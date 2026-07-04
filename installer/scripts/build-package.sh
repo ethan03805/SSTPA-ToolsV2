@@ -7,8 +7,12 @@ VERSION="0.1.0"
 BUILD_TAURI=1
 BUILD_DOCKER=1
 SAVE_IMAGES=0
+STAGE_REFERENCE_DATA=1
+REFERENCE_ARTIFACT=""
 FRONTEND_BUNDLE_STATUS="skipped"
 STARTUP_BUNDLE_STATUS="skipped"
+REFERENCE_DATA_STATUS="skipped"
+REFERENCE_DATA_ARTIFACT_NAME=""
 
 usage() {
   cat <<'USAGE'
@@ -17,6 +21,10 @@ Usage: build-package.sh [options]
 Options:
   --skip-tauri      Skip Tauri desktop bundle builds.
   --skip-docker     Skip backend Docker image build.
+  --skip-reference-data
+                    Skip validated Reference Data artifact packaging.
+  --reference-artifact PATH
+                    Package a specific sstpa-ref-data-*.tar.gz artifact.
   --save-images     Save required Docker images into the package.
   --version VALUE   Package version (default: 0.1.0).
   --out PATH        Output directory (default: installer/out).
@@ -33,6 +41,14 @@ while [[ $# -gt 0 ]]; do
     --skip-docker)
       BUILD_DOCKER=0
       shift
+      ;;
+    --skip-reference-data)
+      STAGE_REFERENCE_DATA=0
+      shift
+      ;;
+    --reference-artifact)
+      REFERENCE_ARTIFACT="${2:?--reference-artifact requires a value}"
+      shift 2
       ;;
     --save-images)
       SAVE_IMAGES=1
@@ -132,6 +148,54 @@ build_tauri_or_release() {
   printf -v "${status_var}" "%s" "release-binary"
 }
 
+latest_reference_artifact() {
+  local artifact newest=""
+
+  shopt -s nullglob
+  for artifact in "${ROOT_DIR}/sustainment/artifacts"/sstpa-ref-data-*.tar.gz; do
+    if [[ -z "${newest}" || "${artifact}" -nt "${newest}" ]]; then
+      newest="${artifact}"
+    fi
+  done
+  shopt -u nullglob
+
+  echo "${newest}"
+}
+
+stage_reference_data() {
+  local artifact="$1"
+  local checksum release_note target_dir
+
+  if [[ -z "${artifact}" ]]; then
+    artifact="$(latest_reference_artifact)"
+  fi
+  if [[ -z "${artifact}" || ! -f "${artifact}" ]]; then
+    echo "Missing Reference Data artifact. Run the sustainment pipeline or pass --skip-reference-data." >&2
+    exit 1
+  fi
+
+  checksum="${artifact}.sha256"
+  if [[ ! -f "${checksum}" ]]; then
+    echo "Missing Reference Data checksum: ${checksum}" >&2
+    exit 1
+  fi
+
+  (cd "$(dirname "${artifact}")" && "${CHECKSUM_CMD[@]}" -c "$(basename "${checksum}")")
+
+  target_dir="${PACKAGE_DIR}/payload/reference-data"
+  mkdir -p "${target_dir}"
+  install -m 0644 "${artifact}" "${target_dir}/"
+  install -m 0644 "${checksum}" "${target_dir}/"
+
+  release_note="${artifact%.tar.gz}-RELEASE-NOTE.txt"
+  if [[ -f "${release_note}" ]]; then
+    install -m 0644 "${release_note}" "${target_dir}/"
+  fi
+
+  REFERENCE_DATA_STATUS="packaged"
+  REFERENCE_DATA_ARTIFACT_NAME="$(basename "${artifact}")"
+}
+
 require_cmd tar
 require_cmd git
 
@@ -211,6 +275,10 @@ if [[ "${SAVE_IMAGES}" -eq 1 ]]; then
   "${ROOT_DIR}/installer/scripts/save-images.sh" --out "${PACKAGE_DIR}/payload/images"
 fi
 
+if [[ "${STAGE_REFERENCE_DATA}" -eq 1 ]]; then
+  stage_reference_data "${REFERENCE_ARTIFACT}"
+fi
+
 COMMIT="$(git -C "${ROOT_DIR}" rev-parse HEAD)"
 TAURI_BUILT=0
 if [[ "${FRONTEND_BUNDLE_STATUS}" == "bundle" && "${STARTUP_BUNDLE_STATUS}" == "bundle" ]]; then
@@ -227,6 +295,8 @@ fi
   echo "tauriNativeBundles=${TAURI_BUILT}"
   echo "frontendBundleStatus=${FRONTEND_BUNDLE_STATUS}"
   echo "startupBundleStatus=${STARTUP_BUNDLE_STATUS}"
+  echo "referenceDataStatus=${REFERENCE_DATA_STATUS}"
+  echo "referenceDataArtifact=${REFERENCE_DATA_ARTIFACT_NAME}"
   echo "dockerBuilt=${BUILD_DOCKER}"
   echo "imagesSaved=${SAVE_IMAGES}"
 } > "${PACKAGE_DIR}/manifests/package.properties"

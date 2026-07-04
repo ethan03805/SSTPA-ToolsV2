@@ -20,10 +20,11 @@ development system — never on a deployed SSTPA Tools installation.
 
 The Installer segment stages all product segments into a versioned release
 payload, copies platform-native Tauri bundle outputs when available, optionally
-saves Docker images for air-gapped installation, and emits SHA-256 checksums for
-audit and transfer verification. If the host cannot run the Tauri native bundler
-because build-time watcher capacity is exhausted, the package path falls back to
-release binaries and records the per-app bundle status in the package manifest.
+saves Docker images for air-gapped installation, stages the latest validated
+Reference Data artifact, and emits SHA-256 checksums for audit and transfer
+verification. If the host cannot run the Tauri native bundler because build-time
+watcher capacity is exhausted, the package path falls back to release binaries
+and records the per-app bundle status in the package manifest.
 
 ## 2. Backend (§5)
 
@@ -88,7 +89,12 @@ Cypher artifact produced by the Sustainment pipeline (`sustainment/`):
 - MITRE ATLAS — ATLAS.yaml → `(:AT_*)` nodes
 - NIST SP 800-53 Rev 5 — OSCAL JSON → `(:NIST_*)` nodes
 - MITRE EMB3D — STIX → `(:EMB3D_*)` nodes
-- Cyber Resiliency (CREF) & Cyber Survivability Attributes data (§9.6)
+
+The validated `2026-07-04-v1` artifact is staged into installer packages under
+`payload/reference-data/` and loaded with `deploy/load-reference-data.sh`.
+Cyber Resiliency and Cyber Survivability Attribute selections are maintained in
+`(:ControlsBaseline).ControlsBaselineJSON`; a dedicated immutable CREF/CNSSI
+reference import requires an authorized machine-readable source bundle.
 
 Users clone reference properties into owned Core nodes via `[:REFERENCES]` (§3.4.6).
 

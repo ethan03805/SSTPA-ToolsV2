@@ -101,10 +101,12 @@ Fonts are bundled with the application for air-gapped deployment.
 
 | Data set | Version | Source | License / attribution | Status |
 |---|---|---|---|---|
-| MITRE ATT&CK (Enterprise, ICS, Mobile) | per acquisition manifest (SRS baseline: v19.1) | https://github.com/mitre-attack/attack-stix-data | "This product uses the MITRE ATT&CK framework. ATT&CK is a registered trademark and copyright of The MITRE Corporation. Licensed under CC BY 4.0." | planned |
-| MITRE ATLAS | per acquisition manifest (SRS baseline: v5.4) | https://github.com/mitre-atlas/atlas-data | "This product uses MITRE ATLAS. Copyright 2023-2026 The MITRE Corporation. Licensed under Apache 2.0." | planned |
-| NIST SP 800-53 | per acquisition manifest (SRS baseline: Rev 5.2.0) | https://github.com/usnistgov/oscal-content | "This product incorporates NIST SP 800-53 Rev 5 content. NIST-authored material is in the public domain. Attribution: National Institute of Standards and Technology, U.S. Department of Commerce." | planned |
-| MITRE EMB3D | per acquisition manifest (SRS baseline: STIX 2.0.1) | https://github.com/mitre/emb3d | "This product uses MITRE EMB3D. Copyright 2024 The MITRE Corporation. Licensed under Apache 2.0." | planned |
-| MITRE CREF / Cyber Survivability Attributes | MTR210700R1-derived | MITRE publications | MITRE attribution (§9.6) | planned |
+| MITRE ATT&CK (Enterprise, ICS, Mobile) | v19.1 in `sstpa-ref-data-2026-07-04-v1.tar.gz` | https://github.com/mitre-attack/attack-stix-data | "This product uses the MITRE ATT&CK framework. ATT&CK is a registered trademark and copyright of The MITRE Corporation. Licensed under CC BY 4.0." | integrated |
+| MITRE ATLAS | v5.4.0 in `sstpa-ref-data-2026-07-04-v1.tar.gz` | https://github.com/mitre-atlas/atlas-data | "This product uses MITRE ATLAS. Copyright 2023-2026 The MITRE Corporation. Licensed under Apache 2.0." | integrated |
+| NIST SP 800-53 | Rev 5 catalog commit `78650f02ad9321bb7b817846f8fbd4f2bcd620de` in `sstpa-ref-data-2026-07-04-v1.tar.gz` | https://github.com/usnistgov/oscal-content | "This product incorporates NIST SP 800-53 Rev 5 content. NIST-authored material is in the public domain. Attribution: National Institute of Standards and Technology, U.S. Department of Commerce." | integrated |
+| MITRE EMB3D | STIX 2.0.1 commit `0d7c25bb4e2928c516fb5811aaab9ff8bab2896c` in `sstpa-ref-data-2026-07-04-v1.tar.gz` | https://github.com/mitre/emb3d | "This product uses MITRE EMB3D. Copyright 2024 The MITRE Corporation. Licensed under Apache 2.0." | integrated |
+| MITRE CREF / CNSSI / Cyber Survivability Attributes | Requires authorized machine-readable source bundle | MITRE publications / CNSSI tables | Attribution to be recorded with the supplied source bundle | planned |
 
 All reference node properties are preserved verbatim (`RawData`) per §9.5.
+The packaged Reference Data artifact and companion SHA-256 file are staged under
+`payload/reference-data/` by the installer package script.

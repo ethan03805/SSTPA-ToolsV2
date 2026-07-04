@@ -125,6 +125,10 @@ SBOM impact: none. No software applications or libraries were added.
 - Hardened the installer package manifest to report native bundle status per
   Tauri app and added a Linux inotify-capacity preflight so watcher-exhausted
   hosts use the release-binary fallback without a noisy CLI panic.
+- Added validated Reference Data artifact packaging: the newest
+  `sustainment/artifacts/sstpa-ref-data-*.tar.gz` is checksum-verified, staged
+  under `payload/reference-data/`, recorded in `package.properties`, and surfaced
+  by the install helpers with the load command.
 - Updated `FloorPlan.md` for the new installer subdirectories and documented the
   installer path in README and architecture notes.
 - Verified the lightweight package path with
@@ -138,6 +142,9 @@ Verification:
 - `./installer/scripts/build-package.sh --skip-docker --version 0.1.0-tauri-smoke`
 - `cargo tauri build --no-bundle --ci` (observed host inotify instance exhaustion;
   release-binary fallback remains the supported package path on this host)
+- Reference Data artifact verification through package staging:
+  `sustainment/artifacts/sstpa-ref-data-2026-07-04-v1.tar.gz.sha256`
 
-SBOM impact: documented the Tauri CLI build tool version; container image tag
-entries were aligned to `deploy/docker-compose.yml`.
+SBOM impact: documented the Tauri CLI build tool version and the packaged
+Reference Data artifact versions; container image tag entries were aligned to
+`deploy/docker-compose.yml`.

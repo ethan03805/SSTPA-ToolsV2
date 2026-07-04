@@ -50,4 +50,11 @@ fi
 
 echo "SSTPA Tools installed to ${PREFIX}"
 echo "Backend stack: cd ${PREFIX}/deploy && docker compose up -d"
+if [[ -d "${PREFIX}/reference-data" ]]; then
+  REF_ARTIFACT="$(find "${PREFIX}/reference-data" -maxdepth 1 -type f -name 'sstpa-ref-data-*.tar.gz' | sort | tail -n 1 || true)"
+  if [[ -n "${REF_ARTIFACT}" ]]; then
+    echo "Reference data artifact: ${REF_ARTIFACT}"
+    echo "Load Reference Data after the Backend is healthy: ${PREFIX}/deploy/load-reference-data.sh ${REF_ARTIFACT} ${PREFIX}/deploy"
+  fi
+fi
 echo "Startup bundles, when built for this platform, are under ${PREFIX}/bundles/startup"

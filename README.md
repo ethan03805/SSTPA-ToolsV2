@@ -60,7 +60,8 @@ cd frontend && npm install && npm run tauri dev
 ```
 
 Use `--skip-tauri --skip-docker` for a fast staging/checksum validation run.
-Packages are written to `installer/out/`.
+Packages are written to `installer/out/` and include the latest validated
+Reference Data artifact unless `--skip-reference-data` is supplied.
 
 ## Copyright
 

@@ -25,4 +25,12 @@ if (Test-Path $ImagesDir) {
 
 Write-Host "SSTPA Tools installed to $Prefix"
 Write-Host "Backend stack: cd `"$Prefix\deploy`"; docker compose up -d"
+$ReferenceDir = Join-Path $Prefix "reference-data"
+if (Test-Path $ReferenceDir) {
+  $ReferenceArtifact = Get-ChildItem -Path $ReferenceDir -Filter "sstpa-ref-data-*.tar.gz" | Sort-Object Name | Select-Object -Last 1
+  if ($ReferenceArtifact) {
+    Write-Host "Reference data artifact: $($ReferenceArtifact.FullName)"
+    Write-Host "Load Reference Data after the Backend is healthy: `"$Prefix\deploy\load-reference-data.sh`" `"$($ReferenceArtifact.FullName)`" `"$Prefix\deploy`""
+  }
+}
 Write-Host "Startup bundles, when built for this platform, are under $Prefix\bundles\startup"
