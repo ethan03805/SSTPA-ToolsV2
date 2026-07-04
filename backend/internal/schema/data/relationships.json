@@ -3019,6 +3019,20 @@
    "srsLine": 1245
   },
   {
+   "type": "SUPPORTED_BY",
+   "source": "GsnStrategy",
+   "target": "GsnGoal",
+   "srsSection": "6.5.11.7",
+   "srsLine": 12581
+  },
+  {
+   "type": "SUPPORTED_BY",
+   "source": "GsnStrategy",
+   "target": "GsnSolution",
+   "srsSection": "6.5.11.7",
+   "srsLine": 12582
+  },
+  {
    "type": "IN_CONTEXT_OF",
    "source": "GsnGoal",
    "target": "GsnContext",
