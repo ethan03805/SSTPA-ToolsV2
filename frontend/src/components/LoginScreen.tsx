@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { useSession } from "../state/stores";
+import { Mark } from "./Mark";
 
 export function LoginScreen() {
   const login = useSession((s) => s.login);
@@ -63,14 +64,23 @@ export function LoginScreen() {
         className="sstpa-frame"
         style={{ width: 420, padding: "var(--sstpa-sp-6)" }}
       >
-        <div style={{ textAlign: "center", marginBottom: "var(--sstpa-sp-4)" }}>
-          <img src="/sstpa-logo-large.png" alt="SSTPA Tools" style={{ maxWidth: 220 }} />
+        <div style={{ textAlign: "center", marginBottom: "var(--sstpa-sp-6)" }}>
+          <div style={{ color: "var(--sstpa-text-strong)" }} aria-hidden>
+            <Mark size={44} />
+          </div>
           <h1
-            className="branding-title"
-            style={{ margin: "var(--sstpa-sp-2) 0 0", fontSize: "1.6rem" }}
+            style={{
+              margin: "var(--sstpa-sp-3) 0 2px",
+              fontSize: "1.25rem",
+              fontWeight: 600,
+              color: "var(--sstpa-text-strong)",
+            }}
           >
             SSTPA Tools
           </h1>
+          <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--sstpa-muted)" }}>
+            Model-based system security engineering
+          </p>
         </div>
         <form
           onSubmit={(e) => {

@@ -53,8 +53,15 @@ export function displayName(typeName: string): string {
 }
 
 export function NodeTypeBadge({ typeName }: { typeName: string }) {
+  const color = nodeTypeColor(typeName);
   return (
-    <span className="type-badge" style={{ background: nodeTypeColor(typeName) }}>
+    <span
+      className="type-badge"
+      style={{
+        color,
+        background: `color-mix(in srgb, ${color} 12%, transparent)`,
+      }}
+    >
       {displayName(typeName)}
     </span>
   );

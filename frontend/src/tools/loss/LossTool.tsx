@@ -39,7 +39,7 @@ const STATUS_COLOR: Record<string, string> = {
   NOT_BUILT: "var(--sstpa-node-muted)",
   AUTO_GENERATED: "var(--sstpa-status-info)",
   ANALYST_REFINED: "var(--sstpa-status-ok)",
-  BASELINED: "var(--sstpa-gold)",
+  BASELINED: "var(--sstpa-accent)",
   EXPORTED: "#6d5a8e",
   INVALIDATED: "var(--sstpa-status-error)",
 };
@@ -313,7 +313,7 @@ export default function LossTool({
           Export Tree JSON
         </button>
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>Launch:</span>
+        <span style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>Launch:</span>
         <button className="icon-button" onClick={() => openTool("sstpa.trace", assetHid ? { focusHid: assetHid, focusType: "Asset" } : undefined)}>
           Trace
         </button>
@@ -505,7 +505,7 @@ function LossRoster({
               width: "calc(100% - 12px)",
               margin: 6,
               textAlign: "left",
-              borderColor: selectedLoss === l.hid ? "var(--sstpa-gold)" : undefined,
+              borderColor: selectedLoss === l.hid ? "var(--sstpa-accent)" : undefined,
               cursor: "pointer",
             }}
             onClick={() => onSelect(l.hid)}
@@ -517,7 +517,7 @@ function LossRoster({
               </span>
             </div>
             <div style={{ fontWeight: 700, fontSize: "0.82rem", marginTop: 4 }}>{String(l.properties.Name ?? "")}</div>
-            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
               {String(asset?.properties.Name ?? "No Asset")} / {env ? String(byHid.get(env)?.properties.Name ?? env) : "No Environment"}
             </div>
             <div style={{ display: "flex", gap: 4, marginTop: 6, alignItems: "center" }}>
@@ -541,7 +541,7 @@ function LossRoster({
         );
       })}
       {losses.length === 0 && (
-        <p style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>No Loss nodes in this SoI.</p>
+        <p style={{ padding: 12, color: "var(--sstpa-muted)" }}>No Loss nodes in this SoI.</p>
       )}
     </div>
   );
@@ -593,7 +593,7 @@ function LossSummary({
 function SummaryCell({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ minWidth: 0 }}>
-      <div style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.66rem" }}>{label}</div>
+      <div style={{ color: "var(--sstpa-muted)", fontSize: "0.66rem" }}>{label}</div>
       <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={value}>
         {value}
       </div>
@@ -622,7 +622,7 @@ function FindingsPanel({
         <span className={errors > 0 ? "state-warn" : "state-ok"}>{errors} errors</span>
         <span>{warnings} warnings</span>
         <span>{infos} info</span>
-        {errors > 0 && <span style={{ color: "var(--sstpa-navy-muted)" }}>tree may be stale</span>}
+        {errors > 0 && <span style={{ color: "var(--sstpa-muted)" }}>tree may be stale</span>}
         <span style={{ flex: 1 }} />
         {errors > 0 && (
           <button className="sstpa-button secondary" style={{ padding: "2px 10px" }} onClick={onRebuild}>
@@ -647,7 +647,7 @@ function FindingsPanel({
             }}
           >
             <span className="type-badge" style={{ background: severityColor(f.severity) }}>{f.severity}</span>
-            <span className="mono" style={{ fontSize: "0.64rem", color: "var(--sstpa-navy-muted)" }}>{f.type}</span>
+            <span className="mono" style={{ fontSize: "0.64rem", color: "var(--sstpa-muted)" }}>{f.type}</span>
             {f.nodeHid && (
               <button className="icon-button" onClick={() => onSelectNode(f.nodeHid!)}>
                 {f.nodeHid}
@@ -693,7 +693,7 @@ function CoverageView({
       </div>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th style={{ padding: "4px 6px" }}>State</th>
             <th>Name</th>
             <th>Sequence</th>
@@ -718,7 +718,7 @@ function CoverageView({
           })}
           {!loading && coverage.length === 0 && (
             <tr>
-              <td colSpan={4} style={{ padding: 14, color: "var(--sstpa-navy-muted)" }}>
+              <td colSpan={4} style={{ padding: 14, color: "var(--sstpa-muted)" }}>
                 No coverage rows returned for this Loss.
               </td>
             </tr>
@@ -766,14 +766,14 @@ function TreeView({
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-3)" }}>
         {loading && <ToolStatus loading />}
-        {!loading && nodes.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Attack Tree nodes returned.</p>}
+        {!loading && nodes.length === 0 && <p style={{ color: "var(--sstpa-muted)" }}>No Attack Tree nodes returned.</p>}
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: "max-content" }}>
           {tiers.map(([tier, group]) => (
             <div key={tier} style={{ width: 190 }}>
               <div
                 style={{
                   fontFamily: "var(--sstpa-font-mono)",
-                  color: "var(--sstpa-navy-muted)",
+                  color: "var(--sstpa-muted)",
                   fontSize: "0.72rem",
                   marginBottom: 6,
                 }}
@@ -793,10 +793,10 @@ function TreeView({
                       marginBottom: 8,
                       textAlign: "left",
                       cursor: "pointer",
-                      background: selectedNodeHid === n.hid ? "var(--sstpa-ivory-sunken)" : undefined,
+                      background: selectedNodeHid === n.hid ? "var(--sstpa-inset)" : undefined,
                       borderColor:
                         selectedNodeHid === n.hid
-                          ? "var(--sstpa-gold)"
+                          ? "var(--sstpa-accent)"
                           : isRvLeaf
                             ? allowed
                               ? "var(--sstpa-status-warn)"
@@ -833,7 +833,7 @@ function TreeView({
                 style={{
                   cursor: "pointer",
                   borderBottom: "1px solid var(--sstpa-line-soft)",
-                  background: selectedEdgeKey === edgeKey(e) ? "var(--sstpa-ivory-sunken)" : undefined,
+                  background: selectedEdgeKey === edgeKey(e) ? "var(--sstpa-inset)" : undefined,
                   opacity: e.tailoredOut ? 0.55 : 1,
                 }}
               >
@@ -956,7 +956,7 @@ function PathAnalysis({
         {loading && <ToolStatus loading />}
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.74rem" }}>
           <thead>
-            <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+            <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
               <th style={{ padding: "4px 6px", cursor: "pointer" }} onClick={() => sortBy("path")}>
                 #{arrow("path")}
               </th>
@@ -995,7 +995,7 @@ function PathAnalysis({
             ))}
             {!loading && sorted.length === 0 && (
               <tr>
-                <td colSpan={4 + metricNames.length} style={{ padding: 14, color: "var(--sstpa-navy-muted)" }}>
+                <td colSpan={4 + metricNames.length} style={{ padding: 14, color: "var(--sstpa-muted)" }}>
                   No root-to-terminal paths in the current filter.
                 </td>
               </tr>
@@ -1054,14 +1054,14 @@ function MetricSummaryBar({ metricDefs, paths }: { metricDefs: MetricDef[]; path
             <div style={{ display: "flex", gap: 6, alignItems: "baseline", fontSize: "0.74rem" }}>
               <strong>{def.MetricName}</strong>
               <span className="mono">{value == null ? "—" : value.toPrecision(4)}</span>
-              <span style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.68rem" }}>
+              <span style={{ color: "var(--sstpa-muted)", fontSize: "0.68rem" }}>
                 / {def.AcceptanceThreshold} ({def.ThresholdDirection})
               </span>
               <span className={pass == null ? "" : pass ? "state-ok" : "state-warn"}>
                 {pass == null ? "" : pass ? "PASS" : "FAIL"}
               </span>
             </div>
-            <div style={{ height: 4, background: "var(--sstpa-ivory-sunken)", borderRadius: 2, marginTop: 2 }}>
+            <div style={{ height: 4, background: "var(--sstpa-inset)", borderRadius: 2, marginTop: 2 }}>
               <div
                 style={{
                   width: `${pct}%`,
@@ -1141,7 +1141,7 @@ function DetailPanel({
           onCommit={onCommit}
         />
       )}
-      {!node && !edge && <p style={{ color: "var(--sstpa-navy-muted)" }}>Select a node or edge.</p>}
+      {!node && !edge && <p style={{ color: "var(--sstpa-muted)" }}>Select a node or edge.</p>}
     </div>
   );
 }
@@ -1302,7 +1302,7 @@ function NodeDetail({
   return (
     <>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <span className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{node.hid}</span>
+        <span className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>{node.hid}</span>
         <button className="icon-button" title="Copy HID" onClick={() => onCopyHid(node.hid)}>
           copy
         </button>
@@ -1313,7 +1313,7 @@ function NodeDetail({
         <p style={{ fontSize: "0.74rem", margin: "6px 0 0" }}>{node.props.ShortDescription}</p>
       )}
       {isAttack && (
-        <div style={{ fontSize: "0.72rem", marginTop: 6, color: "var(--sstpa-navy-muted)" }}>
+        <div style={{ fontSize: "0.72rem", marginTop: 6, color: "var(--sstpa-muted)" }}>
           Level: {String(node.props?.AttackLevel ?? "—")}
           {typeof node.props?.ReferenceFramework === "string" && node.props.ReferenceFramework.trim() !== "" && (
             <> / Ref: {String(node.props.ReferenceFramework)} {String(node.props?.ReferenceID ?? "")}</>
@@ -1332,7 +1332,7 @@ function NodeDetail({
       </div>
 
       <h4>Incoming edges</h4>
-      {incoming.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>Root node — no incoming edges.</p>}
+      {incoming.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>Root node — no incoming edges.</p>}
       {incoming.map((e) => (
         <div key={edgeKey(e)} style={{ borderBottom: "1px solid var(--sstpa-line-soft)", padding: "4px 0", fontSize: "0.72rem" }}>
           <div className="mono">
@@ -1415,7 +1415,7 @@ function NodeDetail({
 
       <h4>Outgoing edges</h4>
       {outgoing.length === 0 && (
-        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
           Leaf node{isLeafAttack ? " — Residual Vulnerability endpoint" : ""}.
         </p>
       )}
@@ -1445,7 +1445,7 @@ function NodeDetail({
             Commit Add Existing
           </button>
           {isAttack && (
-            <p style={{ fontSize: "0.68rem", color: "var(--sstpa-navy-muted)", margin: "4px 0 0" }}>
+            <p style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)", margin: "4px 0 0" }}>
               A canonical [:BLOCKS] relationship is created with the tree edge when missing (§6.5.10.11).
             </p>
           )}
@@ -1591,7 +1591,7 @@ function EdgeEditor({
 
   return (
     <>
-      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
         {edge.sourceHid} {"->"} {edge.targetHid}
       </div>
       <h3 style={{ margin: "4px 0 6px" }}>{source?.name ?? edge.sourceHid} to {target?.name ?? edge.targetHid}</h3>
@@ -1636,7 +1636,7 @@ function EdgeEditor({
         </>
       )}
       {metricDefs.length > 0 && (
-        <div style={{ marginTop: 10, fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+        <div style={{ marginTop: 10, fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
           Metrics defined: {metricDefs.map((m) => m.MetricName).join(", ")}
         </div>
       )}
@@ -1693,7 +1693,7 @@ function MetricEditor({
       </div>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.74rem" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th>Name</th>
             <th>Direction</th>
             <th>Leaf</th>
@@ -1748,7 +1748,7 @@ function MetricEditor({
           ))}
         </tbody>
       </table>
-      <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", marginTop: 8 }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)", marginTop: 8 }}>
         Committing metric definitions does not invalidate the tree; metric values are recomputed from
         the definitions on the next path enumeration (§6.5.10.8).
       </p>
@@ -1772,7 +1772,7 @@ function RvBadge({ status }: { status: LossPathResult["rvStatus"] }) {
     status === "RV"
       ? "var(--sstpa-status-error)"
       : status === "ALLOWED_RV"
-        ? "var(--sstpa-gold)"
+        ? "var(--sstpa-accent)"
         : status === "BLOCKED"
           ? "var(--sstpa-status-ok)"
           : "var(--sstpa-node-muted)";

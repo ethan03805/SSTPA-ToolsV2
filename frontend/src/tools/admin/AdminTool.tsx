@@ -58,9 +58,9 @@ async function purgeMessage(id: string, token: string | null): Promise<void> {
 function RoleBadge({ role }: { role: Role }) {
   const style =
     role === "ROOT_ADMIN"
-      ? { background: "var(--sstpa-navy)" }
+      ? { background: "var(--sstpa-text)" }
       : role === "ADMIN"
-        ? { background: "var(--sstpa-gold)", color: "var(--sstpa-navy)" }
+        ? { background: "var(--sstpa-accent)", color: "var(--sstpa-text)" }
         : { background: "var(--sstpa-node-muted)" };
   return (
     <span className="type-badge" style={style}>
@@ -75,7 +75,7 @@ function StatusLabel({ status }: { status: RosterUser["accountStatus"] }) {
       ? "var(--sstpa-status-ok)"
       : status === "SUSPENDED"
         ? "var(--sstpa-status-warn)"
-        : "var(--sstpa-navy-muted)";
+        : "var(--sstpa-muted)";
   return (
     <span
       style={{
@@ -119,7 +119,7 @@ function SortHeader({
           cursor: "pointer",
           font: "inherit",
           fontWeight: 700,
-          color: "var(--sstpa-navy)",
+          color: "var(--sstpa-text)",
           padding: "6px 10px",
           width: "100%",
           textAlign: "left",
@@ -163,7 +163,7 @@ function ActionButton({
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <>
-      <dt style={{ color: "var(--sstpa-navy-muted)", whiteSpace: "nowrap" }}>{label}</dt>
+      <dt style={{ color: "var(--sstpa-muted)", whiteSpace: "nowrap" }}>{label}</dt>
       <dd style={{ margin: 0 }}>{children}</dd>
     </>
   );
@@ -249,14 +249,14 @@ export default function AdminTool({ ctx }: { ctx: ToolLaunchContext; manifest: T
           alignItems: "center",
           gap: "var(--sstpa-sp-3)",
           padding: "var(--sstpa-sp-2) var(--sstpa-sp-3)",
-          borderBottom: "2px solid var(--sstpa-navy)",
+          borderBottom: "2px solid var(--sstpa-text)",
         }}
       >
         <span
           style={{
-            fontFamily: "var(--sstpa-font-brand)",
+            fontFamily: "var(--sstpa-font-ui)",
             fontWeight: 700,
-            color: "var(--sstpa-navy)",
+            color: "var(--sstpa-text)",
           }}
         >
           Admin Tool
@@ -701,7 +701,7 @@ function AccountsMode({
               <tr
                 style={{
                   textAlign: "left",
-                  borderBottom: "2px solid var(--sstpa-navy)",
+                  borderBottom: "2px solid var(--sstpa-text)",
                 }}
               >
                 {ROSTER_COLUMNS.map((c) => (
@@ -733,7 +733,7 @@ function AccountsMode({
                         status === "DISENROLLED" ? "line-through" : undefined,
                       color:
                         status === "SUSPENDED"
-                          ? "var(--sstpa-navy-muted)"
+                          ? "var(--sstpa-muted)"
                           : undefined,
                     }}
                     onClick={() => setSelected(u.userName)}
@@ -902,7 +902,7 @@ function AccountDetail({
         </Field>
         <Field label="Owned Core Data nodes:">
           {user.ownedNodes}{" "}
-          <span style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.78rem" }}>
+          <span style={{ color: "var(--sstpa-muted)", fontSize: "0.78rem" }}>
             (per-node-type breakdown is not available from this Backend version)
           </span>
         </Field>
@@ -939,7 +939,7 @@ function AccountDetail({
               onChange={(e) => setEditEmail(e.target.value)}
             />
           </label>
-          <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--sstpa-navy-muted)" }}>
+          <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--sstpa-muted)" }}>
             Username cannot be changed in this version.
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
@@ -1037,7 +1037,7 @@ function AccountDetail({
       )}
 
       {update.isPending && (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.8rem" }}>Applying…</p>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.8rem" }}>Applying…</p>
       )}
 
       {confirming === "suspend" && (
@@ -1280,7 +1280,7 @@ function EnrollDialog({
               style={{
                 border: "var(--sstpa-border-soft)",
                 borderRadius: "var(--sstpa-radius)",
-                background: "var(--sstpa-ivory-sunken)",
+                background: "var(--sstpa-inset)",
                 padding: "var(--sstpa-sp-2) var(--sstpa-sp-3)",
               }}
             >
@@ -1419,7 +1419,7 @@ function DisenrollWizard({
             <p
               style={{
                 fontSize: "0.78rem",
-                color: "var(--sstpa-navy-muted)",
+                color: "var(--sstpa-muted)",
                 margin: "0 0 10px",
               }}
             >
@@ -1697,7 +1697,7 @@ function MessagesMode({
           borderBottom: "var(--sstpa-border-soft)",
         }}
       >
-        <span style={{ fontSize: "0.82rem", color: "var(--sstpa-navy-muted)" }}>
+        <span style={{ fontSize: "0.82rem", color: "var(--sstpa-muted)" }}>
           All mailboxes (admin view, SRS §6.5.15.5b)
         </span>
         <input
@@ -1711,7 +1711,7 @@ function MessagesMode({
         {userFilter && (
           <span
             className="type-badge"
-            style={{ background: "var(--sstpa-navy)", display: "inline-flex", gap: 6 }}
+            style={{ background: "var(--sstpa-text)", display: "inline-flex", gap: 6 }}
           >
             Mailbox: {userFilter}
             <button
@@ -1755,7 +1755,7 @@ function MessagesMode({
               <tr
                 style={{
                   textAlign: "left",
-                  borderBottom: "2px solid var(--sstpa-navy)",
+                  borderBottom: "2px solid var(--sstpa-text)",
                 }}
               >
                 {MSG_COLUMNS.map((c) => (
@@ -1801,7 +1801,7 @@ function MessagesMode({
                   <td
                     style={{
                       color: m.isRead
-                        ? "var(--sstpa-navy-muted)"
+                        ? "var(--sstpa-muted)"
                         : "var(--sstpa-status-info)",
                     }}
                   >
@@ -1897,7 +1897,7 @@ function AdminMessageDetail({
             <h2>{String(msg.Subject ?? "(no subject)")}</h2>
             <p
               className="mono"
-              style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}
+              style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}
             >
               {String(msg.MessageType ?? "")} · from {String(msg.Sender ?? "")} to{" "}
               {String(msg.Recipient ?? "")} ·{" "}
@@ -1908,7 +1908,7 @@ function AdminMessageDetail({
                 whiteSpace: "pre-wrap",
                 fontFamily: "var(--sstpa-font-ui)",
                 fontSize: "0.85rem",
-                background: "var(--sstpa-ivory-sunken)",
+                background: "var(--sstpa-inset)",
                 padding: "var(--sstpa-sp-3)",
                 borderRadius: "var(--sstpa-radius)",
                 maxHeight: 300,
@@ -2037,7 +2037,7 @@ function TransferMode({
           the destination in one transaction. A standalone transfer that keeps
           the source account active is not yet supported by the Backend API.
         </div>
-        <p style={{ fontSize: "0.8rem", color: "var(--sstpa-navy-muted)" }}>
+        <p style={{ fontSize: "0.8rem", color: "var(--sstpa-muted)" }}>
           For selective, per-node transfers while keeping the source account
           active: ownership changes automatically when another user commits an
           edit to a node (SRS §3.2) — have the new owner edit and commit the

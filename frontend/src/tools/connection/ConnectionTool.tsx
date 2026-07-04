@@ -246,7 +246,7 @@ function ConnectionList({
   onSelect: (hid: string) => void;
 }) {
   return (
-    <aside style={{ width: 300, borderRight: "var(--sstpa-border)", overflow: "auto", background: "var(--sstpa-ivory-raised)" }}>
+    <aside style={{ width: 300, borderRight: "var(--sstpa-border)", overflow: "auto", background: "var(--sstpa-surface)" }}>
       {connections.map((connection) => {
         const participants = participantInterfaces(connection.hid, interfaces);
         const owner = ownerMap.get(connection.hid);
@@ -255,7 +255,7 @@ function ConnectionList({
           <button
             key={connection.hid}
             className="entity-card"
-            style={{ width: "calc(100% - 12px)", margin: 6, textAlign: "left", borderColor: selected === connection.hid ? "var(--sstpa-gold)" : undefined }}
+            style={{ width: "calc(100% - 12px)", margin: 6, textAlign: "left", borderColor: selected === connection.hid ? "var(--sstpa-accent)" : undefined }}
             onClick={() => onSelect(connection.hid)}
           >
             <div className="entity-card-header">
@@ -265,19 +265,19 @@ function ConnectionList({
               </span>
             </div>
             <div style={{ fontWeight: 700 }}>{String(connection.properties.Name ?? "")}</div>
-            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
               {owner ? String(owner.properties.Name ?? owner.hid) : "No owner"} / {participants.length} interface(s)
             </div>
             <div className="mono" style={{ fontSize: "0.66rem" }}>
               OSI {String(connection.properties.OSILayer ?? "n/a")} / {String(connection.properties.Protocol ?? "protocol n/a")}
             </div>
-            <div style={{ fontSize: "0.66rem", color: "var(--sstpa-navy-muted)" }}>
+            <div style={{ fontSize: "0.66rem", color: "var(--sstpa-muted)" }}>
               {participants.map((p) => String(byHid.get(p.hid)?.properties.Name ?? p.hid)).join(", ")}
             </div>
           </button>
         );
       })}
-      {connections.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>No Connections match the current filters.</p>}
+      {connections.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-muted)" }}>No Connections match the current filters.</p>}
     </aside>
   );
 }
@@ -314,7 +314,7 @@ function SelectionView({
                   <button
                     key={connection.hid}
                     className="entity-card"
-                    style={{ textAlign: "left", borderColor: selected === connection.hid ? "var(--sstpa-gold)" : undefined }}
+                    style={{ textAlign: "left", borderColor: selected === connection.hid ? "var(--sstpa-accent)" : undefined }}
                     onClick={() => onSelect(connection.hid)}
                   >
                     <div className="entity-card-header">
@@ -443,16 +443,16 @@ function ConnectionCanvas({
             <section
               key={connection.hid}
               className="sstpa-frame"
-              style={{ padding: "var(--sstpa-sp-3)", borderColor: selected === connection.hid ? "var(--sstpa-gold)" : undefined }}
+              style={{ padding: "var(--sstpa-sp-3)", borderColor: selected === connection.hid ? "var(--sstpa-accent)" : undefined }}
             >
               <button className="entity-card" style={{ width: "100%", textAlign: "center", borderRadius: 4 }} onClick={() => onSelect(connection.hid)}>
                 <div className="entity-hid">{connection.hid}</div>
                 <div style={{ fontWeight: 800 }}>{String(connection.properties.Name ?? "")}</div>
-                <div style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+                <div style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
                   {String(connection.properties.ConnectionType ?? "Connection")} / OSI {String(connection.properties.OSILayer ?? "n/a")}
                 </div>
               </button>
-              <div style={{ textAlign: "center", margin: "8px 0", color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+              <div style={{ textAlign: "center", margin: "8px 0", color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
                 Owner: {owner ? String(owner.properties.Name ?? owner.hid) : "Unassigned"}
               </div>
               <div style={{ display: "grid", gap: 8 }}>
@@ -466,7 +466,7 @@ function ConnectionCanvas({
                         <span className="type-badge">{String(rel?.props?.FlowDirectionality ?? "Unspecified")}</span>
                       </div>
                       <div style={{ fontWeight: 700 }}>{String(iface.properties.Name ?? "")}</div>
-                      <div style={{ fontSize: "0.68rem", color: "var(--sstpa-navy-muted)" }}>
+                      <div style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)" }}>
                         {ownerSystem ? String(ownerSystem.properties.Name ?? ownerSystem.hid) : "System n/a"} / {String(rel?.props?.RelationshipNature ?? "LOGICAL")}
                       </div>
                     </button>
@@ -477,7 +477,7 @@ function ConnectionCanvas({
           );
         })}
       </div>
-      {connections.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Connections to display.</p>}
+      {connections.length === 0 && <p style={{ color: "var(--sstpa-muted)" }}>No Connections to display.</p>}
     </div>
   );
 }
@@ -538,8 +538,8 @@ function ConnectionDetail({
   const connectionRequirements = relatedNodes(connection, "HAS_REQUIREMENT", new Map(requirements.map((r) => [r.hid, r])));
 
   return (
-    <aside style={{ width: 390, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)", background: "var(--sstpa-ivory-raised)" }}>
-      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{connection.hid}</div>
+    <aside style={{ width: 390, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)", background: "var(--sstpa-surface)" }}>
+      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>{connection.hid}</div>
       <h3 style={{ margin: "4px 0 8px" }}>{String(connection.properties.Name ?? "")}</h3>
       <button className="sstpa-button" disabled={drawerOpen} onClick={() => onOpenDrawer(connection.hid)}>Open Drawer</button>
 

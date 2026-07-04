@@ -7,6 +7,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useDrawer, useSoI } from "../state/stores";
+import { Icon } from "./Icon";
 
 /** HID structure per the identity model (SRS §3.3.8): TYPE_INDEX_SEQUENCE,
  *  e.g. SYS_1_0 or EL_1.2_4. The SoI index is the middle segment. */
@@ -70,9 +71,8 @@ export function SoIPanel() {
             className="icon-button"
             title="Navigate to parent System of Interest"
             onClick={() => setSoI(parentOfSoI?.hid ?? null)}
-            style={{ fontSize: "1.05rem" }}
           >
-            ⬆
+            <Icon name="arrow-up" size={16} />
           </button>
           <div className="soi-identity">
             <div className="soi-hid">{soiHid}</div>
@@ -83,7 +83,7 @@ export function SoIPanel() {
                   ? "(could not load node)"
                   : String(props.Name ?? soiNode.data?.hid ?? "")}
             </div>
-            <div style={{ fontSize: "0.8rem", color: "var(--sstpa-navy-muted)" }}>
+            <div style={{ fontSize: "0.8rem", color: "var(--sstpa-muted)" }}>
               {String(props.ShortDescription ?? "") === "null"
                 ? ""
                 : String(props.ShortDescription ?? "")}
@@ -94,7 +94,7 @@ export function SoIPanel() {
             title="Edit System of Interest properties"
             onClick={() => requestOpenDrawer({ mode: "edit", hid: soiHid })}
           >
-            ✎ Edit
+            <Icon name="pencil" size={14} /> Edit
           </button>
         </>
       ) : (
@@ -130,7 +130,7 @@ export function SoIPanel() {
         ))}
         {children.length === 0 && soiHid && !hierarchy.isError && (
           <span
-            style={{ fontSize: "0.78rem", color: "var(--sstpa-navy-muted)" }}
+            style={{ fontSize: "0.78rem", color: "var(--sstpa-muted)" }}
           >
             No child systems
           </span>

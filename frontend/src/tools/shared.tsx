@@ -77,8 +77,8 @@ export function ToolStatus({
 }) {
   if (needsSoI) {
     return (
-      <div style={{ padding: 24, color: "var(--sstpa-navy-muted)", textAlign: "center" }}>
-        <p style={{ fontFamily: "var(--sstpa-font-brand)", fontSize: "1.05rem" }}>
+      <div style={{ padding: 24, color: "var(--sstpa-muted)", textAlign: "center" }}>
+        <p style={{ fontFamily: "var(--sstpa-font-ui)", fontSize: "1.05rem" }}>
           Select a System of Interest first
         </p>
         <p style={{ fontSize: "0.82rem" }}>
@@ -90,7 +90,7 @@ export function ToolStatus({
   }
   if (loading) {
     return (
-      <div style={{ padding: 24, color: "var(--sstpa-navy-muted)" }}>Loading…</div>
+      <div style={{ padding: 24, color: "var(--sstpa-muted)" }}>Loading…</div>
     );
   }
   if (error) {
@@ -113,7 +113,7 @@ export function ToolStatus({
   }
   if (empty) {
     return (
-      <div style={{ padding: 24, color: "var(--sstpa-navy-muted)", textAlign: "center" }}>
+      <div style={{ padding: 24, color: "var(--sstpa-muted)", textAlign: "center" }}>
         <p>{empty}</p>
         {emptyHint && <div style={{ fontSize: "0.82rem" }}>{emptyHint}</div>}
       </div>

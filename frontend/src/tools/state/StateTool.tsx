@@ -438,7 +438,7 @@ export default function StateTool({
             </select>
           </label>
           {envFilter && (
-            <span style={{ color: "var(--sstpa-navy-muted)" }}>
+            <span style={{ color: "var(--sstpa-muted)" }}>
               States valid in {String(byHid.get(envFilter)?.properties.Name ?? envFilter)}, ordered
               by StateSequence.
             </span>
@@ -451,7 +451,7 @@ export default function StateTool({
             padding: "4px var(--sstpa-sp-3)",
             borderBottom: "var(--sstpa-border-soft)",
             fontSize: "0.74rem",
-            color: "var(--sstpa-navy-muted)",
+            color: "var(--sstpa-muted)",
           }}
         >
           Context: {contextFocusHid} — showing only States related to this{" "}
@@ -514,7 +514,7 @@ export default function StateTool({
             width: 330,
             borderLeft: "var(--sstpa-border)",
             overflow: "auto",
-            background: "var(--sstpa-ivory-raised)",
+            background: "var(--sstpa-surface)",
           }}
         >
           {selectedState && byHid.get(selectedState) && (
@@ -541,7 +541,7 @@ export default function StateTool({
             />
           )}
           {!selectedState && !selectedTransition && (
-            <p style={{ padding: 14, fontSize: "0.8rem", color: "var(--sstpa-navy-muted)" }}>
+            <p style={{ padding: 14, fontSize: "0.8rem", color: "var(--sstpa-muted)" }}>
               Select a State block or a transition edge. Press Escape to
               deselect.
               <br />
@@ -1110,14 +1110,14 @@ function StateDetailPanel({
             Commit
           </button>
         </span>
-        <span style={{ fontSize: "0.68rem", color: "var(--sstpa-navy-muted)" }}>
+        <span style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)" }}>
           Used for SAND sequencing in the Loss Tool.
         </span>
       </label>
 
       {sectionH("Valid in Environments")}
       {validIn.length === 0 && (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           No [:VALID_IN] assignments.
         </p>
       )}
@@ -1181,7 +1181,7 @@ function StateDetailPanel({
 
       {sectionH("Hazards")}
       {stateHazards.length === 0 && (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           No [:HAS_HAZARD] associations.
         </p>
       )}
@@ -1260,7 +1260,7 @@ function StateDetailPanel({
 
       {sectionH("Countermeasures")}
       {applyingCms.length === 0 && (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           No [:APPLIES_TO_STATE] associations.
         </p>
       )}
@@ -1356,7 +1356,7 @@ function StateDetailPanel({
 
       {sectionH("Requirements (via Countermeasure)")}
       {applyingCms.length === 0 ? (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           Requirements associate through a requirement-bearing node — apply a
           Countermeasure to this State first (§6.5.5.12).
         </p>

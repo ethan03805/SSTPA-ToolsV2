@@ -253,7 +253,7 @@ export default function UseCaseTool({
               system={system}
             />
           )}
-          {!selected && <p style={{ padding: 20, color: "var(--sstpa-navy-muted)" }}>No Use Case selected.</p>}
+          {!selected && <p style={{ padding: 20, color: "var(--sstpa-muted)" }}>No Use Case selected.</p>}
         </div>
         <DetailPanel
           useCase={selected}
@@ -348,7 +348,7 @@ function UseCaseList({
           <button
             key={u.hid}
             className="entity-card"
-            style={{ width: "calc(100% - 12px)", margin: 6, textAlign: "left", borderColor: selected === u.hid ? "var(--sstpa-gold)" : undefined }}
+            style={{ width: "calc(100% - 12px)", margin: 6, textAlign: "left", borderColor: selected === u.hid ? "var(--sstpa-accent)" : undefined }}
             onClick={() => onSelect(u.hid)}
           >
             <div className="entity-card-header">
@@ -358,13 +358,13 @@ function UseCaseList({
               </span>
             </div>
             <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>{String(u.properties.Name ?? "")}</div>
-            <div style={{ fontSize: "0.68rem", color: "var(--sstpa-navy-muted)" }}>
+            <div style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)" }}>
               {actors.length} actor(s), {interfaces.length} interface(s), {functions.length} function(s)
             </div>
           </button>
         );
       })}
-      {useCases.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>No Use Cases in this SoI.</p>}
+      {useCases.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-muted)" }}>No Use Cases in this SoI.</p>}
     </div>
   );
 }
@@ -415,11 +415,11 @@ function DiagramView({
             top: 0,
             right: 0,
             bottom: 0,
-            border: "2px solid var(--sstpa-navy)",
-            background: "var(--sstpa-ivory-raised)",
+            border: "2px solid var(--sstpa-text)",
+            background: "var(--sstpa-surface)",
           }}
         >
-          <div style={{ position: "absolute", top: 6, left: 12, fontFamily: "var(--sstpa-font-brand)", fontSize: "1.1rem" }}>
+          <div style={{ position: "absolute", top: 6, left: 12, fontFamily: "var(--sstpa-font-ui)", fontSize: "1.1rem" }}>
             {String(system?.properties.Name ?? system?.hid ?? "System Boundary")}
           </div>
         </div>
@@ -465,12 +465,12 @@ function DiagramView({
               minHeight: 110,
               borderRadius: 999,
               textAlign: "center",
-              borderColor: selectedElement === useCase.hid ? "var(--sstpa-gold)" : undefined,
+              borderColor: selectedElement === useCase.hid ? "var(--sstpa-accent)" : undefined,
             }}
           >
             <div className="entity-hid">{useCase.hid}</div>
             <div style={{ fontWeight: 700 }}>{String(useCase.properties.Name ?? "")}</div>
-            <div style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{String(useCase.properties.UCStatement ?? "")}</div>
+            <div style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>{String(useCase.properties.UCStatement ?? "")}</div>
           </div>
         </DraggableElement>
 
@@ -493,7 +493,7 @@ function DiagramView({
           <div>
             <h4>«include» Use Cases</h4>
             {includedUseCases.map((n) => (
-              <button key={n.hid} className="entity-card" style={{ width: "100%", marginBottom: 8, textAlign: "left", borderColor: selectedElement === n.hid ? "var(--sstpa-gold)" : undefined }} onClick={() => onSelect(n.hid)}>
+              <button key={n.hid} className="entity-card" style={{ width: "100%", marginBottom: 8, textAlign: "left", borderColor: selectedElement === n.hid ? "var(--sstpa-accent)" : undefined }} onClick={() => onSelect(n.hid)}>
                 <span className="entity-hid">{n.hid}</span> <strong>{String(n.properties.Name ?? "")}</strong>
               </button>
             ))}
@@ -501,14 +501,14 @@ function DiagramView({
           <div>
             <h4>«extend» Use Cases</h4>
             {extendedUseCases.map((n) => (
-              <button key={n.hid} className="entity-card" style={{ width: "100%", marginBottom: 8, textAlign: "left", borderColor: selectedElement === n.hid ? "var(--sstpa-gold)" : undefined }} onClick={() => onSelect(n.hid)}>
+              <button key={n.hid} className="entity-card" style={{ width: "100%", marginBottom: 8, textAlign: "left", borderColor: selectedElement === n.hid ? "var(--sstpa-accent)" : undefined }} onClick={() => onSelect(n.hid)}>
                 <span className="entity-hid">{n.hid}</span> <strong>{String(n.properties.Name ?? "")}</strong>
               </button>
             ))}
           </div>
         </div>
       )}
-      <p style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)", marginTop: 8 }}>
+      <p style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)", marginTop: 8 }}>
         Drag elements to arrange the diagram; use Commit Diagram to persist positions to the Backend (§6.5.12.15).
       </p>
     </div>
@@ -558,7 +558,7 @@ function DiagramNode({ node, selected }: { node: SoINode; selected: boolean }) {
   return (
     <div
       className="entity-card"
-      style={{ width: 200, textAlign: "left", borderColor: selected ? "var(--sstpa-gold)" : undefined }}
+      style={{ width: 200, textAlign: "left", borderColor: selected ? "var(--sstpa-accent)" : undefined }}
     >
       <div className="entity-card-header">
         <span className="entity-hid">{node.hid}</span>
@@ -672,7 +672,7 @@ function DetailPanel({
 
   return (
     <div style={{ width: 360, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)" }}>
-      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{selectedElement?.hid ?? useCase.hid}</div>
+      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>{selectedElement?.hid ?? useCase.hid}</div>
       <h3 style={{ margin: "4px 0 8px" }}>{String((selectedElement ?? useCase).properties.Name ?? "")}</h3>
       <button className="sstpa-button" disabled={drawerOpen} onClick={() => onOpenDrawer((selectedElement ?? useCase).hid)}>Open Drawer</button>
 
@@ -990,7 +990,7 @@ function RelationshipList({
   if (items.length === 0) return null;
   return (
     <div style={{ margin: "4px 0 6px" }}>
-      <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>{title}</div>
+      <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>{title}</div>
       {items.map((item) => (
         <div key={`${relType}-${item.hid}`} style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 3 }}>
           <button className="icon-button" onClick={() => onSelect(item.hid)}>{item.hid}</button>

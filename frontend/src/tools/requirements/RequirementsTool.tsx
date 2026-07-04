@@ -391,7 +391,7 @@ function DeleteRequirementDialog({
           become orphans: {orphaned.map((c) => c.hid).join(", ")}
         </div>
       )}
-      <p style={{ fontSize: "0.76rem", color: "var(--sstpa-navy-muted)" }}>
+      <p style={{ fontSize: "0.76rem", color: "var(--sstpa-muted)" }}>
         Cross-SoI dependents are not listed here; deletion does not cascade
         outside the current SoI (§6.5.2.13).
       </p>
@@ -441,7 +441,7 @@ function AllocationView({
       {error && <div className="sstpa-alert-error">{error}</div>}
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th style={{ padding: "4px 8px" }}>HID</th>
             <th>Name</th>
             <th>Statement</th>
@@ -935,7 +935,7 @@ function RequirementDetailPanel({
         borderLeft: "var(--sstpa-border)",
         padding: "var(--sstpa-sp-3)",
         overflow: "auto",
-        background: "var(--sstpa-ivory-raised)",
+        background: "var(--sstpa-surface)",
         fontSize: "0.8rem",
       }}
     >
@@ -964,7 +964,7 @@ function RequirementDetailPanel({
 
       <h4 style={{ margin: "12px 0 4px" }}>Parents [:PARENTS]</h4>
       {parents.length === 0 && (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           No parents within the loaded lineage window.
         </p>
       )}
@@ -1038,12 +1038,12 @@ function RequirementDetailPanel({
 
       <h4 style={{ margin: "12px 0 4px" }}>Verifications [:VERIFIED_BY]</h4>
       {verifications === null ? (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           Double-click this requirement to focus it and list its
           verifications.
         </p>
       ) : verifications.length === 0 ? (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           No verifications.
         </p>
       ) : (

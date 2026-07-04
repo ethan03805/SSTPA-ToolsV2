@@ -507,7 +507,7 @@ function NewAssetDialog({
                 ))}
               </select>
             </label>
-            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
               Created as (:DerivedAsset) with [:DERIVED_FROM]. The schema defines
               no Criticality/Assurance properties on (:DerivedAsset); Criticality
               displays inherited from the referenced PRIMARY.
@@ -768,7 +768,7 @@ function AssetTable({
               zIndex: 5,
               padding: 10,
               fontSize: "0.76rem",
-              background: "var(--sstpa-ivory-raised)",
+              background: "var(--sstpa-surface)",
             }}
           >
             {COLUMNS.map((c) => (
@@ -793,7 +793,7 @@ function AssetTable({
       </div>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th></th>
             {visibleCols.map((c) => (
               <th
@@ -897,7 +897,7 @@ function AssetTable({
           })}
           {sorted.length === 0 && (
             <tr>
-              <td colSpan={colSpan} style={{ padding: 14, color: "var(--sstpa-navy-muted)" }}>
+              <td colSpan={colSpan} style={{ padding: 14, color: "var(--sstpa-muted)" }}>
                 No Assets{search ? " matching the search" : " in this SoI yet"}.
               </td>
             </tr>
@@ -932,7 +932,7 @@ function ExpandableRow({
       </tr>
       {isOpen && (
         <tr>
-          <td colSpan={colSpan} style={{ background: "var(--sstpa-ivory-sunken)", padding: 10 }}>
+          <td colSpan={colSpan} style={{ background: "var(--sstpa-inset)", padding: 10 }}>
             {expandedContent}
           </td>
         </tr>
@@ -1050,7 +1050,7 @@ function QuickEdit({
       <div>
         <strong>Criticality</strong>
         {derived && (
-          <span style={{ color: "var(--sstpa-navy-muted)" }}>
+          <span style={{ color: "var(--sstpa-muted)" }}>
             {" "}
             (inherited from {primary ? String(primary.properties.Name ?? primary.hid) : "PRIMARY"})
           </span>
@@ -1085,7 +1085,7 @@ function QuickEdit({
           ))}
         </div>
         {derivedLabel ? (
-          <p style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)", maxWidth: 220 }}>
+          <p style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)", maxWidth: 220 }}>
             The schema defines no Assurance properties on (:DerivedAsset);
             additional Assurance is managed on the referenced PRIMARY.
           </p>
@@ -1116,7 +1116,7 @@ function QuickEdit({
                 <span className="mono" style={{ fontSize: "0.66rem" }}>
                   {l.hid}
                 </span>{" "}
-                <span style={{ fontSize: "0.64rem", color: "var(--sstpa-navy-muted)" }}>
+                <span style={{ fontSize: "0.64rem", color: "var(--sstpa-muted)" }}>
                   {c.replace("Critical", "")}/{s}
                 </span>
                 <br />
@@ -1234,7 +1234,7 @@ function AllocationPanel({
     return (
       <div style={{ minWidth: 260 }}>
         <strong>Allocation (§6.5.7.11)</strong>
-        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
           Trace relationships (HOLDS/TRANSPORTS/USES) target (:Asset); the
           schema does not authorize them to (:DerivedAsset). Allocate the
           referenced PRIMARY Asset instead.
@@ -1260,7 +1260,7 @@ function AllocationPanel({
             <span style={{ fontSize: "0.68rem" }}>
               <span className="mono">[:{e.relType}]</span> {nameOf(e.entityHid)}
               {e.stateHid && (
-                <span style={{ color: "var(--sstpa-navy-muted)" }}> @ {nameOf(e.stateHid)}</span>
+                <span style={{ color: "var(--sstpa-muted)" }}> @ {nameOf(e.stateHid)}</span>
               )}
             </span>
             <button
@@ -1283,12 +1283,12 @@ function AllocationPanel({
           </div>
         ))
       ) : (
-        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
           No current trace allocations.
         </p>
       )}
       {states.length === 0 ? (
-        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
           Trace allocation requires a State context (TraceStateHID,
           §3.3.4.6.1) — create States in the State Tool first.
         </p>
@@ -1361,7 +1361,7 @@ function AllocationPanel({
       )}
       <div style={{ marginTop: 6, fontSize: "0.7rem" }}>
         <strong>Environments</strong>{" "}
-        <span style={{ color: "var(--sstpa-navy-muted)" }}>(via Losses; Context Tool)</span>
+        <span style={{ color: "var(--sstpa-muted)" }}>(via Losses; Context Tool)</span>
         <div>
           {envs.size > 0 ? Array.from(envs).map(nameOf).join(", ") : "—"}{" "}
           <button className="icon-button" onClick={() => openTool("sstpa.context")}>
@@ -1406,10 +1406,10 @@ function RegimeView({
 
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-3)", fontSize: "0.8rem" }}>
-      <h3 style={{ fontFamily: "var(--sstpa-font-brand)" }}>Master Regimes (templates)</h3>
+      <h3 style={{ fontFamily: "var(--sstpa-font-ui)" }}>Master Regimes (templates)</h3>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th style={{ padding: "4px 6px" }}>Name</th>
             <th>Authority</th>
             <th>Standard</th>
@@ -1424,7 +1424,7 @@ function RegimeView({
           ))}
           {masters.length === 0 && (
             <tr>
-              <td colSpan={6} style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>
+              <td colSpan={6} style={{ padding: 12, color: "var(--sstpa-muted)" }}>
                 No Master Regimes yet — create one below.
               </td>
             </tr>
@@ -1432,7 +1432,7 @@ function RegimeView({
         </tbody>
       </table>
 
-      <h3 style={{ fontFamily: "var(--sstpa-font-brand)", marginTop: 18 }}>Create New Master Regime</h3>
+      <h3 style={{ fontFamily: "var(--sstpa-font-ui)", marginTop: 18 }}>Create New Master Regime</h3>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
         <label>
           Name
@@ -1485,12 +1485,12 @@ function RegimeView({
         </button>
       </div>
 
-      <h3 style={{ fontFamily: "var(--sstpa-font-brand)", marginTop: 18 }}>
+      <h3 style={{ fontFamily: "var(--sstpa-font-ui)", marginTop: 18 }}>
         Asset Regimes (cloned, editable)
       </h3>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th style={{ padding: "4px 6px" }}>HID</th>
             <th>Asset</th>
             <th>Name</th>
@@ -1506,7 +1506,7 @@ function RegimeView({
           ))}
           {clones.length === 0 && (
             <tr>
-              <td colSpan={7} style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>
+              <td colSpan={7} style={{ padding: 12, color: "var(--sstpa-muted)" }}>
                 No Asset-specific Regimes yet — clone a Master Regime above.
               </td>
             </tr>

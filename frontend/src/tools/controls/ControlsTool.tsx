@@ -635,9 +635,9 @@ export default function ControlsTool({
  *  Tailored Out, Tailor Reason, Mapped Control, Requirement Count, Status. */
 function ControlsTable({ controls, selected, onSelect }: { controls: BaselineControl[]; selected: string; onSelect: (id: string) => void }) {
   return (
-    <aside style={{ width: 560, borderRight: "var(--sstpa-border)", overflow: "auto", background: "var(--sstpa-ivory-raised)" }}>
+    <aside style={{ width: 560, borderRight: "var(--sstpa-border)", overflow: "auto", background: "var(--sstpa-surface)" }}>
       <table style={{ width: "100%", minWidth: 680, borderCollapse: "collapse", fontSize: "0.7rem" }}>
-        <thead style={{ position: "sticky", top: 0, background: "var(--sstpa-ivory-raised)", zIndex: 1 }}>
+        <thead style={{ position: "sticky", top: 0, background: "var(--sstpa-surface)", zIndex: 1 }}>
           <tr>
             <th style={thStyle}>Control ID</th>
             <th style={thStyle}>Control Name</th>
@@ -676,7 +676,7 @@ function ControlsTable({ controls, selected, onSelect }: { controls: BaselineCon
           ))}
         </tbody>
       </table>
-      {controls.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>No controls in the current view.</p>}
+      {controls.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-muted)" }}>No controls in the current view.</p>}
     </aside>
   );
 }
@@ -746,7 +746,7 @@ function CategorizationView({
         </label>
       </div>
       {errorCount > 0 && (
-        <p style={{ fontSize: "0.74rem", color: "var(--sstpa-navy-muted)", margin: "6px 0 0" }}>
+        <p style={{ fontSize: "0.74rem", color: "var(--sstpa-muted)", margin: "6px 0 0" }}>
           Promotion to BASELINED/APPROVED is blocked while {errorCount} validation error{errorCount === 1 ? "" : "s"} exist (§6.5.17.1.1 Step 8) — see the Validation view.
         </p>
       )}
@@ -785,7 +785,7 @@ function CategorizationView({
           {generating ? "Generating…" : "Generate Initial Baseline"}
         </button>
       </div>
-      <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", marginTop: 6 }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)", marginTop: 6 }}>
         Generation uses the committed C/I/A values with the NIST 800-53B allocation; CNSSI 1253 refinement pending reference bundle (deviation I-13). Generated rows are tagged Source = BASELINE.
       </p>
       {genProgress && (
@@ -819,7 +819,7 @@ function ResilienceView({ artifact, onSave }: { artifact: BaselineArtifact; onSa
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)", display: "grid", gridTemplateColumns: "minmax(280px, 420px) 1fr", gap: 16 }}>
       <div>
-        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", margin: "0 0 4px" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)", margin: "0 0 4px" }}>
           Suggestions from NIST SP 800-160 Vol. 2 Rev. 1 (App. D principles, App. E techniques and approaches).
         </p>
         <datalist id="sstpa-cref-principles">
@@ -875,12 +875,12 @@ function ResilienceView({ artifact, onSave }: { artifact: BaselineArtifact; onSa
               <span className="type-badge">{entry.RelatedControlIDs.length} controls</span>
             </div>
             <strong>{entry.ApproachName}</strong>
-            <div style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.72rem" }}>{entry.UserStrategy}</div>
+            <div style={{ color: "var(--sstpa-muted)", fontSize: "0.72rem" }}>{entry.UserStrategy}</div>
             <button className="icon-button" onClick={() => { setDraft(entry); setEditIndex(i); }}>Edit</button>
             <button className="icon-button danger" onClick={() => onSave({ ...artifact, resilience: artifact.resilience.filter((_, idx) => idx !== i) })}>Remove</button>
           </div>
         ))}
-        {artifact.resilience.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Cyber Resilience approaches recorded.</p>}
+        {artifact.resilience.length === 0 && <p style={{ color: "var(--sstpa-muted)" }}>No Cyber Resilience approaches recorded.</p>}
       </div>
     </div>
   );
@@ -920,7 +920,7 @@ function SurvivabilityView({
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)", display: "grid", gridTemplateColumns: "minmax(280px, 420px) 1fr", gap: 16 }}>
       <div>
-        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", margin: "0 0 4px" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)", margin: "0 0 4px" }}>
           Suggestions: Cyber Survivability Attributes per the CSE Implementation Guide (MTR210700R1).
         </p>
         <datalist id="sstpa-csa-ids">
@@ -962,12 +962,12 @@ function SurvivabilityView({
               <span className="type-badge">{entry.RelatedAssetHIDs.length + entry.RelatedLossHIDs.length} traces</span>
             </div>
             <strong>{entry.CSAName}</strong>
-            <div style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.72rem" }}>{entry.UserApplicabilityStatement}</div>
+            <div style={{ color: "var(--sstpa-muted)", fontSize: "0.72rem" }}>{entry.UserApplicabilityStatement}</div>
             <button className="icon-button" onClick={() => { setDraft(entry); setEditIndex(i); }}>Edit</button>
             <button className="icon-button danger" onClick={() => onSave({ ...artifact, survivability: artifact.survivability.filter((_, idx) => idx !== i) }, { SelectedCSA: JSON.stringify(artifact.survivability.filter((_, idx) => idx !== i)) })}>Remove</button>
           </div>
         ))}
-        {artifact.survivability.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Cyber Survivability Attributes recorded.</p>}
+        {artifact.survivability.length === 0 && <p style={{ color: "var(--sstpa-muted)" }}>No Cyber Survivability Attributes recorded.</p>}
       </div>
     </div>
   );
@@ -1046,7 +1046,7 @@ function ControlEditor({ artifact, selectedControl, onSave }: { artifact: Baseli
     setTailorReason(selectedControl?.TailorReason ?? "");
     setParameters(selectedControl?.ParameterValues ?? "");
   }, [selectedControl]);
-  if (!selectedControl) return <p style={{ color: "var(--sstpa-navy-muted)" }}>Select a control row.</p>;
+  if (!selectedControl) return <p style={{ color: "var(--sstpa-muted)" }}>Select a control row.</p>;
   const update = (patch: Partial<BaselineControl>) => {
     onSave({ ...artifact, controls: artifact.controls.map((c) => c.ControlID === selectedControl.ControlID ? { ...c, ...patch } : c) });
   };
@@ -1316,12 +1316,12 @@ function SummaryPanel({ baseline, artifact, findings, mappedNode, onOpenDrawer }
   const tailored = artifact.controls.filter((c) => c.TailoredOut).length;
   const errors = findings.filter((f) => f.severity === "ERROR").length;
   return (
-    <aside style={{ width: 310, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)", background: "var(--sstpa-ivory-raised)" }}>
-      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{baseline.hid}</div>
+    <aside style={{ width: 310, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)", background: "var(--sstpa-surface)" }}>
+      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>{baseline.hid}</div>
       <h3 style={{ margin: "4px 0 8px" }}>{String(baseline.properties.Name ?? "Controls Baseline")}</h3>
       <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
         <span className="type-badge">{String(baseline.properties.BaselineStatus ?? "DRAFT")}</span>
-        <span className="type-badge" style={{ background: baseline.properties.IsActive !== false ? "var(--sstpa-gold)" : "var(--sstpa-node-muted)" }}>
+        <span className="type-badge" style={{ background: baseline.properties.IsActive !== false ? "var(--sstpa-accent)" : "var(--sstpa-node-muted)" }}>
           {baseline.properties.IsActive !== false ? "ACTIVE" : "INACTIVE"}
         </span>
       </div>

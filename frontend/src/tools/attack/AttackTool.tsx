@@ -398,7 +398,7 @@ export default function AttackTool({
           style={{
             padding: "4px 12px",
             fontSize: "0.72rem",
-            background: "var(--sstpa-ivory-sunken)",
+            background: "var(--sstpa-inset)",
             borderBottom: "var(--sstpa-border-soft)",
           }}
         >
@@ -685,7 +685,7 @@ function EntityRoster({
                 margin: 6,
                 textAlign: "left",
                 cursor: "pointer",
-                borderColor: selectedEntity === e.hid ? "var(--sstpa-gold)" : undefined,
+                borderColor: selectedEntity === e.hid ? "var(--sstpa-accent)" : undefined,
               }}
               onClick={() => onSelect(e.hid)}
             >
@@ -695,14 +695,14 @@ function EntityRoster({
                 <span style={{ marginLeft: "auto", fontWeight: 700 }}>{count}</span>
               </div>
               <div style={{ fontWeight: 700, fontSize: "0.82rem", marginTop: 4 }}>{String(e.properties.Name ?? "")}</div>
-              <div style={{ fontSize: "0.68rem", color: "var(--sstpa-navy-muted)" }}>
+              <div style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)" }}>
                 {readinessLabel(e, attacks)}
               </div>
             </button>
           );
         })}
         {entities.length === 0 && (
-          <p style={{ padding: 12, color: "var(--sstpa-navy-muted)", fontSize: "0.78rem" }}>
+          <p style={{ padding: 12, color: "var(--sstpa-muted)", fontSize: "0.78rem" }}>
             No entities match the current filters.
           </p>
         )}
@@ -795,7 +795,7 @@ function EntityAttackView({
             />
           );
         })}
-        {entity && attacks.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Attacks associated to this entity via [:EXPLOITS].</p>}
+        {entity && attacks.length === 0 && <p style={{ color: "var(--sstpa-muted)" }}>No Attacks associated to this entity via [:EXPLOITS].</p>}
 
         {hazardPairs.length > 0 && (
           <>
@@ -846,7 +846,7 @@ function HierarchyView({
             onSelectAttack={onSelectAttack}
           />
         ))}
-        {attacks.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Attack nodes match the current scope.</p>}
+        {attacks.length === 0 && <p style={{ color: "var(--sstpa-muted)" }}>No Attack nodes match the current scope.</p>}
       </div>
       <div style={{ width: 260, borderLeft: "var(--sstpa-border-soft)", padding: "var(--sstpa-sp-3)" }}>
         <h3 style={{ marginTop: 0 }}>Parent</h3>
@@ -883,13 +883,13 @@ function HierarchyNode({
     <div style={{ marginLeft: depth * 18, marginBottom: 6 }}>
       <button
         className="entity-card"
-        style={{ width: 340, maxWidth: "100%", textAlign: "left", borderColor: selectedAttack === attack.hid ? "var(--sstpa-gold)" : undefined }}
+        style={{ width: 340, maxWidth: "100%", textAlign: "left", borderColor: selectedAttack === attack.hid ? "var(--sstpa-accent)" : undefined }}
         onClick={() => onSelectAttack(attack.hid)}
       >
         <div className="entity-card-header">
           <span className="entity-hid">{attack.hid}</span>
           <LevelBadge level={levelOf(attack)} />
-          {attack.properties.IsRVCandidate === true && <span className="type-badge" style={{ background: "var(--sstpa-gold)" }}>RV</span>}
+          {attack.properties.IsRVCandidate === true && <span className="type-badge" style={{ background: "var(--sstpa-accent)" }}>RV</span>}
         </div>
         <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>{String(attack.properties.Name ?? "")}</div>
       </button>
@@ -915,7 +915,7 @@ function AttackCatalog({
     <div style={{ flex: 1, overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th style={{ padding: "4px 6px" }}>HID</th>
             <th>Name</th>
             <th>Level</th>
@@ -931,7 +931,7 @@ function AttackCatalog({
               <tr
                 key={a.hid}
                 onClick={() => onSelectAttack(a.hid)}
-                style={{ cursor: "pointer", borderBottom: "1px solid var(--sstpa-line-soft)", background: selectedAttack === a.hid ? "var(--sstpa-ivory-sunken)" : undefined }}
+                style={{ cursor: "pointer", borderBottom: "1px solid var(--sstpa-line-soft)", background: selectedAttack === a.hid ? "var(--sstpa-inset)" : undefined }}
               >
                 <td className="mono" style={{ padding: "4px 6px", fontSize: "0.68rem" }}>{a.hid}</td>
                 <td>{String(a.properties.Name ?? "")}</td>
@@ -944,7 +944,7 @@ function AttackCatalog({
           })}
         </tbody>
       </table>
-      {attacks.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>No Attack nodes match the current scope.</p>}
+      {attacks.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-muted)" }}>No Attack nodes match the current scope.</p>}
     </div>
   );
 }
@@ -994,7 +994,7 @@ function AttackDetail({
   if (!attack) {
     return (
       <div style={{ width: 330, borderLeft: "var(--sstpa-border)", padding: "var(--sstpa-sp-3)" }}>
-        <p style={{ color: "var(--sstpa-navy-muted)" }}>Select an Attack.</p>
+        <p style={{ color: "var(--sstpa-muted)" }}>Select an Attack.</p>
       </div>
     );
   }
@@ -1025,7 +1025,7 @@ function AttackDetail({
 
   return (
     <div style={{ width: 330, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)" }}>
-      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{attack.hid}</div>
+      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>{attack.hid}</div>
       <h3 style={{ margin: "4px 0 8px" }}>{String(attack.properties.Name ?? "")}</h3>
       {entities.length === 0 && (
         <div className="sstpa-alert-warning" style={{ marginBottom: 8, fontSize: "0.74rem" }}>
@@ -1076,10 +1076,10 @@ function AttackDetail({
       <SmallList title="Countermeasures" values={blockers.map((c) => `${c.hid} ${String(c.properties.Name ?? "")}`)} />
       <div style={{ marginTop: 8, fontSize: "0.74rem" }}>
         <strong>Targeted Losses</strong>
-        {targeted.length === 0 && <div style={{ color: "var(--sstpa-navy-muted)" }}>— (generally applicable)</div>}
+        {targeted.length === 0 && <div style={{ color: "var(--sstpa-muted)" }}>— (generally applicable)</div>}
         {targeted.map((l) => (
           <div key={l.hid} style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            <span style={{ flex: 1, color: "var(--sstpa-navy-muted)" }}>{l.hid} {String(l.properties.Name ?? "")}</span>
+            <span style={{ flex: 1, color: "var(--sstpa-muted)" }}>{l.hid} {String(l.properties.Name ?? "")}</span>
             <button
               className="icon-button danger"
               onClick={() => onCommit([{ op: "deleteRelationship", type: "TARGETS_LOSS", sourceHid: attack.hid, targetHid: l.hid }])}
@@ -1146,7 +1146,7 @@ function MetricsEditor({
         </div>
       ))}
       {Object.keys(metrics).length === 0 && (
-        <div style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>No metric values.</div>
+        <div style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>No metric values.</div>
       )}
       <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
         <input className="sstpa-input" placeholder="Metric name" value={key} onChange={(e) => setKey(e.target.value)} />
@@ -1218,11 +1218,11 @@ function CloneReferenceDialog({
           </select>
         </div>
         <div style={{ maxHeight: 320, overflow: "auto", marginTop: 8 }}>
-          {!enabled && <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.78rem" }}>Type at least two characters to search Reference Data.</p>}
-          {enabled && search.isLoading && <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.78rem" }}>Searching…</p>}
+          {!enabled && <p style={{ color: "var(--sstpa-muted)", fontSize: "0.78rem" }}>Type at least two characters to search Reference Data.</p>}
+          {enabled && search.isLoading && <p style={{ color: "var(--sstpa-muted)", fontSize: "0.78rem" }}>Searching…</p>}
           {enabled && search.error != null && <div className="sstpa-alert-error">{errorText(search.error)}</div>}
           {enabled && !search.isLoading && results.length === 0 && !search.error && (
-            <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.78rem" }}>No matching reference items.</p>
+            <p style={{ color: "var(--sstpa-muted)", fontSize: "0.78rem" }}>No matching reference items.</p>
           )}
           {results.map((r) => (
             <button
@@ -1238,7 +1238,7 @@ function CloneReferenceDialog({
                 <LevelBadge level={levelForReference(r.labels, {})} />
               </div>
               <strong style={{ fontSize: "0.82rem" }}>{r.name}</strong>
-              <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
                 {(r.shortDescription ?? "").slice(0, 140)}
               </div>
             </button>
@@ -1339,13 +1339,13 @@ function AttackRow({
   return (
     <div
       className="entity-card"
-      style={{ width: "100%", marginBottom: 8, textAlign: "left", cursor: "pointer", borderColor: selected ? "var(--sstpa-gold)" : undefined }}
+      style={{ width: "100%", marginBottom: 8, textAlign: "left", cursor: "pointer", borderColor: selected ? "var(--sstpa-accent)" : undefined }}
       onClick={onSelect}
     >
       <div className="entity-card-header">
         <span className="entity-hid">{attack.hid}</span>
         <LevelBadge level={levelOf(attack)} />
-        {attack.properties.IsRVCandidate === true && <span className="type-badge" style={{ background: "var(--sstpa-gold)" }}>RV</span>}
+        {attack.properties.IsRVCandidate === true && <span className="type-badge" style={{ background: "var(--sstpa-accent)" }}>RV</span>}
         {!!attack.properties.ReferenceID && (
           <span className="type-badge" title={String(attack.properties.ReferenceFramework ?? "")}>
             {String(attack.properties.ReferenceID)}
@@ -1355,7 +1355,7 @@ function AttackRow({
         {actions}
       </div>
       <div style={{ fontWeight: 700, fontSize: "0.84rem", marginTop: 4 }}>{String(attack.properties.Name ?? "")}</div>
-      <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+      <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
         {attackEntities(attack, byHid).map((e) => e.hid).join(", ") || "Unassociated — cannot appear in Attack Tree"}
       </div>
     </div>
@@ -1382,7 +1382,7 @@ function SmallList({ title, values }: { title: string; values: string[] }) {
   return (
     <div style={{ marginTop: 8, fontSize: "0.74rem" }}>
       <strong>{title}</strong>
-      <div style={{ color: "var(--sstpa-navy-muted)" }}>{values.length > 0 ? values.join("; ") : "—"}</div>
+      <div style={{ color: "var(--sstpa-muted)" }}>{values.length > 0 ? values.join("; ") : "—"}</div>
     </div>
   );
 }

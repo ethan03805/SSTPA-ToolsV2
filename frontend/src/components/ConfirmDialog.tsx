@@ -4,6 +4,7 @@
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { Icon } from "./Icon";
 
 export function ConfirmDialog({
   title,
@@ -111,7 +112,9 @@ export function UnderConstructionDialog({
         role="alertdialog"
         aria-label="Under Construction"
       >
-        <h2>🚧 Under Construction</h2>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Icon name="wrench" size={17} /> Under construction
+        </h2>
         <p style={{ fontSize: "0.88rem" }}>
           {feature ? `“${feature}” is` : "This feature is"} not yet available in
           this version of SSTPA Tools.

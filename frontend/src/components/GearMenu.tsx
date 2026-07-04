@@ -108,6 +108,12 @@ function ProductDialog({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h2>SSTPA Tools</h2>
+        {/* The heritage logo's one ceremonial home (docs/DESIGN.md). */}
+        <img
+          src="/sstpa-logo-large.png"
+          alt=""
+          style={{ maxWidth: 200, display: "block", margin: "0 auto var(--sstpa-sp-3)" }}
+        />
         <p className="mono" style={{ fontSize: "0.78rem" }}>
           Version {String(p.Version ?? "—")} · Build{" "}
           {String(p.BuildNumber ?? "—")}

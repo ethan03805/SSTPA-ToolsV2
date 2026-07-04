@@ -117,8 +117,8 @@ export function ModelTextPanel({
           writingMode: "vertical-rl",
           fontFamily: "var(--sstpa-font-mono)",
           fontSize: "0.7rem",
-          color: "var(--sstpa-navy-muted)",
-          background: "var(--sstpa-ivory-raised)",
+          color: "var(--sstpa-muted)",
+          background: "var(--sstpa-surface)",
         }}
         onClick={() => {
           setCollapsed(false);

@@ -8,6 +8,7 @@ import { api } from "../api/client";
 import { useSession, useToolWindows } from "../state/stores";
 import { controlPanelTools, unavailableReason } from "../tools/manifest";
 import { shutdownApplication } from "../shutdown";
+import { Icon } from "./Icon";
 
 export function ControlPanel() {
   const { user } = useSession();
@@ -47,7 +48,7 @@ export function ControlPanel() {
             onClick={() => openTool(tool.ToolID)}
           >
             <span className="tool-icon" aria-hidden>
-              {tool.Icon}
+              <Icon name={tool.Icon} />
             </span>
             <span>{tool.ToolName.replace(" Tool", "")}</span>
           </button>
@@ -59,7 +60,7 @@ export function ControlPanel() {
         onClick={() => void shutdownApplication()}
       >
         <span className="tool-icon" aria-hidden>
-          ⏻
+          <Icon name="power" />
         </span>
         <span>Shutdown</span>
       </button>

@@ -62,7 +62,7 @@ function SortHeader({
           cursor: "pointer",
           font: "inherit",
           fontWeight: 700,
-          color: "var(--sstpa-navy)",
+          color: "var(--sstpa-text)",
           padding: "6px 10px",
           width: "100%",
           textAlign: "left",
@@ -215,7 +215,7 @@ export default function MessageCenterTool() {
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
             <thead>
-              <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+              <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
                 {columns.map((c) => (
                   <SortHeader
                     key={c.key}
@@ -257,7 +257,7 @@ export default function MessageCenterTool() {
                       style={{
                         color: unread
                           ? "var(--sstpa-status-info)"
-                          : "var(--sstpa-navy-muted)",
+                          : "var(--sstpa-muted)",
                       }}
                     >
                       {unread ? "● Unread" : "Read"}
@@ -384,7 +384,7 @@ function MessageDetail({
             <h2>{String(msg.Subject ?? "(no subject)")}</h2>
             <p
               className="mono"
-              style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}
+              style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}
             >
               {String(msg.MessageType ?? "")} · from {String(msg.Sender ?? "")} to{" "}
               {String(msg.Recipient ?? "")} ·{" "}
@@ -395,7 +395,7 @@ function MessageDetail({
                 whiteSpace: "pre-wrap",
                 fontFamily: "var(--sstpa-font-ui)",
                 fontSize: "0.85rem",
-                background: "var(--sstpa-ivory-sunken)",
+                background: "var(--sstpa-inset)",
                 padding: "var(--sstpa-sp-3)",
                 borderRadius: "var(--sstpa-radius)",
                 maxHeight: 300,

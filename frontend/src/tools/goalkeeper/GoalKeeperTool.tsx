@@ -240,7 +240,7 @@ function StructureList({
         <button
           key={s.root.hid}
           className="entity-card"
-          style={{ width: "calc(100% - 12px)", margin: 6, textAlign: "left", borderColor: selectedRoot === s.root.hid ? "var(--sstpa-gold)" : undefined }}
+          style={{ width: "calc(100% - 12px)", margin: 6, textAlign: "left", borderColor: selectedRoot === s.root.hid ? "var(--sstpa-accent)" : undefined }}
           onClick={() => onSelect(s.root.hid)}
         >
           <div className="entity-card-header">
@@ -248,13 +248,13 @@ function StructureList({
             <span className="type-badge" style={{ background: "var(--sstpa-status-info)" }}>ROOT</span>
           </div>
           <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>{String(s.root.properties.Name ?? "")}</div>
-          <div style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.68rem" }}>
+          <div style={{ color: "var(--sstpa-muted)", fontSize: "0.68rem" }}>
             {s.asset ? `${s.asset.hid} ${String(s.asset.properties.Name ?? "")}` : "No Asset"}<br />
             {s.loss ? `${s.loss.hid} ${String(s.loss.properties.Name ?? "")}` : "No paired Loss"}
           </div>
         </button>
       ))}
-      {structures.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-navy-muted)" }}>No root Goals in this SoI.</p>}
+      {structures.length === 0 && <p style={{ padding: 12, color: "var(--sstpa-muted)" }}>No root Goals in this SoI.</p>}
     </div>
   );
 }
@@ -282,7 +282,7 @@ function StructureView({
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start", minWidth: "max-content" }}>
           {byTier.map(([tier, group]) => (
             <div key={tier} style={{ width: 220 }}>
-              <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", marginBottom: 6 }}>Tier {tier}</div>
+              <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)", marginBottom: 6 }}>Tier {tier}</div>
               {group.map((n) => (
                 <button
                   key={n.hid}
@@ -291,7 +291,7 @@ function StructureView({
                     width: "100%",
                     marginBottom: 8,
                     textAlign: "left",
-                    borderColor: selectedHid === n.hid ? "var(--sstpa-gold)" : errors.has(n.hid) ? "var(--sstpa-status-error)" : undefined,
+                    borderColor: selectedHid === n.hid ? "var(--sstpa-accent)" : errors.has(n.hid) ? "var(--sstpa-status-error)" : undefined,
                     borderRadius: shapeRadius(n.typeName),
                   }}
                   onClick={() => onSelect(n.hid)}
@@ -301,7 +301,7 @@ function StructureView({
                     <GsnBadge typeName={n.typeName} />
                   </div>
                   <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>{String(n.properties.Name ?? "")}</div>
-                  <div style={{ fontSize: "0.68rem", color: "var(--sstpa-navy-muted)" }}>{statement(n).slice(0, 90)}</div>
+                  <div style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)" }}>{statement(n).slice(0, 90)}</div>
                 </button>
               ))}
             </div>
@@ -359,10 +359,10 @@ function EvidenceView({
                   <span className="type-badge" style={{ background: "var(--sstpa-status-info)" }}>{e.typeName}</span>
                   <button className="icon-button" onClick={() => onSelect(e.hid)}>{e.hid}</button>
                   <strong>{String(e.properties.Name ?? "")}</strong>
-                  <span className="mono" style={{ fontSize: "0.62rem", color: "var(--sstpa-navy-muted)" }}>{relType}</span>
+                  <span className="mono" style={{ fontSize: "0.62rem", color: "var(--sstpa-muted)" }}>{relType}</span>
                 </div>
                 {String(e.properties.ShortDescription ?? "").trim() !== "" && (
-                  <div style={{ color: "var(--sstpa-navy-muted)" }}>{String(e.properties.ShortDescription)}</div>
+                  <div style={{ color: "var(--sstpa-muted)" }}>{String(e.properties.ShortDescription)}</div>
                 )}
                 {e.typeName === "Validation" && String(e.properties.VMethod ?? "").trim() !== "" && (
                   <div>Validation method: {String(e.properties.VMethod)}</div>
@@ -380,7 +380,7 @@ function EvidenceView({
           </div>
         );
       })}
-      {solutions.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Solution nodes in this structure.</p>}
+      {solutions.length === 0 && <p style={{ color: "var(--sstpa-muted)" }}>No Solution nodes in this structure.</p>}
     </div>
   );
 }
@@ -475,7 +475,7 @@ function ExportView({
       <div style={{ padding: "var(--sstpa-sp-2) var(--sstpa-sp-3)", borderBottom: "var(--sstpa-border-soft)", display: "flex", gap: 8, alignItems: "center" }}>
         <button className="sstpa-button" onClick={() => downloadText(`sstpa-${rootHid}-gsn.md`, md, "text/markdown")}>Markdown</button>
         <button className="sstpa-button" onClick={() => downloadText(`sstpa-${rootHid}-gsn.json`, json, "application/json")}>JSON</button>
-        <span style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+        <span style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
           PNG/SVG export deferred: the structure view renders as DOM tiers, not a canvas.
         </span>
       </div>
@@ -573,7 +573,7 @@ function DetailPanel({
 
   return (
     <div style={{ width: 330, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)" }}>
-      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{node.hid}</div>
+      <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>{node.hid}</div>
       <h3 style={{ margin: "4px 0 8px" }}>{String(node.properties.Name ?? "")}</h3>
       <GsnBadge typeName={node.typeName} />
       {gsnId(node) !== "" && (
@@ -587,7 +587,7 @@ function DetailPanel({
       {/* Path-to-root display (§6.5.11.17). */}
       {rootPath.length > 1 && (
         <div style={{ marginTop: 10, fontSize: "0.7rem" }}>
-          <div style={{ color: "var(--sstpa-navy-muted)" }}>Path to root</div>
+          <div style={{ color: "var(--sstpa-muted)" }}>Path to root</div>
           {rootPath.map((hid, i) => (
             <span key={hid}>
               {i > 0 && " -> "}

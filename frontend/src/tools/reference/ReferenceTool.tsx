@@ -283,7 +283,7 @@ export default function ReferenceTool({
             cursor: "pointer",
             background:
               selected && node.item?.uuid === selected.uuid
-                ? "var(--sstpa-ivory-sunken)"
+                ? "var(--sstpa-inset)"
                 : undefined,
           }}
           onClick={() => {
@@ -312,7 +312,7 @@ export default function ReferenceTool({
               {node.item.name}
             </span>
           ) : (
-            <span style={{ color: "var(--sstpa-navy-muted)" }}>(derived)</span>
+            <span style={{ color: "var(--sstpa-muted)" }}>(derived)</span>
           )}
         </div>
         {open && hasChildren && (
@@ -352,7 +352,7 @@ export default function ReferenceTool({
           Assignment Mode
         </button>
         {mode === "assignment" && (
-          <span className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+          <span className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
             Source: {ctx.drawerNodeHid} ({sourceType}) · SoI {ctx.soiHid ?? "—"} · allowed:{" "}
             {allowedLabels?.join(", ")}
           </span>
@@ -483,7 +483,7 @@ export default function ReferenceTool({
           <div
             style={{
               fontSize: "0.68rem",
-              color: "var(--sstpa-navy-muted)",
+              color: "var(--sstpa-muted)",
               marginBottom: 4,
             }}
           >
@@ -491,7 +491,7 @@ export default function ReferenceTool({
             results; the Backend exposes no parent/child query)
           </div>
           {hierarchy.size === 0 ? (
-            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
               Search to populate the hierarchy.
             </p>
           ) : (
@@ -515,7 +515,7 @@ export default function ReferenceTool({
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
               <thead>
-                <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+                <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
                   <th style={{ padding: "4px 8px" }}>ID</th>
                   <th>Name</th>
                   <th>Type</th>
@@ -539,7 +539,7 @@ export default function ReferenceTool({
                         cursor: "pointer",
                         opacity: valid ? 1 : 0.45,
                         background:
-                          selected?.uuid === r.uuid ? "var(--sstpa-ivory-sunken)" : undefined,
+                          selected?.uuid === r.uuid ? "var(--sstpa-inset)" : undefined,
                       }}
                     >
                       <td className="mono" style={{ padding: "4px 8px", fontSize: "0.7rem" }}>
@@ -557,7 +557,7 @@ export default function ReferenceTool({
                 })}
                 {results.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ padding: 14, color: "var(--sstpa-navy-muted)" }}>
+                    <td colSpan={4} style={{ padding: 14, color: "var(--sstpa-muted)" }}>
                       Enter an ExternalID or at least two characters of text to
                       search.
                     </td>
@@ -574,22 +574,22 @@ export default function ReferenceTool({
             width: 380,
             overflow: "auto",
             padding: "var(--sstpa-sp-3)",
-            background: "var(--sstpa-ivory-raised)",
+            background: "var(--sstpa-surface)",
             fontSize: "0.8rem",
           }}
         >
-          {!selected && <p style={{ color: "var(--sstpa-navy-muted)" }}>Select a reference item.</p>}
+          {!selected && <p style={{ color: "var(--sstpa-muted)" }}>Select a reference item.</p>}
           {selected && (
             <>
               {detail.isError && (
                 <div className="sstpa-alert-error">{errorText(detail.error)}</div>
               )}
-              <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+              <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
                 {String(props.FrameworkName ?? selected.frameworkName ?? "")}{" "}
                 {String(props.FrameworkVersion ?? selected.frameworkVersion ?? "")} ·{" "}
                 {effectiveLabels.join(", ") || (detail.isFetching ? "loading…" : "—")}
               </div>
-              <h3 style={{ margin: "4px 0", fontFamily: "var(--sstpa-font-brand)" }}>
+              <h3 style={{ margin: "4px 0", fontFamily: "var(--sstpa-font-ui)" }}>
                 {String(props.ExternalID ?? selected.externalId)} —{" "}
                 {String(props.Name ?? selected.name)}
               </h3>

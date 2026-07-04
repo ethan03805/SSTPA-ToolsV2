@@ -786,7 +786,7 @@ export default function TraceTool({
         key={e.hid}
         style={{
           borderBottom: "1px solid var(--sstpa-line-soft)",
-          background: highlightEntity === e.hid ? "var(--sstpa-ivory-sunken)" : undefined,
+          background: highlightEntity === e.hid ? "var(--sstpa-inset)" : undefined,
         }}
       >
         <td
@@ -795,7 +795,7 @@ export default function TraceTool({
             cursor: "pointer",
             position: "sticky",
             left: 0,
-            background: "var(--sstpa-ivory-raised)",
+            background: "var(--sstpa-surface)",
             whiteSpace: "nowrap",
           }}
           title="Open in Data Drawer"
@@ -809,7 +809,7 @@ export default function TraceTool({
           <span
             className="type-badge"
             title={`${cur} CURRENT cell(s)${stale ? `; ${stale} SUPERSEDED/INVALIDATED relationship(s)` : ""}`}
-            style={{ background: cur > 0 ? "var(--sstpa-navy)" : "var(--sstpa-node-muted)" }}
+            style={{ background: cur > 0 ? "var(--sstpa-text)" : "var(--sstpa-node-muted)" }}
           >
             {cur}
           </span>
@@ -847,9 +847,9 @@ export default function TraceTool({
                   : invalidated
                     ? "var(--sstpa-status-error)"
                     : superseded
-                      ? "var(--sstpa-navy-muted)"
+                      ? "var(--sstpa-muted)"
                       : "var(--sstpa-line-soft)",
-                outline: isStaged ? "2px solid var(--sstpa-gold)" : undefined,
+                outline: isStaged ? "2px solid var(--sstpa-accent)" : undefined,
                 outlineOffset: -2,
                 fontStyle: isStaged ? "italic" : undefined,
                 textDecoration: superseded ? "line-through" : undefined,
@@ -1086,8 +1086,8 @@ export default function TraceTool({
           <div style={{ flex: 1, overflow: "auto" }}>
             <table style={{ borderCollapse: "collapse", fontSize: "0.74rem" }}>
               <thead>
-                <tr style={{ borderBottom: "2px solid var(--sstpa-navy)", textAlign: "left" }}>
-                  <th style={{ padding: "4px 8px", position: "sticky", left: 0, background: "var(--sstpa-ivory)" }}>
+                <tr style={{ borderBottom: "2px solid var(--sstpa-text)", textAlign: "left" }}>
+                  <th style={{ padding: "4px 8px", position: "sticky", left: 0, background: "var(--sstpa-bg)" }}>
                     Entity \ State
                   </th>
                   {visibleStates.map((s) => (
@@ -1096,7 +1096,7 @@ export default function TraceTool({
                       style={{
                         padding: "4px 8px",
                         cursor: "pointer",
-                        background: highlightState === s.hid ? "var(--sstpa-ivory-sunken)" : undefined,
+                        background: highlightState === s.hid ? "var(--sstpa-inset)" : undefined,
                       }}
                       title={`${s.hid} — click to open in Data Drawer; right-click for options`}
                       onClick={() => requestOpenDrawer({ mode: "edit", hid: s.hid })}
@@ -1114,7 +1114,7 @@ export default function TraceTool({
                         className="type-badge"
                         title={`${colCurrentCount(s.hid)} entity(ies) with a CURRENT relationship in this State`}
                         style={{
-                          background: colCurrentCount(s.hid) > 0 ? "var(--sstpa-navy)" : "var(--sstpa-node-muted)",
+                          background: colCurrentCount(s.hid) > 0 ? "var(--sstpa-text)" : "var(--sstpa-node-muted)",
                         }}
                       >
                         {colCurrentCount(s.hid)}
@@ -1134,7 +1134,7 @@ export default function TraceTool({
                           <td
                             colSpan={visibleStates.length + (showReadiness ? 2 : 1)}
                             style={{
-                              fontFamily: "var(--sstpa-font-brand)",
+                              fontFamily: "var(--sstpa-font-ui)",
                               fontWeight: 600,
                               padding: "6px 8px",
                               borderBottom: "1px solid var(--sstpa-line)",
@@ -1159,7 +1159,7 @@ export default function TraceTool({
               width: 280,
               borderLeft: "var(--sstpa-border)",
               overflow: "auto",
-              background: "var(--sstpa-ivory-raised)",
+              background: "var(--sstpa-surface)",
               padding: "var(--sstpa-sp-3)",
               fontSize: "0.78rem",
               flexShrink: 0,
@@ -1170,14 +1170,14 @@ export default function TraceTool({
               {asset?.hid}
             </div>
             <div style={{ fontWeight: 700 }}>{nodeName(asset)}</div>
-            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
               Criticality:{" "}
               {[...CRITICALITIES]
                 .filter((c) => asset?.properties[c] === true)
                 .map((c) => c.replace("Critical", ""))
                 .join(", ") || "—"}
             </div>
-            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+            <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
               Assurance: {[...ASSURANCES].filter((a) => asset?.properties[a] === true).join(", ") || "—"}
             </div>
             {selectedCell && (
@@ -1200,7 +1200,7 @@ export default function TraceTool({
                           : "none"}
                       </div>
                       {c?.current?.date && (
-                        <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+                        <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
                           TraceDate: {c.current.date}
                         </div>
                       )}
@@ -1219,7 +1219,7 @@ export default function TraceTool({
               </div>
             ))}
             {staged.size > 20 && (
-              <div style={{ fontSize: "0.64rem", color: "var(--sstpa-navy-muted)" }}>
+              <div style={{ fontSize: "0.64rem", color: "var(--sstpa-muted)" }}>
                 … and {staged.size - 20} more
               </div>
             )}
@@ -1267,7 +1267,7 @@ export default function TraceTool({
               boxShadow: "var(--sstpa-shadow-popup)",
             }}
           >
-            <div className="mono" style={{ fontSize: "0.62rem", padding: "2px 6px", color: "var(--sstpa-navy-muted)" }}>
+            <div className="mono" style={{ fontSize: "0.62rem", padding: "2px 6px", color: "var(--sstpa-muted)" }}>
               {cellMenu.entity} × {cellMenu.state}
             </div>
             {(["HOLDS", "TRANSPORTS", "USES"] as RelType[]).map((t) => (
@@ -1392,7 +1392,7 @@ export default function TraceTool({
               </span>
             </p>
           )}
-          <p style={{ fontSize: "0.76rem", color: "var(--sstpa-navy-muted)" }}>
+          <p style={{ fontSize: "0.76rem", color: "var(--sstpa-muted)" }}>
             Criticality/assurance inheritance, Connection inheritance, and protection Requirement generation
             execute server-side in the same ACID transaction (§6.5.9.6).
           </p>
@@ -1441,7 +1441,7 @@ export default function TraceTool({
               onChange={(e) => setNewEntity({ ...newEntity, desc: e.target.value })}
             />
           </label>
-          <p style={{ fontSize: "0.74rem", color: "var(--sstpa-navy-muted)" }}>
+          <p style={{ fontSize: "0.74rem", color: "var(--sstpa-muted)" }}>
             Created as a separate ACID transaction; the entity immediately joins the matrix as a{" "}
             {newEntity.kind === "State" ? "column" : "row"} (§6.5.9.11).
           </p>
@@ -1469,7 +1469,7 @@ function ValidationMode({
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-3)", fontSize: "0.8rem" }}>
       {suppressed > 0 && (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.74rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.74rem" }}>
           {suppressed} acknowledged invalidation(s) suppressed. Acknowledgments are stored locally (no
           Backend API exists yet to set AcknowledgedInvalidation on the relationship).
         </p>
@@ -1520,7 +1520,7 @@ function CriticalityReview({
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-3)", fontSize: "0.78rem" }}>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
             <th style={{ padding: "4px 8px" }}>Entity</th>
             {CRITICALITIES.map((c) => (
               <th key={c}>{c.replace("Critical", "")}</th>

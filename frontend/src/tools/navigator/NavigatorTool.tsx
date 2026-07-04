@@ -247,7 +247,7 @@ export default function NavigatorTool({
           style: {
             "background-color": token("--sstpa-node-fill"),
             "border-width": 1.6,
-            color: token("--sstpa-ink"),
+            color: token("--sstpa-text"),
             "font-family": "JetBrains Mono, monospace",
             "font-size": 9,
             "text-wrap": "wrap",
@@ -794,7 +794,7 @@ export default function NavigatorTool({
                   {displayName(t)}
                 </div>
               ))}
-              <div style={{ fontSize: "0.68rem", color: "var(--sstpa-navy-muted)", marginTop: 4 }}>
+              <div style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)", marginTop: 4 }}>
                 Double gold border = current SoI. Dashed edges = SoI content
                 relationships.
               </div>
@@ -831,7 +831,7 @@ export default function NavigatorTool({
             <button
               key={b.t}
               className="icon-button"
-              style={{ background: "var(--sstpa-ivory-raised)" }}
+              style={{ background: "var(--sstpa-surface)" }}
               title={b.t}
               onClick={b.f}
             >
@@ -848,7 +848,7 @@ export default function NavigatorTool({
             display: "flex",
             gap: 4,
             zIndex: 5,
-            background: "var(--sstpa-ivory-raised)",
+            background: "var(--sstpa-surface)",
             border: "var(--sstpa-border-soft)",
             borderRadius: 3,
             padding: 4,
@@ -882,7 +882,7 @@ export default function NavigatorTool({
                   right: 0,
                   top: "110%",
                   zIndex: 10,
-                  background: "var(--sstpa-ivory-raised)",
+                  background: "var(--sstpa-surface)",
                   minWidth: 170,
                   padding: 4,
                 }}
@@ -939,7 +939,7 @@ export default function NavigatorTool({
         }}
       >
         {!selected && (
-          <p style={{ fontSize: "0.8rem", color: "var(--sstpa-navy-muted)" }}>
+          <p style={{ fontSize: "0.8rem", color: "var(--sstpa-muted)" }}>
             Select a node on the canvas or from the search results.
           </p>
         )}
@@ -975,7 +975,7 @@ export default function NavigatorTool({
                     marginTop: 3,
                   }}
                 >
-                  <span style={{ color: "var(--sstpa-navy-muted)", width: 84 }}>
+                  <span style={{ color: "var(--sstpa-muted)", width: 84 }}>
                     {row.k}
                   </span>
                   <span className="mono" style={{ flex: 1, overflowWrap: "anywhere" }}>
@@ -991,13 +991,13 @@ export default function NavigatorTool({
                 </div>
               ))}
               {selected.shortDescription && (
-                <p style={{ fontSize: "0.75rem", color: "var(--sstpa-navy-muted)" }}>
+                <p style={{ fontSize: "0.75rem", color: "var(--sstpa-muted)" }}>
                   {selected.shortDescription}
                 </p>
               )}
               {pathToRoot.length > 1 && (
                 <div style={{ fontSize: "0.68rem", marginTop: 4 }}>
-                  <span style={{ color: "var(--sstpa-navy-muted)" }}>Path: </span>
+                  <span style={{ color: "var(--sstpa-muted)" }}>Path: </span>
                   {pathToRoot.map((h, i) => (
                     <span key={h} className="mono">
                       {i > 0 && " → "}
@@ -1040,7 +1040,7 @@ export default function NavigatorTool({
               </button>
             )}
             {mode === "soi" && selected.typeName !== "System" && (
-              <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+              <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
                 Only (:System) nodes can become the current SoI.
               </p>
             )}
@@ -1053,7 +1053,7 @@ export default function NavigatorTool({
                   <p style={{ fontSize: "0.72rem" }}>Loading SoI nodes…</p>
                 )}
                 {soiHid && !currentSoINodes.isLoading && assocPairs.length === 0 && (
-                  <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
                     No authorized relationship from a current-SoI node to this{" "}
                     {selected.typeName}.
                   </p>
@@ -1171,7 +1171,7 @@ export default function NavigatorTool({
                   )}
                 {(selected.id === clonePhase.source.id ||
                   !validParentPairs.has(selected.typeName)) && (
-                  <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
                     Select a valid destination parent on the canvas — nodes
                     that cannot own a {clonePhase.source.typeName} are dimmed.
                   </p>

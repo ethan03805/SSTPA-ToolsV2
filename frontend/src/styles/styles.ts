@@ -6,8 +6,8 @@
 export type StyleName = "default" | "nocturne";
 
 export const availableStyles: { name: StyleName; label: string }[] = [
-  { name: "default", label: "SSTPA Default (ivory)" },
-  { name: "nocturne", label: "Nocturne (dark)" },
+  { name: "default", label: "Light" },
+  { name: "nocturne", label: "Dark" },
 ];
 
 const STORAGE_KEY = "sstpa.style";

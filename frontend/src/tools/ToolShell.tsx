@@ -7,6 +7,7 @@
 
 import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType } from "react";
 import { apiBase } from "../api/client";
+import { Icon } from "../components/Icon";
 import { useDrawer, useSession, useSoI, useToolWindows } from "../state/stores";
 import { activeStyle } from "../styles/styles";
 import { manifestById, type ToolLaunchContext, type ToolManifest } from "./manifest";
@@ -141,7 +142,6 @@ function ToolWindow({ toolId }: { toolId: string }) {
         flexDirection: "column",
         boxShadow: "var(--sstpa-shadow-popup)",
         overflow: "hidden",
-        background: "var(--sstpa-ivory)",
       }}
       role="dialog"
       aria-label={manifest.ToolName}
@@ -154,7 +154,9 @@ function ToolWindow({ toolId }: { toolId: string }) {
         style={{ cursor: "move" }}
         onMouseDown={(e) => startDrag(e, "move")}
       >
-        <img src="/sstpa-menu-logo.png" alt="" style={{ height: 26 }} />
+        <span style={{ display: "flex", color: "var(--sstpa-muted)" }} aria-hidden>
+          <Icon name={manifest.Icon} size={17} />
+        </span>
         <span className="tool-shell-title">{manifest.ToolName}</span>
         <div className="tool-shell-context">
           SoI: {soiHid ?? "none"}
@@ -178,7 +180,7 @@ function ToolWindow({ toolId }: { toolId: string }) {
         <div className="tool-shell-canvas">
           <Suspense
             fallback={
-              <p style={{ padding: 20, color: "var(--sstpa-navy-muted)" }}>
+              <p style={{ padding: 20, color: "var(--sstpa-muted)" }}>
                 Loading {manifest.ToolName}…
               </p>
             }
@@ -207,8 +209,9 @@ function ToolWindow({ toolId }: { toolId: string }) {
           width: 16,
           height: 16,
           cursor: "nwse-resize",
-          borderRight: "3px solid var(--sstpa-gold-soft)",
-          borderBottom: "3px solid var(--sstpa-gold-soft)",
+          borderRight: "2px solid var(--sstpa-line)",
+          borderBottom: "2px solid var(--sstpa-line)",
+          borderBottomRightRadius: "var(--sstpa-radius-lg)",
         }}
         title="Resize"
       />

@@ -29,7 +29,7 @@ const STATUS_COLOR: Record<string, string> = {
   NOT_BUILT: "var(--sstpa-node-muted)",
   AUTO_GENERATED: "var(--sstpa-status-info)",
   ANALYST_REFINED: "var(--sstpa-status-ok)",
-  BASELINED: "var(--sstpa-gold)",
+  BASELINED: "var(--sstpa-accent)",
   EXPORTED: "#6d5a8e",
   INVALIDATED: "var(--sstpa-status-error)",
 };
@@ -225,7 +225,7 @@ export default function ContextTool({
           Loss Allocation
         </button>
         <span style={{ flex: 1 }} />
-        {busy && <span style={{ fontSize: "0.74rem", color: "var(--sstpa-navy-muted)" }}>Committing…</span>}
+        {busy && <span style={{ fontSize: "0.74rem", color: "var(--sstpa-muted)" }}>Committing…</span>}
         {warnings.length > 0 && (
           <button
             className="icon-button"
@@ -482,14 +482,14 @@ function EnvironmentDetail({
                   padding: "8px 10px",
                   cursor: "pointer",
                   borderBottom: "1px solid var(--sstpa-line-soft)",
-                  background: selectedEnv === e.hid ? "var(--sstpa-ivory-sunken)" : undefined,
+                  background: selectedEnv === e.hid ? "var(--sstpa-inset)" : undefined,
                 }}
               >
-                <div className="mono" style={{ fontSize: "0.66rem", color: "var(--sstpa-navy-muted)" }}>
+                <div className="mono" style={{ fontSize: "0.66rem", color: "var(--sstpa-muted)" }}>
                   {e.hid}
                 </div>
                 <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>{nodeName(e)}</div>
-                <div style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)" }}>
+                <div style={{ fontSize: "0.7rem", color: "var(--sstpa-muted)" }}>
                   {stateCount} states · {hazardCount} hazards · {lossCountForEnv(e)} losses assigned ·{" "}
                   {unallocatedLosses} unassigned (SoI)
                 </div>
@@ -497,7 +497,7 @@ function EnvironmentDetail({
             );
           })}
         {environments.length === 0 && (
-          <p style={{ padding: 10, fontSize: "0.78rem", color: "var(--sstpa-navy-muted)" }}>
+          <p style={{ padding: 10, fontSize: "0.78rem", color: "var(--sstpa-muted)" }}>
             No Environments yet — create one with “+”.
           </p>
         )}
@@ -505,11 +505,11 @@ function EnvironmentDetail({
 
       {/* Right: selected environment detail */}
       <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-3)", fontSize: "0.8rem" }}>
-        {!env && <p style={{ color: "var(--sstpa-navy-muted)" }}>Select or create an Environment.</p>}
+        {!env && <p style={{ color: "var(--sstpa-muted)" }}>Select or create an Environment.</p>}
         {env && (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <h3 style={{ fontFamily: "var(--sstpa-font-brand)", margin: 0 }}>
+              <h3 style={{ fontFamily: "var(--sstpa-font-ui)", margin: 0 }}>
                 {nodeName(env)}{" "}
                 <span className="mono" style={{ fontSize: "0.7rem" }}>
                   {env.hid}
@@ -530,7 +530,7 @@ function EnvironmentDetail({
             <h4 style={{ margin: "14px 0 4px" }}>State Assignments (sorted by StateSequence)</h4>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-navy)" }}>
+                <tr style={{ textAlign: "left", borderBottom: "2px solid var(--sstpa-text)" }}>
                   <th style={{ padding: "3px 6px" }}>HID</th>
                   <th>Name</th>
                   <th>Sequence</th>
@@ -586,7 +586,7 @@ function EnvironmentDetail({
 
             <h4 style={{ margin: "14px 0 4px" }}>Hazard Associations</h4>
             {envHazardRels.length === 0 && (
-              <p style={{ color: "var(--sstpa-navy-muted)", margin: "2px 0" }}>No Hazards associated.</p>
+              <p style={{ color: "var(--sstpa-muted)", margin: "2px 0" }}>No Hazards associated.</p>
             )}
             {envHazardRels.map((r) => {
               const h = byHid.get(r.targetHID);
@@ -597,7 +597,7 @@ function EnvironmentDetail({
                       {r.targetHID}
                     </span>{" "}
                     <strong>{nodeName(h)}</strong>{" "}
-                    <span style={{ color: "var(--sstpa-navy-muted)" }}>
+                    <span style={{ color: "var(--sstpa-muted)" }}>
                       {String(h?.properties.ShortDescription ?? "")}
                     </span>
                   </span>
@@ -658,7 +658,7 @@ function EnvSummaryGraph({
   const midY = height / 2;
   const trunc = (s: string, n = 26) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
   const edgeColor = (kind: "committed" | "add" | "remove") =>
-    kind === "add" ? "var(--sstpa-gold)" : kind === "remove" ? "var(--sstpa-status-error)" : "var(--sstpa-navy-muted)";
+    kind === "add" ? "var(--sstpa-accent)" : kind === "remove" ? "var(--sstpa-status-error)" : "var(--sstpa-muted)";
   const boxY = (i: number) => 22 + i * 32;
   return (
     <svg
@@ -670,13 +670,13 @@ function EnvSummaryGraph({
         maxWidth: 760,
         border: "1px solid var(--sstpa-line-soft)",
         borderRadius: 4,
-        background: "var(--sstpa-ivory)",
+        background: "var(--sstpa-bg)",
       }}
     >
-      <text x={200} y={12} style={{ fill: "var(--sstpa-navy-muted)", fontSize: 9 }}>
+      <text x={200} y={12} style={{ fill: "var(--sstpa-muted)", fontSize: 9 }}>
         [:VALID_IN]
       </text>
-      <text x={440} y={12} style={{ fill: "var(--sstpa-navy-muted)", fontSize: 9 }}>
+      <text x={440} y={12} style={{ fill: "var(--sstpa-muted)", fontSize: 9 }}>
         [:HAS_HAZARD]
       </text>
       {states.map((s, i) => (
@@ -700,7 +700,7 @@ function EnvSummaryGraph({
           y1={midY}
           x2={505}
           y2={boxY(i) + 12}
-          style={{ stroke: "var(--sstpa-navy-muted)", strokeWidth: 1.4 }}
+          style={{ stroke: "var(--sstpa-muted)", strokeWidth: 1.4 }}
         />
       ))}
       <rect
@@ -709,9 +709,9 @@ function EnvSummaryGraph({
         width={170}
         height={28}
         rx={5}
-        style={{ fill: "var(--sstpa-ivory-raised)", stroke: "var(--sstpa-navy)", strokeWidth: 1.6 }}
+        style={{ fill: "var(--sstpa-surface)", stroke: "var(--sstpa-text)", strokeWidth: 1.6 }}
       />
-      <text x={350} y={midY + 4} textAnchor="middle" style={{ fill: "var(--sstpa-navy)", fontSize: 10, fontWeight: 700 }}>
+      <text x={350} y={midY + 4} textAnchor="middle" style={{ fill: "var(--sstpa-text)", fontSize: 10, fontWeight: 700 }}>
         {trunc(envLabel, 28)}
       </text>
       {states.map((s, i) => (
@@ -722,15 +722,15 @@ function EnvSummaryGraph({
             width={170}
             height={24}
             rx={4}
-            style={{ fill: "var(--sstpa-ivory-raised)", stroke: edgeColor(s.kind), strokeWidth: 1.2 }}
+            style={{ fill: "var(--sstpa-surface)", stroke: edgeColor(s.kind), strokeWidth: 1.2 }}
           />
-          <text x={110} y={boxY(i) + 15} textAnchor="middle" style={{ fill: "var(--sstpa-navy)", fontSize: 9 }}>
+          <text x={110} y={boxY(i) + 15} textAnchor="middle" style={{ fill: "var(--sstpa-text)", fontSize: 9 }}>
             {trunc(s.label)}
           </text>
         </g>
       ))}
       {states.length === 0 && (
-        <text x={110} y={midY + 3} textAnchor="middle" style={{ fill: "var(--sstpa-navy-muted)", fontSize: 9 }}>
+        <text x={110} y={midY + 3} textAnchor="middle" style={{ fill: "var(--sstpa-muted)", fontSize: 9 }}>
           no States assigned
         </text>
       )}
@@ -742,15 +742,15 @@ function EnvSummaryGraph({
             width={170}
             height={24}
             rx={4}
-            style={{ fill: "var(--sstpa-ivory-raised)", stroke: "var(--sstpa-status-warn)", strokeWidth: 1.2 }}
+            style={{ fill: "var(--sstpa-surface)", stroke: "var(--sstpa-status-warn)", strokeWidth: 1.2 }}
           />
-          <text x={590} y={boxY(i) + 15} textAnchor="middle" style={{ fill: "var(--sstpa-navy)", fontSize: 9 }}>
+          <text x={590} y={boxY(i) + 15} textAnchor="middle" style={{ fill: "var(--sstpa-text)", fontSize: 9 }}>
             {trunc(h.label)}
           </text>
         </g>
       ))}
       {hazards.length === 0 && (
-        <text x={590} y={midY + 3} textAnchor="middle" style={{ fill: "var(--sstpa-navy-muted)", fontSize: 9 }}>
+        <text x={590} y={midY + 3} textAnchor="middle" style={{ fill: "var(--sstpa-muted)", fontSize: 9 }}>
           no Hazards associated
         </text>
       )}
@@ -780,7 +780,7 @@ function SequenceEditor({
       className="sstpa-input"
       type="number"
       min={0}
-      style={{ width: 64, outline: stagedValue !== undefined ? "2px solid var(--sstpa-gold)" : undefined }}
+      style={{ width: 64, outline: stagedValue !== undefined ? "2px solid var(--sstpa-accent)" : undefined }}
       placeholder="—"
       title={stagedValue !== undefined ? "Staged — commits with the assignment batch" : "StateSequence"}
       value={text}
@@ -942,7 +942,7 @@ function HazardTools({
             Add
           </button>
           {unassociated.length === 0 && (
-            <span style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)" }}>
               All SoI Hazards are already associated.
             </span>
           )}
@@ -981,7 +981,7 @@ function HazardTools({
             onChange={(e) => setRefText(e.target.value)}
           />
           {refSearch.isFetching && (
-            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", margin: "4px 0" }}>Searching…</p>
+            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)", margin: "4px 0" }}>Searching…</p>
           )}
           {refSearch.error != null && (
             <p className="state-error" style={{ fontSize: "0.72rem", margin: "4px 0" }}>
@@ -989,7 +989,7 @@ function HazardTools({
             </p>
           )}
           {refText.trim().length >= 2 && !refSearch.isFetching && refResults.length === 0 && !refSearch.error && (
-            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", margin: "4px 0" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--sstpa-muted)", margin: "4px 0" }}>
               No AK_Group / AK_Technique matches.
             </p>
           )}
@@ -1000,7 +1000,7 @@ function HazardTools({
                   {r.externalId}
                 </span>{" "}
                 {r.name}{" "}
-                <span style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.7rem" }}>
+                <span style={{ color: "var(--sstpa-muted)", fontSize: "0.7rem" }}>
                   ({r.labels.filter((l) => l.startsWith("AK_")).join(", ")} · {r.frameworkName})
                 </span>
               </span>
@@ -1176,7 +1176,7 @@ function StateEnvMatrix({
       </div>
       <table style={{ borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ borderBottom: "2px solid var(--sstpa-navy)", textAlign: "left" }}>
+          <tr style={{ borderBottom: "2px solid var(--sstpa-text)", textAlign: "left" }}>
             <th style={{ padding: "4px 8px" }}>State</th>
             <th>Seq</th>
             {envs.map((e) => (
@@ -1192,7 +1192,7 @@ function StateEnvMatrix({
               key={s.hid}
               style={{
                 borderBottom: "1px solid var(--sstpa-line-soft)",
-                background: focusHid === s.hid ? "var(--sstpa-ivory-sunken)" : undefined,
+                background: focusHid === s.hid ? "var(--sstpa-inset)" : undefined,
               }}
             >
               <td style={{ padding: "3px 8px" }}>
@@ -1215,7 +1215,7 @@ function StateEnvMatrix({
                     <input
                       type="checkbox"
                       checked={effective(s, e.hid)}
-                      style={op ? { outline: "2px solid var(--sstpa-gold)" } : undefined}
+                      style={op ? { outline: "2px solid var(--sstpa-accent)" } : undefined}
                       onChange={() => {
                         if (op) {
                           setStaged((x) => x.filter((o) => o !== op));
@@ -1484,13 +1484,13 @@ function LossAllocation({
               <span className="mono" style={{ fontSize: "0.66rem" }}>
                 {a.hid}
               </span>{" "}
-              <span className="type-badge" style={{ background: "var(--sstpa-navy)" }}>
+              <span className="type-badge" style={{ background: "var(--sstpa-text)" }}>
                 C: {critFlags.join("/") || "—"}
               </span>{" "}
-              <span className="type-badge" style={{ background: "var(--sstpa-navy-muted)" }}>
+              <span className="type-badge" style={{ background: "var(--sstpa-muted)" }}>
                 A: {assurFlags.join("/") || "—"}
               </span>{" "}
-              <span style={{ color: "var(--sstpa-navy-muted)" }}>
+              <span style={{ color: "var(--sstpa-muted)" }}>
                 — {total} losses / {assigned} assigned / {total - assigned} unassigned
               </span>{" "}
               <button
@@ -1526,7 +1526,7 @@ function LossAllocation({
                       key={l.hid}
                       style={{
                         borderBottom: "1px solid var(--sstpa-line-soft)",
-                        background: focusHid === l.hid ? "var(--sstpa-ivory-sunken)" : undefined,
+                        background: focusHid === l.hid ? "var(--sstpa-inset)" : undefined,
                       }}
                     >
                       <td className="mono" style={{ fontSize: "0.66rem", padding: "3px 6px" }}>
@@ -1617,7 +1617,7 @@ function LossAllocation({
           )}
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.74rem" }}>
             <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid var(--sstpa-navy)" }}>
+              <tr style={{ textAlign: "left", borderBottom: "1px solid var(--sstpa-text)" }}>
                 <th>Asset</th>
                 <th>Criticality</th>
                 <th>Assurance</th>

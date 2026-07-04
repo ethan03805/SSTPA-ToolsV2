@@ -22,7 +22,7 @@ export interface ToolManifest {
   SupportedExportFormats: string[];
   MinimumSRSVersion: string;
   ToolEntryPoint: string;
-  /** Icon glyph shown on the Control Panel button. */
+  /** Icon glyph name (components/Icon.tsx) shown on the Control Panel button. */
   Icon: string;
 }
 
@@ -62,7 +62,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/navigator",
-    Icon: "🧭",
+    Icon: "compass",
   },
   {
     ToolID: "sstpa.requirements",
@@ -93,7 +93,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG", "SVG", "SYSML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/requirements",
-    Icon: "📐",
+    Icon: "list-checks",
   },
   {
     ToolID: "sstpa.reports",
@@ -114,7 +114,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["MD", "TXT", "HTML", "PDF", "CSV"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/reports",
-    Icon: "📄",
+    Icon: "file-text",
   },
   {
     ToolID: "sstpa.reference",
@@ -138,7 +138,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: [],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/reference",
-    Icon: "📚",
+    Icon: "book",
   },
   {
     ToolID: "sstpa.state",
@@ -155,7 +155,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG", "SVG", "SYSML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/state",
-    Icon: "🔀",
+    Icon: "transition",
   },
   {
     ToolID: "sstpa.flow",
@@ -181,7 +181,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG", "SVG", "SYSML", "KERML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/flow",
-    Icon: "🌊",
+    Icon: "flow",
   },
   {
     ToolID: "sstpa.assets",
@@ -198,7 +198,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["CSV", "KERML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/assets",
-    Icon: "💎",
+    Icon: "layers",
   },
   {
     ToolID: "sstpa.context",
@@ -215,7 +215,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["CSV", "MD"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/context",
-    Icon: "🌍",
+    Icon: "globe",
   },
   {
     ToolID: "sstpa.trace",
@@ -232,7 +232,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["CSV", "MD", "JSON"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/trace",
-    Icon: "🧵",
+    Icon: "route",
   },
   {
     ToolID: "sstpa.loss",
@@ -249,7 +249,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG", "SVG", "CSV", "KERML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/loss",
-    Icon: "🌳",
+    Icon: "tree",
   },
   {
     ToolID: "sstpa.goalkeeper",
@@ -266,7 +266,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG", "SVG", "KERML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/goalkeeper",
-    Icon: "🎯",
+    Icon: "target",
   },
   {
     ToolID: "sstpa.usecase",
@@ -283,7 +283,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG", "SVG", "SYSML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/usecase",
-    Icon: "👤",
+    Icon: "user",
   },
   {
     ToolID: "sstpa.connection",
@@ -300,7 +300,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["PNG", "SYSML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/connection",
-    Icon: "🔗",
+    Icon: "link",
   },
   {
     ToolID: "sstpa.messagecenter",
@@ -317,7 +317,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: [],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/messagecenter",
-    Icon: "✉️",
+    Icon: "mail",
   },
   {
     ToolID: "sstpa.admin",
@@ -334,7 +334,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: [],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/admin",
-    Icon: "🛡️",
+    Icon: "shield",
   },
   {
     ToolID: "sstpa.attack",
@@ -355,7 +355,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["CSV", "MD", "KERML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/attack",
-    Icon: "⚔️",
+    Icon: "crosshair",
   },
   {
     ToolID: "sstpa.controls",
@@ -376,7 +376,7 @@ export const toolManifests: ToolManifest[] = [
     SupportedExportFormats: ["CSV", "KERML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/controls",
-    Icon: "🎛️",
+    Icon: "sliders",
   },
 ];
 

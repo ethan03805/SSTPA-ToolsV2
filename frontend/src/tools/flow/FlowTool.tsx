@@ -802,7 +802,7 @@ export default function FlowTool({
               width: 300,
               borderLeft: "var(--sstpa-border)",
               overflow: "auto",
-              background: "var(--sstpa-ivory-raised)",
+              background: "var(--sstpa-surface)",
               padding: "var(--sstpa-sp-3)",
               fontSize: "0.8rem",
             }}
@@ -834,7 +834,7 @@ export default function FlowTool({
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>
                   {String(selNode.properties.Name ?? "")}
                 </div>
-                <div style={{ color: "var(--sstpa-navy-muted)" }}>{selNode.typeName}</div>
+                <div style={{ color: "var(--sstpa-muted)" }}>{selNode.typeName}</div>
                 <p>{String(selNode.properties.ShortDescription ?? "").replace("null", "")}</p>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
                   {REQUIREMENT_SOURCES.includes(selNode.typeName) && (
@@ -890,7 +890,7 @@ export default function FlowTool({
                   ))}
               </>
             ) : (
-              <p style={{ color: "var(--sstpa-navy-muted)" }}>
+              <p style={{ color: "var(--sstpa-muted)" }}>
                 Select a node or relationship. Drag nodes to arrange; positions
                 and flow membership persist to {layoutProp} on Commit layout.
               </p>
@@ -1021,7 +1021,7 @@ function EdgePanel({
         {nameOf(edge.sourceHid)} → {nameOf(edge.targetHid)}
       </div>
       {edge.projected && (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.72rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.72rem" }}>
           Feedback relationship projected onto cast Functions/Interfaces
           (§6.5.6.9); endpoints are the underlying STPA role nodes.
         </p>
@@ -1085,7 +1085,7 @@ function EdgePanel({
           </button>
         </>
       ) : (
-        <p style={{ color: "var(--sstpa-navy-muted)", fontSize: "0.72rem" }}>
+        <p style={{ color: "var(--sstpa-muted)", fontSize: "0.72rem" }}>
           Flow-nature properties are edited on Functional Flow relationships.
         </p>
       )}

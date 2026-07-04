@@ -287,7 +287,7 @@ export default function ReportsTool({
               whiteSpace: "pre-wrap",
               fontFamily: "var(--sstpa-font-mono)",
               fontSize: "0.78rem",
-              background: "var(--sstpa-ivory-raised)",
+              background: "var(--sstpa-surface)",
               border: "var(--sstpa-border-soft)",
               borderRadius: 4,
               padding: "var(--sstpa-sp-4)",
@@ -296,7 +296,7 @@ export default function ReportsTool({
             {generated}
           </pre>
         ) : (
-          <p style={{ color: "var(--sstpa-navy-muted)" }}>
+          <p style={{ color: "var(--sstpa-muted)" }}>
             Choose a report and press Generate.
           </p>
         )}

@@ -10,6 +10,8 @@ import type { SoINode } from "../api/types";
 import { useDrawer, useSoI } from "../state/stores";
 import { NodeTypeBadge, nodeTypeColor } from "./NodeTypeBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { Icon } from "./Icon";
+import { Mark } from "./Mark";
 
 /** Primary section order per SRS §6.3.4.2. SecurityControl/Countermeasure
  *  disclose through the Security section's relationship groups (§6.3.4.2);
@@ -93,18 +95,23 @@ export function MainPanel() {
           style={{
             padding: "var(--sstpa-sp-8)",
             textAlign: "center",
-            color: "var(--sstpa-navy-muted)",
+            color: "var(--sstpa-muted)",
           }}
         >
-          <img
-            src="/sstpa-logo-large.png"
-            alt=""
-            style={{ maxWidth: 260, opacity: 0.85 }}
-          />
-          <p style={{ fontFamily: "var(--sstpa-font-brand)", fontSize: "1.2rem" }}>
+          <div style={{ color: "var(--sstpa-node-muted)" }} aria-hidden>
+            <Mark size={40} />
+          </div>
+          <p
+            style={{
+              fontSize: "1rem",
+              fontWeight: 600,
+              color: "var(--sstpa-text)",
+              margin: "var(--sstpa-sp-3) 0 4px",
+            }}
+          >
             Select a System of Interest to begin
           </p>
-          <p style={{ fontSize: "0.85rem" }}>
+          <p style={{ fontSize: "0.85rem", margin: 0 }}>
             Use the Navigator Tool or the System of Interest Panel above.
           </p>
         </div>
@@ -115,7 +122,7 @@ export function MainPanel() {
   if (soiQuery.isLoading) {
     return (
       <main className="main-panel">
-        <p style={{ color: "var(--sstpa-navy-muted)" }}>Loading SoI…</p>
+        <p style={{ color: "var(--sstpa-muted)" }}>Loading SoI…</p>
       </main>
     );
   }
@@ -225,7 +232,7 @@ function NodeTypeSection({
       {open && (
         <div className="node-section-body">
           {nodes.length === 0 && (
-            <span style={{ fontSize: "0.8rem", color: "var(--sstpa-navy-muted)" }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--sstpa-muted)" }}>
               No {title} nodes in this SoI.
             </span>
           )}
@@ -339,14 +346,14 @@ export function EntityCard({
             title="Edit in Data Drawer"
             onClick={() => requestOpenDrawer({ mode: "edit", hid: node.hid })}
           >
-            ✎
+            <Icon name="pencil" size={14} />
           </button>
           <button
             className="icon-button danger"
             title="Delete node"
             onClick={() => setConfirmDelete(true)}
           >
-            🗑
+            <Icon name="trash" size={14} />
           </button>
         </div>
       </div>
@@ -356,7 +363,7 @@ export function EntityCard({
           {relGroups.size === 0 && (
             <div
               className="rel-group"
-              style={{ fontSize: "0.78rem", color: "var(--sstpa-navy-muted)" }}
+              style={{ fontSize: "0.78rem", color: "var(--sstpa-muted)" }}
             >
               No outgoing relationships.
             </div>
@@ -618,7 +625,7 @@ function RelationshipGroup({
                     style={{ padding: "4px 10px", fontSize: "0.78rem" }}
                   >
                     <span className="entity-hid">{targetHid}</span>{" "}
-                    <span style={{ color: "var(--sstpa-navy-muted)" }}>
+                    <span style={{ color: "var(--sstpa-muted)" }}>
                       (outside this SoI)
                     </span>
                   </div>

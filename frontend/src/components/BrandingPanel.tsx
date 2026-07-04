@@ -10,6 +10,8 @@ import { useState } from "react";
 import { toolManifests, unavailableReason } from "../tools/manifest";
 import { APP_VERSION } from "../version";
 import { GearMenu } from "./GearMenu";
+import { Icon } from "./Icon";
+import { Mark } from "./Mark";
 
 export function BrandingPanel() {
   const { user, connected, backendInfo } = useSession();
@@ -39,13 +41,11 @@ export function BrandingPanel() {
 
   return (
     <header className="branding-panel sstpa-panel">
-      <img
-        src="/sstpa-menu-logo.png"
-        alt="SSTPA Tools logo"
-        style={{ height: 42 }}
-      />
-      <div style={{ flex: 1, textAlign: "center" }}>
-        <span className="branding-title">SSTPA Tools</span>{" "}
+      <span style={{ display: "flex", color: "var(--sstpa-text-strong)" }} aria-hidden>
+        <Mark size={22} />
+      </span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, flex: 1 }}>
+        <span className="branding-title">SSTPA Tools</span>
         <span
           className="branding-version"
           title={`GUI v${APP_VERSION} · Backend v${backendInfo?.version ?? "—"} · Schema v${backendInfo?.schemaVersion ?? "—"}`}
@@ -53,10 +53,12 @@ export function BrandingPanel() {
           v{APP_VERSION}
         </span>
       </div>
-      <div className={`branding-status ${connected ? "" : "disconnected"}`}>
+      <div
+        className={`branding-status ${connected ? "" : "disconnected"}`}
+        title={connected ? "Backend connected" : "Backend disconnected"}
+      >
+        <span className="status-dot" aria-hidden />
         {backendHost}
-        <br />
-        {connected ? "CONNECTED" : "DISCONNECTED"}
       </div>
       <div
         style={{
@@ -65,7 +67,7 @@ export function BrandingPanel() {
           gap: "var(--sstpa-sp-2)",
         }}
       >
-        <span style={{ fontWeight: 600, color: "var(--sstpa-navy)" }}>
+        <span style={{ fontWeight: 600, color: "var(--sstpa-text)" }}>
           {user?.userName ?? ""}
         </span>
         {brandingTools.map((tool) => {
@@ -82,9 +84,9 @@ export function BrandingPanel() {
               title={reason ?? tool.ToolName}
               disabled={reason !== null}
               onClick={() => openTool(tool.ToolID)}
-              style={{ position: "relative", fontSize: "1rem" }}
+              style={{ position: "relative" }}
             >
-              {tool.Icon}
+              <Icon name={tool.Icon} size={17} />
               {isMessages && (unread.data?.unread ?? 0) > 0 && (
                 <span
                   style={{
@@ -111,9 +113,8 @@ export function BrandingPanel() {
             className="icon-button"
             title="Settings, style, license and version information"
             onClick={() => setGearOpen((v) => !v)}
-            style={{ fontSize: "1rem" }}
           >
-            ⚙️
+            <Icon name="gear" size={17} />
           </button>
           {gearOpen && <GearMenu onClose={() => setGearOpen(false)} />}
         </div>

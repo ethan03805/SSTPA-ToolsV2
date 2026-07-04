@@ -311,7 +311,7 @@ function DrawerContent() {
       </div>
 
       <div className="drawer-footer">
-        <span style={{ fontSize: "0.75rem", color: "var(--sstpa-navy-muted)" }}>
+        <span style={{ fontSize: "0.75rem", color: "var(--sstpa-muted)" }}>
           {Object.keys(drawer.staged).length} property change(s),{" "}
           {drawer.stagedRelAdds.length} association(s),{" "}
           {drawer.stagedRelDeletes.length} removal(s) staged
@@ -621,7 +621,7 @@ function DrawerRelationships({
       <div className="prop-group-header">Relationships</div>
       <div className="prop-group-body">
         {groups.size === 0 && (
-          <span style={{ fontSize: "0.8rem", color: "var(--sstpa-navy-muted)" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--sstpa-muted)" }}>
             No outgoing relationships yet — use Add or Associate below.
           </span>
         )}
