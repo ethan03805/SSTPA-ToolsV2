@@ -16,13 +16,23 @@ export function ControlPanel() {
   const capability = useQuery({
     queryKey: ["capability"],
     queryFn: api.capability,
-    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10000,
+    retry: false,
   });
   const backendCaps = capability.data?.capabilities ?? [];
 
+  // Admin-permission tools are HIDDEN (not disabled) from non-admin users
+  // (SRS §6.5.15.3 "SHALL NOT be displayed to users with UserRole = USER").
+  const visibleTools = controlPanelTools().filter(
+    (t) =>
+      !t.RequiredPermissions.includes("admin") ||
+      (user?.isAdmin ?? false) ||
+      (user?.isRootAdmin ?? false),
+  );
+
   return (
     <nav className="control-panel sstpa-panel">
-      {controlPanelTools().map((tool) => {
+      {visibleTools.map((tool) => {
         const reason = unavailableReason(
           tool,
           backendCaps,

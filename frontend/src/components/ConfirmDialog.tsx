@@ -1,7 +1,9 @@
-// Alert/confirm dialog (SRS §6.3.4.8, §6.3.5).
+// Alert/confirm dialog (SRS §6.3.4.8, §6.3.5). Keyboard accessible: Escape
+// cancels, focus starts on Cancel for danger dialogs (destructive default is
+// never focused) and on Confirm otherwise, and Tab is trapped inside.
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 export function ConfirmDialog({
   title,
@@ -9,6 +11,7 @@ export function ConfirmDialog({
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   danger = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: {
@@ -17,15 +20,48 @@ export function ConfirmDialog({
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
+  confirmDisabled?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    (danger ? cancelRef : confirmRef).current?.focus();
+    return () => previous?.focus?.();
+  }, [danger]);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      onCancel();
+    } else if (e.key === "Tab") {
+      // Two-stop focus trap between Cancel and Confirm.
+      const stops = [cancelRef.current, confirmRef.current].filter(
+        (b): b is HTMLButtonElement => !!b && !b.disabled,
+      );
+      if (stops.length < 2) return;
+      const idx = stops.indexOf(document.activeElement as HTMLButtonElement);
+      e.preventDefault();
+      stops[(idx + (e.shiftKey ? stops.length - 1 : 1)) % stops.length].focus();
+    }
+  };
+
   return (
-    <div className="sstpa-dialog-overlay" onClick={onCancel}>
+    <div
+      className="sstpa-dialog-overlay"
+      onClick={danger ? undefined : onCancel}
+      onKeyDown={onKeyDown}
+    >
       <div
+        ref={dialogRef}
         className="sstpa-frame sstpa-dialog"
         onClick={(e) => e.stopPropagation()}
         role="alertdialog"
+        aria-modal="true"
         aria-label={title}
       >
         <h2>{title}</h2>
@@ -38,11 +74,17 @@ export function ConfirmDialog({
             marginTop: "var(--sstpa-sp-4)",
           }}
         >
-          <button className="sstpa-button secondary" onClick={onCancel}>
+          <button
+            ref={cancelRef}
+            className="sstpa-button secondary"
+            onClick={onCancel}
+          >
             {cancelLabel}
           </button>
           <button
+            ref={confirmRef}
             className={`sstpa-button ${danger ? "danger" : ""}`}
+            disabled={confirmDisabled}
             onClick={onConfirm}
           >
             {confirmLabel}

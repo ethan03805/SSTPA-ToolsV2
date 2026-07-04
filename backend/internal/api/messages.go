@@ -26,7 +26,7 @@ func (s *Server) handleListMessages(w http.ResponseWriter, r *http.Request) {
 	sortField := map[string]string{
 		"subject":  "m.Subject",
 		"datetime": "m.SentAt",
-		"hid":      "m.RelatedNodeHIDs",
+		"hid":      "coalesce(m.RelatedNodeHIDs[0], '')",
 		"sender":   "m.Sender",
 	}[strings.ToLower(r.URL.Query().Get("sort"))]
 	if sortField == "" {
@@ -47,8 +47,11 @@ func (s *Server) handleListMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := s.db.Read(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
+		// Deletion is per-user: a message a user removed from their own list
+		// (DeletedBy) stays visible to the other party (SRS §6.5.14.11).
 		rec, err := tx.Run(r.Context(), `
 			MATCH (m:Message) WHERE `+where+` AND coalesce(m.IsDeleted, false) = false
+			  AND NOT $user IN coalesce(m.DeletedBy, [])
 			RETURN m.MessageID AS messageId, m.Subject AS subject, toString(m.SentAt) AS sentAt,
 			       m.RelatedNodeHIDs AS relatedNodeHids, m.Sender AS sender,
 			       m.Recipient AS recipient, m.MessageType AS messageType, m.IsRead AS isRead
@@ -237,21 +240,43 @@ func (s *Server) handleMarkRead(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-// handleDeleteMessage soft-deletes (IsDeleted, DeletedAt). Admins may delete
-// any message (§3.2); users only their own.
+// handleDeleteMessage removes a message from the CURRENT user's list only
+// (per-user soft delete via DeletedBy; SRS §6.5.14.11) — the other party
+// still sees it. Admins may purge a message globally with ?purge=true (§3.2).
 func (s *Server) handleDeleteMessage(w http.ResponseWriter, r *http.Request) {
 	user, _ := CurrentUser(r.Context())
 	id := chi.URLParam(r, "messageId")
-	where := "(m.Recipient = $user OR m.Sender = $user)"
-	if user.IsAdmin {
-		where = "1=1"
+	purge := r.URL.Query().Get("purge") == "true" && user.IsAdmin
+
+	var err error
+	if purge {
+		_, err = s.db.Write(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
+			return tx.Run(r.Context(), `
+				MATCH (m:Message {MessageID: $id})
+				SET m.IsDeleted = true, m.DeletedAt = datetime(), m.DeletedByAdmin = $user`,
+				map[string]any{"id": id, "user": user.UserName})
+		})
+	} else {
+		_, err = s.db.Write(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
+			rec, e := tx.Run(r.Context(), `
+				MATCH (m:Message {MessageID: $id})
+				WHERE m.Recipient = $user OR m.Sender = $user
+				SET m.DeletedBy = [x IN coalesce(m.DeletedBy, []) WHERE x <> $user] + $user
+				RETURN count(m) AS n`,
+				map[string]any{"id": id, "user": user.UserName})
+			if e != nil {
+				return nil, e
+			}
+			single, e := rec.Single(r.Context())
+			if e != nil {
+				return nil, e
+			}
+			if n, _ := single.AsMap()["n"].(int64); n == 0 {
+				return nil, &constError{"message not found or not yours"}
+			}
+			return nil, nil
+		})
 	}
-	_, err := s.db.Write(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
-		return tx.Run(r.Context(), `
-			MATCH (m:Message {MessageID: $id}) WHERE `+where+`
-			SET m.IsDeleted = true, m.DeletedAt = datetime()`,
-			map[string]any{"id": id, "user": user.UserName})
-	})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "delete failed", err.Error())
 		return
@@ -266,6 +291,7 @@ func (s *Server) handleUnreadCount(w http.ResponseWriter, r *http.Request) {
 		rec, err := tx.Run(r.Context(), `
 			MATCH (m:Message) WHERE m.Recipient = $user
 			  AND coalesce(m.IsRead, false) = false AND coalesce(m.IsDeleted, false) = false
+			  AND NOT $user IN coalesce(m.DeletedBy, [])
 			RETURN count(m) AS unread`,
 			map[string]any{"user": user.UserName})
 		if err != nil {

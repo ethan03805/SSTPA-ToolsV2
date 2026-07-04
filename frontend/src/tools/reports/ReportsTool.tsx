@@ -1,15 +1,18 @@
 // Reports Tool (SRS §6.5.3): general text-based reports — System Description,
 // System Specification, Requirement-Traceability Gap Analysis, Controls List.
-// Output as plain text, Markdown, or HTML (Word-compatible / print-to-PDF);
+// Output as plain text, Markdown, HTML (Word-compatible / print-to-PDF), and
+// CSV for the Controls List; optional G2M model-text appendix (§6.5.3.9);
 // see docs/REQUIREMENTS-NOTES.md I-11.
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { api } from "../../api/client";
+import { api, apiBase } from "../../api/client";
 import type { SoINode } from "../../api/types";
 import { displayName } from "../../components/NodeTypeBadge";
+import { useSession } from "../../state/stores";
 import type { ToolLaunchContext, ToolManifest } from "../manifest";
+import { downloadText, errorText, ToolStatus } from "../shared";
 
 type ReportKind =
   | "system-description"
@@ -38,6 +41,22 @@ const SECTION_ORDER = [
   "Countermeasure",
 ];
 
+interface Notice {
+  kind: "success" | "error" | "warning";
+  text: string;
+}
+
+const NOTICE_CLASS: Record<Notice["kind"], string> = {
+  success: "sstpa-alert-success",
+  error: "sstpa-alert-error",
+  warning: "sstpa-alert-warning",
+};
+
+function tokenHeader(): Record<string, string> {
+  const token = useSession.getState().token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export default function ReportsTool({
   ctx,
 }: {
@@ -46,8 +65,10 @@ export default function ReportsTool({
 }) {
   const [kind, setKind] = useState<ReportKind>("system-description");
   const [generated, setGenerated] = useState<string | null>(null); // markdown
+  const [generatedKind, setGeneratedKind] = useState<ReportKind | null>(null);
+  const [appendModelText, setAppendModelText] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
   const soi = useQuery({
     queryKey: ["soi", ctx.soiHid],
@@ -59,9 +80,12 @@ export default function ReportsTool({
   const byHid = useMemo(() => new Map(nodes.map((n) => [n.hid, n])), [nodes]);
 
   const generate = async () => {
-    if (!ctx.soiHid) return;
+    // Generation is guarded until the SoI query has resolved so reports never
+    // run against a partial node set.
+    if (!ctx.soiHid || !soi.data) return;
     setBusy(true);
     setNotice(null);
+    const warnings: string[] = [];
     try {
       let md: string;
       switch (kind) {
@@ -71,19 +95,52 @@ export default function ReportsTool({
         case "system-specification":
           md = systemSpecification(ctx.soiHid, nodes, byHid);
           break;
-        case "gap-analysis":
-          md = await gapAnalysis(ctx, nodes, byHid);
+        case "gap-analysis": {
+          const res = await gapAnalysis(ctx, nodes, byHid);
+          md = res.md;
+          warnings.push(...res.warnings);
           break;
+        }
         case "controls-list":
           md = controlsList(ctx.soiHid, nodes, byHid);
           break;
       }
+      // Optional model-text appendix (§6.5.3.9) for the two report kinds
+      // that embed it.
+      if (
+        appendModelText &&
+        (kind === "system-description" || kind === "system-specification")
+      ) {
+        for (const lang of ["sysml", "kerml"] as const) {
+          try {
+            const text = await fetchModelText(lang, ctx.soiHid);
+            md +=
+              `\n---\n\n## Appendix: G2M ${lang === "sysml" ? "SysML 2.0" : "KerML 1.0"} Model Text\n\n` +
+              `Profile: G2M (SRS §3.7). Read-only translation of the report scope.\n\n` +
+              "```\n" +
+              text +
+              "\n```\n";
+          } catch (e) {
+            warnings.push(
+              `Model text appendix (${lang.toUpperCase()}) unavailable: ${errorText(e)}`,
+            );
+          }
+        }
+      }
       setGenerated(md);
-      if (kind === "gap-analysis") {
-        setNotice("Orphan and Barren properties were computed and committed by this report (SRS §6.5.3.8).");
+      setGeneratedKind(kind);
+      if (warnings.length > 0) {
+        setNotice({ kind: "warning", text: warnings.join(" · ") });
+      } else if (kind === "gap-analysis") {
+        setNotice({
+          kind: "success",
+          text: "Report generated; Orphan and Barren properties were computed and committed (SRS §6.5.3.8).",
+        });
+      } else {
+        setNotice({ kind: "success", text: "Report generated." });
       }
     } catch (e) {
-      setNotice(String(e));
+      setNotice({ kind: "error", text: errorText(e) });
     } finally {
       setBusy(false);
     }
@@ -94,28 +151,63 @@ export default function ReportsTool({
     let content = generated;
     let mime = "text/markdown";
     if (format === "txt") {
-      content = generated.replace(/^#+\s*/gm, "").replace(/\*\*/g, "");
+      content = generated
+        .replace(/^```.*$/gm, "")
+        .replace(/^#+\s*/gm, "")
+        .replace(/\*\*/g, "");
       mime = "text/plain";
     } else if (format === "html") {
       content = mdToHtml(generated);
       mime = "text/html";
     }
-    const blob = new Blob([content], { type: mime });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `sstpa-${kind}-${ctx.soiHid}.${format}`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    downloadText(`sstpa-${generatedKind ?? kind}-${ctx.soiHid}.${format}`, content, mime);
+  };
+
+  const downloadCsv = () => {
+    if (generatedKind !== "controls-list") return;
+    downloadText(
+      `sstpa-controls-list-${ctx.soiHid}.csv`,
+      controlsCsv(nodes, byHid),
+      "text/csv",
+    );
   };
 
   const printPdf = () => {
     if (!generated) return;
+    const html = mdToHtml(generated);
     const win = window.open("", "_blank");
-    if (!win) return;
-    win.document.write(mdToHtml(generated));
+    if (!win) {
+      // Popup blocked — fall back to an HTML download the user can print.
+      downloadText(`sstpa-${generatedKind ?? kind}-${ctx.soiHid}.html`, html, "text/html");
+      setNotice({
+        kind: "warning",
+        text: "Popup blocked by the browser — the HTML report was downloaded instead; open it and print to PDF.",
+      });
+      return;
+    }
+    win.document.write(html);
     win.document.close();
     win.print();
   };
+
+  if (!ctx.soiHid) {
+    return (
+      <div className="tool-shell" style={{ height: "100%" }}>
+        <ToolStatus needsSoI />
+      </div>
+    );
+  }
+  if (soi.isLoading || soi.isError) {
+    return (
+      <div className="tool-shell" style={{ height: "100%" }}>
+        <ToolStatus
+          loading={soi.isLoading}
+          error={soi.isError ? soi.error : undefined}
+          onRetry={() => void soi.refetch()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="tool-shell" style={{ height: "100%" }}>
@@ -126,6 +218,7 @@ export default function ReportsTool({
           alignItems: "center",
           padding: "var(--sstpa-sp-2) var(--sstpa-sp-3)",
           borderBottom: "var(--sstpa-border-soft)",
+          flexWrap: "wrap",
         }}
       >
         <select
@@ -140,7 +233,21 @@ export default function ReportsTool({
             </option>
           ))}
         </select>
-        <button className="sstpa-button" disabled={!ctx.soiHid || busy} onClick={() => void generate()}>
+        {(kind === "system-description" || kind === "system-specification") && (
+          <label style={{ fontSize: "0.74rem" }} title="Embed the G2M SysML 2.0 / KerML 1.0 text for the report scope (§6.5.3.9)">
+            <input
+              type="checkbox"
+              checked={appendModelText}
+              onChange={(e) => setAppendModelText(e.target.checked)}
+            />{" "}
+            Model text appendix
+          </label>
+        )}
+        <button
+          className="sstpa-button"
+          disabled={!soi.data || busy}
+          onClick={() => void generate()}
+        >
           {busy ? "Generating…" : "Generate"}
         </button>
         <span style={{ flex: 1 }} />
@@ -153,17 +260,27 @@ export default function ReportsTool({
         <button className="icon-button" disabled={!generated} onClick={() => download("html")}>
           HTML (Word)
         </button>
+        <button
+          className="icon-button"
+          disabled={generatedKind !== "controls-list"}
+          title="Comma-separated controls list (generate the Controls List report first)"
+          onClick={downloadCsv}
+        >
+          CSV
+        </button>
         <button className="icon-button" disabled={!generated} onClick={printPdf}>
           Print / PDF
         </button>
       </div>
       {notice && (
-        <div className="sstpa-alert-warning" style={{ margin: "6px 12px" }}>
-          {notice}
+        <div className={NOTICE_CLASS[notice.kind]} style={{ margin: "6px 12px" }}>
+          {notice.text}{" "}
+          <button className="icon-button" onClick={() => setNotice(null)}>
+            ✕
+          </button>
         </div>
       )}
       <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)" }}>
-        {!ctx.soiHid && <p>Select a System of Interest first.</p>}
         {generated ? (
           <pre
             style={{
@@ -186,6 +303,17 @@ export default function ReportsTool({
       </div>
     </div>
   );
+}
+
+/** Fetch G2M model text for the SoI (§6.5.3.9), same endpoint contract as the
+ *  Model Text Panel. */
+async function fetchModelText(lang: "sysml" | "kerml", soiHid: string): Promise<string> {
+  const res = await fetch(
+    `${apiBase()}/api/model/${lang}?scope=SOI&soi=${encodeURIComponent(soiHid)}`,
+    { headers: tokenHeader() },
+  );
+  if (!res.ok) throw new Error(`translator unavailable (${res.status})`);
+  return res.text();
 }
 
 function prop(n: SoINode | undefined, key: string): string {
@@ -272,79 +400,160 @@ function systemSpecification(
   return md;
 }
 
+interface GapRow {
+  hid: string;
+  uuid: string;
+  name: string;
+  baseline: string;
+  orphan: boolean;
+  barren: boolean;
+}
+
+interface BackendReqRecord {
+  hid: string;
+  uuid: string;
+  name: string;
+  bearers: { hid: string; name: string; typeName: string }[];
+  parents: string[] | null;
+  childCount: number;
+  verificationCount: number;
+}
+
 /** Gap Analysis (§6.5.3.8): identifies problematic requirements; computes and
- *  COMMITS Orphan/Barren per the §6.5.3.8 definitions (see note I-10). */
+ *  COMMITS Orphan/Barren per the §6.5.3.8 definitions (see note I-10).
+ *
+ *  Parentage is evaluated against the Backend requirements endpoint, whose
+ *  [:PARENTS] query is graph-wide, so cross-SoI parents (§6.5.2.6) do not
+ *  produce false orphans. If the endpoint is unavailable the analysis falls
+ *  back to SoI-local data and says so in the report. */
 async function gapAnalysis(
   ctx: ToolLaunchContext,
   nodes: SoINode[],
   byHid: Map<string, SoINode>,
-): Promise<string> {
-  const requirements = nodes.filter((n) => n.typeName === "Requirement");
+): Promise<{ md: string; warnings: string[] }> {
+  const warnings: string[] = [];
+  let rows: GapRow[];
+  let crossSoIEvaluated = true;
 
-  // Incoming HAS_REQUIREMENT sources and PARENTS per requirement.
-  const incomingBearers = new Map<string, string[]>();
-  const hasParent = new Map<string, boolean>();
-  const hasChild = new Map<string, boolean>();
-  for (const n of nodes) {
-    for (const r of n.relationships ?? []) {
-      if (r.type === "HAS_REQUIREMENT" && byHid.get(r.targetHID)?.typeName === "Requirement") {
-        incomingBearers.set(r.targetHID, [
-          ...(incomingBearers.get(r.targetHID) ?? []),
-          n.typeName,
-        ]);
-      }
-      if (r.type === "PARENTS" && n.typeName === "Requirement") {
-        hasChild.set(n.hid, true);
-        hasParent.set(r.targetHID, true);
+  const soiIndex = ctx.soiHid ? ctx.soiHid.split("_")[1] ?? "" : "";
+  try {
+    const res = await fetch(
+      `${apiBase()}/api/requirements/soi/${encodeURIComponent(soiIndex)}`,
+      { headers: tokenHeader() },
+    );
+    if (!res.ok) throw new Error(`requirements query failed (${res.status})`);
+    const data = (await res.json()) as { requirements: BackendReqRecord[] | null };
+    rows = (data.requirements ?? []).map((r) => {
+      const nonPurpose = r.bearers.filter((b) => b.typeName !== "Purpose");
+      return {
+        hid: r.hid,
+        uuid: r.uuid,
+        name: r.name,
+        baseline: prop(byHid.get(r.hid), "Baseline"),
+        // §6.5.3.8 Orphan: no parent (:Requirement) — graph-wide parents.
+        orphan: (r.parents ?? []).length === 0,
+        // §6.5.3.8 Barren: no child, or no non-(:Purpose) [:HAS_REQUIREMENT].
+        barren: r.childCount === 0 || nonPurpose.length === 0,
+      };
+    });
+  } catch (e) {
+    crossSoIEvaluated = false;
+    warnings.push(
+      `Backend requirements endpoint unavailable (${errorText(e)}) — analysis fell back to SoI-local relationships.`,
+    );
+    const requirements = nodes.filter((n) => n.typeName === "Requirement");
+    const incomingBearers = new Map<string, string[]>();
+    const hasParent = new Map<string, boolean>();
+    const hasChild = new Map<string, boolean>();
+    for (const n of nodes) {
+      for (const r of n.relationships ?? []) {
+        if (r.type === "HAS_REQUIREMENT" && byHid.get(r.targetHID)?.typeName === "Requirement") {
+          incomingBearers.set(r.targetHID, [
+            ...(incomingBearers.get(r.targetHID) ?? []),
+            n.typeName,
+          ]);
+        }
+        if (r.type === "PARENTS" && n.typeName === "Requirement") {
+          hasChild.set(n.hid, true);
+          hasParent.set(r.targetHID, true);
+        }
       }
     }
-  }
-
-  const rows = requirements.map((rq) => {
-    const bearers = incomingBearers.get(rq.hid) ?? [];
-    const nonPurpose = bearers.filter((b) => b !== "Purpose");
-    const orphan = !hasParent.get(rq.hid); // §6.5.3.8: no parent Requirement
-    const barren = !hasChild.get(rq.hid) || nonPurpose.length === 0; // §6.5.3.8
-    return { rq, orphan, barren, baseline: prop(rq, "Baseline") };
-  });
-
-  // Persist the computed flags (report generation SHALL set them, §6.5.3.8).
-  const ops = rows
-    .filter(
-      ({ rq, orphan, barren }) =>
-        rq.properties.Orphan !== orphan || rq.properties.Barren !== barren,
-    )
-    .map(({ rq, orphan, barren }) => ({
-      op: "updateNode" as const,
-      hid: rq.hid,
-      properties: { Orphan: orphan, Barren: barren },
-    }));
-  if (ops.length > 0) {
-    await api.commit({
-      soiHid: ctx.soiHid ?? undefined,
-      toolId: "sstpa.reports",
-      operations: ops,
+    rows = requirements.map((rq) => {
+      const bearers = incomingBearers.get(rq.hid) ?? [];
+      const nonPurpose = bearers.filter((b) => b !== "Purpose");
+      return {
+        hid: rq.hid,
+        uuid: rq.uuid,
+        name: prop(rq, "Name"),
+        baseline: prop(rq, "Baseline"),
+        orphan: !hasParent.get(rq.hid),
+        barren: !hasChild.get(rq.hid) || nonPurpose.length === 0,
+      };
     });
   }
 
+  // Persist the computed flags (report generation SHALL set them, §6.5.3.8).
+  const ops = rows
+    .filter((row) => {
+      const node = byHid.get(row.hid);
+      return (
+        node &&
+        (node.properties.Orphan !== row.orphan || node.properties.Barren !== row.barren)
+      );
+    })
+    .map((row) => ({
+      op: "updateNode" as const,
+      hid: row.hid,
+      properties: { Orphan: row.orphan, Barren: row.barren },
+    }));
+  if (ops.length > 0) {
+    try {
+      await api.commit({
+        soiHid: ctx.soiHid ?? undefined,
+        toolId: "sstpa.reports",
+        operations: ops,
+      });
+    } catch (e) {
+      warnings.push(`Orphan/Barren flags could not be persisted: ${errorText(e)}`);
+    }
+  }
+
   let md = header(ctx.soiHid!, "Requirement-Traceability Gap Analysis", byHid);
+  if (!crossSoIEvaluated) {
+    md +=
+      "> **Note:** cross-SoI parentage was not evaluated (Backend requirements endpoint unavailable); requirements with parents in another SoI may be flagged as false orphans.\n\n";
+  }
   const problems = rows.filter((r) => r.orphan || r.barren);
   md += `**${problems.length} of ${rows.length} requirements need remediation.**\n\n`;
   md += "| UUID | HID | Baseline | Orphan | Barren | Remediation |\n";
   md += "|---|---|---|---|---|---|\n";
-  for (const { rq, orphan, barren, baseline } of rows) {
+  for (const { hid, uuid, baseline, orphan, barren } of rows) {
     if (!orphan && !barren) continue;
     const fixes = [];
     if (orphan) fixes.push("re-parent or remove");
     if (barren) fixes.push("allocate to Interface/Function/Element or add child");
-    md += `| \`${rq.uuid}\` | ${rq.hid} | ${baseline || "—"} | ${orphan} | ${barren} | ${fixes.join("; ")} |\n`;
+    md += `| \`${uuid}\` | ${hid} | ${baseline || "—"} | ${orphan} | ${barren} | ${fixes.join("; ")} |\n`;
   }
   md += "\n## Compliant requirements\n\n";
-  for (const { rq, orphan, barren } of rows) {
+  for (const { hid, uuid, name, orphan, barren } of rows) {
     if (orphan || barren) continue;
-    md += `- \`${rq.uuid}\` ${rq.hid} ${prop(rq, "Name")}\n`;
+    md += `- \`${uuid}\` ${hid} ${name}\n`;
   }
-  return md;
+  return { md, warnings };
+}
+
+/** Satisfying (:Countermeasure) HIDs per (:SecurityControl). */
+function satisfiesMap(nodes: SoINode[]): Map<string, string[]> {
+  const satisfies = new Map<string, string[]>();
+  for (const cm of nodes.filter((n) => n.typeName === "Countermeasure")) {
+    for (const r of cm.relationships ?? []) {
+      if (r.type === "SATISFIES") {
+        satisfies.set(r.targetHID, [...(satisfies.get(r.targetHID) ?? []), cm.hid]);
+      }
+    }
+  }
+  return satisfies;
 }
 
 /** Controls List: (:SecurityControl) nodes with satisfying countermeasures. */
@@ -355,14 +564,7 @@ function controlsList(
 ): string {
   let md = header(soiHid, "Controls List", byHid);
   const controls = nodes.filter((n) => n.typeName === "SecurityControl");
-  const satisfies = new Map<string, string[]>();
-  for (const cm of nodes.filter((n) => n.typeName === "Countermeasure")) {
-    for (const r of cm.relationships ?? []) {
-      if (r.type === "SATISFIES") {
-        satisfies.set(r.targetHID, [...(satisfies.get(r.targetHID) ?? []), cm.hid]);
-      }
-    }
-  }
+  const satisfies = satisfiesMap(nodes);
   md += `**${controls.length} control(s) in this SoI.**\n\n`;
   for (const c of controls) {
     md += `## ${c.hid} — ${prop(c, "Name")}\n\n`;
@@ -378,6 +580,38 @@ function controlsList(
   return md;
 }
 
+/** Controls List CSV export (manifest SupportedExportFormats includes CSV). */
+function controlsCsv(nodes: SoINode[], byHid: Map<string, SoINode>): string {
+  const esc = (s: string) => `"${s.replaceAll('"', '""')}"`;
+  const satisfies = satisfiesMap(nodes);
+  const lines = [
+    [
+      "HID",
+      "Name",
+      "ReferenceID",
+      "ReferenceFramework",
+      "ShortDescription",
+      "SatisfiedBy",
+    ].join(","),
+  ];
+  for (const c of nodes.filter((n) => n.typeName === "SecurityControl")) {
+    const cms = (satisfies.get(c.hid) ?? [])
+      .map((h) => `${h} (${prop(byHid.get(h), "Name")})`)
+      .join("; ");
+    lines.push(
+      [
+        esc(c.hid),
+        esc(prop(c, "Name")),
+        esc(prop(c, "ReferenceID")),
+        esc(prop(c, "ReferenceFramework")),
+        esc(prop(c, "ShortDescription") || prop(c, "LongDescription")),
+        esc(cms),
+      ].join(","),
+    );
+  }
+  return lines.join("\r\n") + "\r\n";
+}
+
 /** Minimal Markdown → HTML for Word/print output. */
 function mdToHtml(md: string): string {
   const esc = (s: string) =>
@@ -386,7 +620,18 @@ function mdToHtml(md: string): string {
   let html = "";
   let inTable = false;
   let inList = false;
+  let inPre = false;
   for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      // Fenced code blocks (model text appendix) render monospace (§6.5.3.9).
+      html += inPre ? "</pre>" : "<pre>";
+      inPre = !inPre;
+      continue;
+    }
+    if (inPre) {
+      html += esc(line) + "\n";
+      continue;
+    }
     if (line.startsWith("|")) {
       const cells = line.split("|").slice(1, -1).map((c) => c.trim());
       if (cells.every((c) => /^-+$/.test(c))) continue;
@@ -428,9 +673,11 @@ function mdToHtml(md: string): string {
   }
   if (inTable) html += "</table>";
   if (inList) html += "</ul>";
+  if (inPre) html += "</pre>";
   return `<!doctype html><html><head><meta charset="utf-8"><title>SSTPA Report</title>
 <style>body{font-family:Georgia,serif;color:#1b2a4a;max-width:900px;margin:2em auto;line-height:1.5}
 table{border-collapse:collapse;font-size:0.9em}th{background:#f0ece0}
+pre{font-family:monospace;background:#f4f1e8;padding:1em;overflow-x:auto;font-size:0.85em}
 code{font-family:monospace;background:#f4f1e8;padding:0 3px}</style></head><body>${html}</body></html>`;
 
   function inline(s: string): string {

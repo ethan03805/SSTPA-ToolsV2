@@ -35,6 +35,9 @@ export interface ToolLaunchContext {
   soiUuid: string | null;
   drawerNodeHid: string | null;
   drawerNodeUuid: string | null;
+  /** Node another tool asked this tool to focus (cross-tool navigation). */
+  focusHid: string | null;
+  focusType: string | null;
   launchMode: "CONTROL_PANEL" | "DATA_DRAWER";
   backendBaseUrl: string;
   editAuthorized: boolean;
@@ -100,11 +103,15 @@ export const toolManifests: ToolManifest[] = [
     ModelTextLanguages: ["SYSML", "KERML"],
     LaunchLocation: ["CONTROL_PANEL"],
     SupportedNodeContexts: ["*"],
-    RequiredBackendCapabilities: ["soi.read", "hierarchy.read"],
+    RequiredBackendCapabilities: [
+      "soi.read",
+      "hierarchy.read",
+      "graph.mutate.transactional", // gap analysis persists Orphan/Barren (§6.5.3.8)
+    ],
     RequiredPermissions: [],
-    MutatesData: false,
+    MutatesData: true,
     ChangesCurrentSoI: false,
-    SupportedExportFormats: ["HTML", "CSV"],
+    SupportedExportFormats: ["MD", "TXT", "HTML", "PDF", "CSV"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/reports",
     Icon: "📄",
@@ -205,7 +212,7 @@ export const toolManifests: ToolManifest[] = [
     RequiredPermissions: [],
     MutatesData: true,
     ChangesCurrentSoI: false,
-    SupportedExportFormats: ["PNG", "CSV"],
+    SupportedExportFormats: ["CSV", "MD"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/context",
     Icon: "🌍",
@@ -222,7 +229,7 @@ export const toolManifests: ToolManifest[] = [
     RequiredPermissions: [],
     MutatesData: true,
     ChangesCurrentSoI: false,
-    SupportedExportFormats: ["CSV", "KERML"],
+    SupportedExportFormats: ["CSV", "MD", "JSON"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/trace",
     Icon: "🧵",
@@ -345,7 +352,7 @@ export const toolManifests: ToolManifest[] = [
     RequiredPermissions: [],
     MutatesData: true,
     ChangesCurrentSoI: false,
-    SupportedExportFormats: ["PNG", "KERML"],
+    SupportedExportFormats: ["CSV", "MD", "KERML"],
     MinimumSRSVersion: "0.7",
     ToolEntryPoint: "tools/attack",
     Icon: "⚔️",

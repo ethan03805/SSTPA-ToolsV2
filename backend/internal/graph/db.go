@@ -88,19 +88,33 @@ func (db *DB) Write(ctx context.Context, fn func(tx neo4j.ManagedTransaction) (a
 	return res, nil
 }
 
-// EnsureIndexes creates the indexes required by SRS §3.3.8.2.1 and the
-// uniqueness supports used by the identity model.
+// EnsureIndexes creates the indexes required by SRS §3.3.8.2.1 and enforces
+// the identity model's uniqueness guarantees (HID, uuid, UserName) with
+// database constraints so concurrent commits cannot mint duplicate identities
+// (SRS §3.3.8, §5.6.6.1 concurrent access).
 func (db *DB) EnsureIndexes(ctx context.Context) error {
+	// Plain indexes on HID/uuid/UserName from earlier releases must be dropped
+	// before the equivalent uniqueness constraints can be created.
+	drops := []string{
+		"DROP INDEX node_hid_index IF EXISTS",
+		"DROP INDEX node_uuid_index IF EXISTS",
+		"DROP INDEX user_name_index IF EXISTS",
+	}
 	stmts := []string{
-		"CREATE INDEX node_hid_index IF NOT EXISTS FOR (n:SSTPA) ON (n.HID)",
-		"CREATE INDEX node_uuid_index IF NOT EXISTS FOR (n:SSTPA) ON (n.uuid)",
+		"CREATE CONSTRAINT node_hid_unique IF NOT EXISTS FOR (n:SSTPA) REQUIRE n.HID IS UNIQUE",
+		"CREATE CONSTRAINT node_uuid_unique IF NOT EXISTS FOR (n:SSTPA) REQUIRE n.uuid IS UNIQUE",
+		"CREATE CONSTRAINT user_name_unique IF NOT EXISTS FOR (n:User) REQUIRE n.UserName IS UNIQUE",
 		"CREATE INDEX node_name_index IF NOT EXISTS FOR (n:SSTPA) ON (n.Name)",
 		"CREATE INDEX node_type_index IF NOT EXISTS FOR (n:SSTPA) ON (n.TypeName)",
 		"CREATE INDEX ref_external_id_index IF NOT EXISTS FOR (n:REF) ON (n.ExternalID)",
-		"CREATE INDEX user_name_index IF NOT EXISTS FOR (n:User) ON (n.UserName)",
 	}
 	session := db.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
+	for _, s := range drops {
+		if _, err := session.Run(ctx, s, nil); err != nil {
+			return fmt.Errorf("drop superseded index %q: %w", s, err)
+		}
+	}
 	for _, s := range stmts {
 		if _, err := session.Run(ctx, s, nil); err != nil {
 			return fmt.Errorf("ensure index %q: %w", s, err)

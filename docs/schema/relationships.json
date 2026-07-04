@@ -3019,6 +3019,20 @@
    "srsLine": 1245
   },
   {
+   "type": "SUPPORTED_BY",
+   "source": "GsnStrategy",
+   "target": "GsnGoal",
+   "srsSection": "6.5.11.7",
+   "srsLine": 12581
+  },
+  {
+   "type": "SUPPORTED_BY",
+   "source": "GsnStrategy",
+   "target": "GsnSolution",
+   "srsSection": "6.5.11.7",
+   "srsLine": 12582
+  },
+  {
    "type": "IN_CONTEXT_OF",
    "source": "GsnGoal",
    "target": "GsnContext",
@@ -3234,7 +3248,7 @@
      "A (:UseCase) MAY involve zero or more (:Interface) nodes via [:INVOLVES].",
      "(:SystemFunction) and (:Interface) nodes associated to a (:UseCase) SHALL belong to the same SoI as the owning (:Purpose).",
      "[:INCLUDES] (UseCase-to-Function participation) SHALL NOT be confused with the SysML 2.0 include-use-case relationship between Use Cases; the inter-UseCase include is modeled by [:INCLUDES_UC] and translates to a SysML 2.0 IncludeUseCaseUsage (keyword: include use case).",
-     "SysML 2.0 does not define a use-case extend relationship. [:EXTENDS] is an SSTPA modeling relationship. It SHALL translate to a SysML 2.0 use case specialization annotated with the SSTPA Profile metadata keyword #extend, carrying ExtensionPoint as a metadata attribute (Section 3.7.6). The \u00abextend\u00bb adornment used in diagrams is an SSTPA display convention, not a SysML 2.0 notation.",
+     "SysML 2.0 does not define a use-case extend relationship. [:EXTENDS] is an SSTPA modeling relationship. It SHALL translate to a SysML 2.0 use case specialization annotated with the SSTPA Profile metadata keyword #extend, carrying ExtensionPoint as a metadata attribute (Section 3.7.6). The «extend» adornment used in diagrams is an SSTPA display convention, not a SysML 2.0 notation.",
      "[:EXTENDS] and [:INCLUDES_UC] SHALL form a DAG; cycles are prohibited.",
      "Requirements SHALL NOT be related directly to (:UseCase).  All (:Requirement) nodes derived from Use Case analysis SHALL be owned by the (:SystemFunction) or (:Interface) participating in the (:UseCase) via [:HAS_REQUIREMENT].",
      "(:Requirement)-[:PARENTS]->(:Requirement) SHALL form a Directed Acyclic Graph.",
@@ -3275,7 +3289,7 @@
      "Hazard and Attack SHALL remain separate node types.",
      "[:EXPLOITS] SHALL relate an (:Attack) to the (:Component), (:Interface), or (:SystemFunction) it acts upon. An (:Attack) SHALL have at least one [:EXPLOITS] relationship before it can appear in an Attack Tree.",
      "[:SUBORDINATE_TO] models the hierarchical relationship between a general Attack (Strategy or Tactic level) and a more specific Attack (Procedure level). A subordinate (:Attack) represents a concrete implementation of its parent Attack. The [:SUBORDINATE_TO] relationship SHALL be acyclic (see Section 3.3.6).",
-     "A subordinate (:Attack) MAY itself have subordinate (:Attack) children, allowing a three-level hierarchy: Strategy \u2192 Tactic \u2192 Procedure, consistent with the MITRE ATT&CK framework levels.",
+     "A subordinate (:Attack) MAY itself have subordinate (:Attack) children, allowing a three-level hierarchy: Strategy → Tactic → Procedure, consistent with the MITRE ATT&CK framework levels.",
      "[:TARGETS_LOSS] records the analytical scoping of an (:Attack) to a specific (:Loss) context. It is optional and used when a User creates an Attack that is relevant only to a specific Loss scenario rather than generally applicable. An (:Attack) without [:TARGETS_LOSS] is considered generally applicable to all relevant entity-Asset combinations in the SoI.",
      "[:DEFEATS] models an Attack that overcomes a specific (:Countermeasure). (:Attack)-[:DEFEATS]->(:Countermeasure) is the semantic inverse of (:Countermeasure)-[:BLOCKS]->(:Attack). Both SHALL exist independently; neither replaces the other."
     ]
@@ -3352,8 +3366,8 @@
    "(:Countermeasure)-[:APPLIES_TO_FUNCTION]->(:SystemFunction)",
    "(:Countermeasure)-[:APPLIES_TO_INTERFACE]->(:Interface)",
    "(:Countermeasure)-[:APPLIES_TO_ELEMENT]->(:Component)",
-   "(:State)-[:VALID_IN]->(:Environment) \u2014 both nodes SHALL belong to the same SoI",
-   "(any)-[:AT_RELATES_TO]->(any) \u2014 all Attack Tree relationships SHALL be scoped to the SoI of the owning (:Loss); the LossHID property SHALL match a (:Loss) node belonging to the same SoI as all participating entity nodes",
+   "(:State)-[:VALID_IN]->(:Environment) — both nodes SHALL belong to the same SoI",
+   "(any)-[:AT_RELATES_TO]->(any) — all Attack Tree relationships SHALL be scoped to the SoI of the owning (:Loss); the LossHID property SHALL match a (:Loss) node belonging to the same SoI as all participating entity nodes",
    "(:Purpose)-[:HAS_USECASE]->(:UseCase)",
    "(:UseCase)-[:INCLUDES]->(:SystemFunction)",
    "(:UseCase)-[:INVOLVES]->(:Interface)"

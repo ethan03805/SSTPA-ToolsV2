@@ -1,11 +1,17 @@
 // Gear menu (SRS §6.3.1, §3.1): style selection, product/license info,
-// hover-help access, example-data reset.
+// example-data reset.
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api/client";
 import { useUnderConstruction } from "../state/stores";
+import {
+  activeStyle,
+  applyStyle,
+  availableStyles,
+  type StyleName,
+} from "../styles/styles";
 
 export function GearMenu({ onClose }: { onClose: () => void }) {
   const [showProduct, setShowProduct] = useState(false);

@@ -233,12 +233,17 @@ fi
 rm -rf "${PACKAGE_DIR}"
 mkdir -p "${PACKAGE_DIR}/payload" "${PACKAGE_DIR}/manifests"
 
+# deploy/.env and docker-compose.override.yml are LOCAL files (dev
+# credentials / Neo4j host exposure) and must never ship in a package;
+# install.sh / install.ps1 generate a fresh .env with random passwords.
 tar \
   --exclude='.git' \
   --exclude='frontend/node_modules' \
   --exclude='frontend/dist' \
   --exclude='frontend/src-tauri/target' \
   --exclude='startup/src-tauri/target' \
+  --exclude='deploy/.env' \
+  --exclude='deploy/docker-compose.override.yml' \
   --exclude='deploy/neo4j/import' \
   --exclude='installer/out' \
   --exclude='sustainment/.venv' \
@@ -247,29 +252,44 @@ tar \
   --exclude='sustainment/graph' \
   --exclude='sustainment/validation' \
   --exclude='sustainment/artifacts' \
+  --exclude='sustainment/logs' \
   -C "${ROOT_DIR}" \
   -cf - \
   README.md NOTICE "SSTPA Tool SRS V7.md" FloorPlan.md Assets backend deploy docs frontend startup sustainment installer/README.md \
   | tar -C "${PACKAGE_DIR}/payload" -xf -
 
-if [[ "${FRONTEND_BUNDLE_STATUS}" == "bundle" && -d "${ROOT_DIR}/frontend/src-tauri/target/release/bundle" ]]; then
-  mkdir -p "${PACKAGE_DIR}/payload/bundles/frontend"
-  tar -C "${ROOT_DIR}/frontend/src-tauri/target/release/bundle" -cf - . | tar -C "${PACKAGE_DIR}/payload/bundles/frontend" -xf -
-elif [[ "${FRONTEND_BUNDLE_STATUS}" != "skipped" && -x "${ROOT_DIR}/frontend/src-tauri/target/release/sstpa-tools-gui" ]]; then
-  mkdir -p "${PACKAGE_DIR}/payload/bundles/frontend/bin"
-  cp "${ROOT_DIR}/frontend/src-tauri/target/release/sstpa-tools-gui" "${PACKAGE_DIR}/payload/bundles/frontend/bin/"
-fi
+# The raw release binaries are ALWAYS staged under bundles/*/bin when they
+# exist — the Startup Software's frontend discovery and the documented
+# launch path rely on that layout regardless of native-bundle success.
+stage_app_binaries() {
+  local app="$1" bin_name="$2" target_dir="$3"
 
-if [[ "${STARTUP_BUNDLE_STATUS}" == "bundle" && -d "${ROOT_DIR}/startup/src-tauri/target/release/bundle" ]]; then
-  mkdir -p "${PACKAGE_DIR}/payload/bundles/startup"
-  tar -C "${ROOT_DIR}/startup/src-tauri/target/release/bundle" -cf - . | tar -C "${PACKAGE_DIR}/payload/bundles/startup" -xf -
-elif [[ "${STARTUP_BUNDLE_STATUS}" != "skipped" && -x "${ROOT_DIR}/startup/src-tauri/target/release/sstpa-startup" ]]; then
-  mkdir -p "${PACKAGE_DIR}/payload/bundles/startup/bin"
-  cp "${ROOT_DIR}/startup/src-tauri/target/release/sstpa-startup" "${PACKAGE_DIR}/payload/bundles/startup/bin/"
+  if [[ -x "${ROOT_DIR}/${app}/src-tauri/target/release/${bin_name}" ]]; then
+    mkdir -p "${PACKAGE_DIR}/payload/bundles/${target_dir}/bin"
+    cp "${ROOT_DIR}/${app}/src-tauri/target/release/${bin_name}" \
+       "${PACKAGE_DIR}/payload/bundles/${target_dir}/bin/"
+  fi
+  if [[ -d "${ROOT_DIR}/${app}/src-tauri/target/release/bundle" ]]; then
+    mkdir -p "${PACKAGE_DIR}/payload/bundles/${target_dir}"
+    tar -C "${ROOT_DIR}/${app}/src-tauri/target/release/bundle" -cf - . \
+      | tar -C "${PACKAGE_DIR}/payload/bundles/${target_dir}" -xf -
+  fi
+}
+
+if [[ "${FRONTEND_BUNDLE_STATUS}" != "skipped" ]]; then
+  stage_app_binaries frontend sstpa-tools-gui frontend
+fi
+if [[ "${STARTUP_BUNDLE_STATUS}" != "skipped" ]]; then
+  stage_app_binaries startup sstpa-startup startup
 fi
 
 install -m 0755 "${ROOT_DIR}/installer/templates/install.sh" "${PACKAGE_DIR}/install.sh"
 install -m 0644 "${ROOT_DIR}/installer/templates/install.ps1" "${PACKAGE_DIR}/install.ps1"
+install -m 0755 "${ROOT_DIR}/installer/templates/uninstall.sh" "${PACKAGE_DIR}/uninstall.sh"
+install -m 0644 "${ROOT_DIR}/installer/templates/uninstall.ps1" "${PACKAGE_DIR}/uninstall.ps1"
+install -m 0755 "${ROOT_DIR}/installer/templates/trust-ca.sh" "${PACKAGE_DIR}/trust-ca.sh"
+install -m 0644 "${ROOT_DIR}/installer/templates/trust-ca.ps1" "${PACKAGE_DIR}/trust-ca.ps1"
+install -m 0644 "${ROOT_DIR}/installer/templates/load-reference-data.ps1" "${PACKAGE_DIR}/load-reference-data.ps1"
 
 if [[ "${SAVE_IMAGES}" -eq 1 ]]; then
   "${ROOT_DIR}/installer/scripts/save-images.sh" --out "${PACKAGE_DIR}/payload/images"

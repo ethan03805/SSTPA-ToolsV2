@@ -11,10 +11,30 @@ fn request_shutdown(app: tauri::AppHandle) {
     app.exit(0);
 }
 
+/// Launch configuration handed over by the Startup Software (SRS §4): the
+/// backend base URL and the already-authenticated session, so the user does
+/// not sign in twice.
+#[derive(serde::Serialize)]
+struct LaunchConfig {
+    backend_url: Option<String>,
+    token: Option<String>,
+    user_name: Option<String>,
+}
+
+#[tauri::command]
+fn launch_config() -> LaunchConfig {
+    let read = |k: &str| std::env::var(k).ok().filter(|v| !v.is_empty());
+    LaunchConfig {
+        backend_url: read("SSTPA_BACKEND_URL"),
+        token: read("SSTPA_SESSION_TOKEN"),
+        user_name: read("SSTPA_USER_NAME"),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![request_shutdown])
+        .invoke_handler(tauri::generate_handler![request_shutdown, launch_config])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(

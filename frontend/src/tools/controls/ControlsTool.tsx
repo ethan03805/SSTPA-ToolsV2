@@ -1,17 +1,26 @@
-// Controls Tool (SRS 6.5.17): SoI controls baseline categorization,
-// tailoring, control mapping, requirement/countermeasure development, and export.
+// Controls Tool (SRS 6.5.17): SoI controls baseline categorization, initial
+// baseline generation (§6.5.17.6), tailoring, control mapping, requirement/
+// countermeasure development, and export.
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import type { CommitOperation, ReferenceSearchResult, SoINode } from "../../api/types";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useDrawer } from "../../state/stores";
+import { downloadText, errorText, ToolStatus, usePrompt } from "../shared";
 import type { ToolLaunchContext, ToolManifest } from "../manifest";
 
 type Mode = "categorization" | "resilience" | "survivability" | "baseline" | "mapping" | "validation" | "export";
 type Impact = "NONE" | "LOW" | "MODERATE" | "HIGH";
 type BaselineStatus = "DRAFT" | "REVIEWED" | "BASELINED" | "APPROVED";
+type NoticeKind = "success" | "warning" | "error";
+
+interface Notice {
+  kind: NoticeKind;
+  text: string;
+}
 
 interface Finding {
   severity: "ERROR" | "WARNING";
@@ -81,6 +90,116 @@ const IMPACTS: Impact[] = ["NONE", "LOW", "MODERATE", "HIGH"];
 const STATUSES: BaselineStatus[] = ["DRAFT", "REVIEWED", "BASELINED", "APPROVED"];
 const SOURCES = ["CNSSI1253", "Overlay", "CSA", "CyberResilience", "UserAdded"];
 
+// Cyber Resilience suggestion lists from NIST SP 800-160 Vol. 2 Rev. 1
+// (App. D design principles, App. E techniques and approaches). The SRS
+// (§6.5.17.7/8) provides no enumerations of its own, and the framework
+// defines no numeric identifiers, so names are used as identifiers.
+const CREF_STRATEGIC_PRINCIPLES = [
+  "Focus on common critical assets",
+  "Support agility and architect for adaptability",
+  "Reduce attack surfaces",
+  "Assume compromised resources",
+  "Expect adversaries to evolve",
+];
+const CREF_STRUCTURAL_PRINCIPLES = [
+  "Limit the need for trust",
+  "Control visibility and use",
+  "Contain and exclude behaviors",
+  "Layer defenses and partition resources",
+  "Plan and manage diversity",
+  "Maintain redundancy",
+  "Make resources location-versatile",
+  "Leverage health and status data",
+  "Maintain situational awareness",
+  "Manage resources (risk-)adaptively",
+  "Maximize transience",
+  "Determine ongoing trustworthiness",
+  "Change or disrupt the attack surface",
+  "Make the effects of deception and unpredictability user-transparent",
+];
+const CREF_TECHNIQUES = [
+  "Adaptive Response",
+  "Analytic Monitoring",
+  "Contextual Awareness",
+  "Coordinated Protection",
+  "Deception",
+  "Diversity",
+  "Dynamic Positioning",
+  "Non-Persistence",
+  "Privilege Restriction",
+  "Realignment",
+  "Redundancy",
+  "Segmentation",
+  "Substantiated Integrity",
+  "Unpredictability",
+];
+const CREF_APPROACHES: { approach: string; technique: string }[] = [
+  { approach: "Dynamic Reconfiguration", technique: "Adaptive Response" },
+  { approach: "Dynamic Resource Allocation", technique: "Adaptive Response" },
+  { approach: "Adaptive Management", technique: "Adaptive Response" },
+  { approach: "Monitoring and Damage Assessment", technique: "Analytic Monitoring" },
+  { approach: "Sensor Fusion and Analysis", technique: "Analytic Monitoring" },
+  { approach: "Forensic and Behavioral Analysis", technique: "Analytic Monitoring" },
+  { approach: "Dynamic Resource Awareness", technique: "Contextual Awareness" },
+  { approach: "Dynamic Threat Awareness", technique: "Contextual Awareness" },
+  { approach: "Mission Dependency and Status Visualization", technique: "Contextual Awareness" },
+  { approach: "Calibrated Defense-in-Depth", technique: "Coordinated Protection" },
+  { approach: "Consistency Analysis", technique: "Coordinated Protection" },
+  { approach: "Orchestration", technique: "Coordinated Protection" },
+  { approach: "Self-Challenge", technique: "Coordinated Protection" },
+  { approach: "Obfuscation", technique: "Deception" },
+  { approach: "Disinformation", technique: "Deception" },
+  { approach: "Misdirection", technique: "Deception" },
+  { approach: "Tainting", technique: "Deception" },
+  { approach: "Architectural Diversity", technique: "Diversity" },
+  { approach: "Design Diversity", technique: "Diversity" },
+  { approach: "Synthetic Diversity", technique: "Diversity" },
+  { approach: "Information Diversity", technique: "Diversity" },
+  { approach: "Path Diversity", technique: "Diversity" },
+  { approach: "Supply Chain Diversity", technique: "Diversity" },
+  { approach: "Functional Relocation of Sensors", technique: "Dynamic Positioning" },
+  { approach: "Functional Relocation of Cyber Resources", technique: "Dynamic Positioning" },
+  { approach: "Asset Mobility", technique: "Dynamic Positioning" },
+  { approach: "Fragmentation", technique: "Dynamic Positioning" },
+  { approach: "Distributed Functionality", technique: "Dynamic Positioning" },
+  { approach: "Non-Persistent Information", technique: "Non-Persistence" },
+  { approach: "Non-Persistent Services", technique: "Non-Persistence" },
+  { approach: "Non-Persistent Connectivity", technique: "Non-Persistence" },
+  { approach: "Trust-Based Privilege Management", technique: "Privilege Restriction" },
+  { approach: "Attribute-Based Usage Restriction", technique: "Privilege Restriction" },
+  { approach: "Dynamic Privileges", technique: "Privilege Restriction" },
+  { approach: "Purposing", technique: "Realignment" },
+  { approach: "Offloading", technique: "Realignment" },
+  { approach: "Restriction", technique: "Realignment" },
+  { approach: "Replacement", technique: "Realignment" },
+  { approach: "Specialization", technique: "Realignment" },
+  { approach: "Evolvability", technique: "Realignment" },
+  { approach: "Protected Backup and Restore", technique: "Redundancy" },
+  { approach: "Surplus Capacity", technique: "Redundancy" },
+  { approach: "Replication", technique: "Redundancy" },
+  { approach: "Predefined Segmentation", technique: "Segmentation" },
+  { approach: "Dynamic Segmentation and Isolation", technique: "Segmentation" },
+  { approach: "Integrity Checks", technique: "Substantiated Integrity" },
+  { approach: "Provenance Tracking", technique: "Substantiated Integrity" },
+  { approach: "Behavior Validation", technique: "Substantiated Integrity" },
+  { approach: "Temporal Unpredictability", technique: "Unpredictability" },
+  { approach: "Contextual Unpredictability", technique: "Unpredictability" },
+];
+// Cyber Survivability Attributes per the Cyber Survivability Endorsement
+// Implementation Guide (MTR210700R1 lineage). The SRS text enumerates none.
+const CSA_SUGGESTIONS: { id: string; name: string }[] = [
+  { id: "CSA-01", name: "Control Access" },
+  { id: "CSA-02", name: "Reduce System's Cyber Detectability" },
+  { id: "CSA-03", name: "Secure Transmissions and Communications" },
+  { id: "CSA-04", name: "Protect System's Information from Exploitation" },
+  { id: "CSA-05", name: "Partition and Ensure Critical Functions at Mission Completion Performance Levels" },
+  { id: "CSA-06", name: "Minimize and Harden Attack Surfaces" },
+  { id: "CSA-07", name: "Baseline and Monitor Systems and Detect Anomalies" },
+  { id: "CSA-08", name: "Manage System Performance if Degraded by Cyber Events" },
+  { id: "CSA-09", name: "Recover System Capabilities" },
+  { id: "CSA-10", name: "Actively Manage System's Configurations to Achieve and Maintain an Operationally Relevant Cyber Survivability Risk Posture" },
+];
+
 const emptyResilience: ResilienceEntry = {
   ApproachID: "",
   ApproachName: "",
@@ -114,12 +233,15 @@ export default function ControlsTool({
   const qc = useQueryClient();
   const openDrawer = useDrawer((s) => s.openDrawer);
   const drawerOpen = useDrawer((s) => s.open);
+  const prompt = usePrompt();
   const [mode, setMode] = useState<Mode>("baseline");
   const [selectedBaseline, setSelectedBaseline] = useState("");
   const [selectedControlId, setSelectedControlId] = useState("");
   const [controlFilter, setControlFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [securityChoice, setSecurityChoice] = useState("");
+  const [genProgress, setGenProgress] = useState<{ done: number; total: number } | null>(null);
 
   const soi = useQuery({
     queryKey: ["soi", ctx.soiHid],
@@ -133,7 +255,10 @@ export default function ControlsTool({
   const activeBaseline = selectedBaseline ? byHid.get(selectedBaseline) : findActiveBaseline(system, byHid, baselines);
   const baseline = activeBaseline?.typeName === "ControlsBaseline" ? activeBaseline : undefined;
   const artifact = useMemo(() => parseArtifact(baseline), [baseline]);
-  const securityNode = findSecurityNode(system, byHid, nodes);
+  // §6.5.17 findSecurityNode: prefer the Security node reachable from the SoI
+  // root; if several remain ambiguous, the Mapping view surfaces a selector.
+  const securityInfo = useMemo(() => resolveSecurityNode(system, byHid, nodes), [system, byHid, nodes]);
+  const securityNode = securityInfo.resolved ?? (securityChoice ? byHid.get(securityChoice) : undefined);
   const controls = nodes.filter((n) => n.typeName === "SecurityControl");
   const countermeasures = nodes.filter((n) => n.typeName === "Countermeasure");
   const requirements = nodes.filter((n) => n.typeName === "Requirement");
@@ -146,13 +271,14 @@ export default function ControlsTool({
   const selectedControl = artifact.controls.find((c) => c.ControlID === selectedControlId) ?? artifact.controls[0];
   const mappedNode = selectedControl?.MappedControl ? byHid.get(selectedControl.MappedControl) : undefined;
   const findings = validateBaseline(artifact, controls, requirements, byHid);
+  const errorCount = findings.filter((f) => f.severity === "ERROR").length;
 
   useEffect(() => {
     if (!selectedBaseline && baseline) setSelectedBaseline(baseline.hid);
   }, [baseline, selectedBaseline]);
 
   useEffect(() => {
-    const hid = ctx.drawerNodeHid;
+    const hid = ctx.focusHid ?? ctx.drawerNodeHid;
     if (!hid) return;
     const node = byHid.get(hid);
     if (!node) return;
@@ -164,16 +290,16 @@ export default function ControlsTool({
     }
     if (node.typeName === "Asset") setMode("survivability");
     if (node.typeName === "System") setMode("categorization");
-  }, [artifact.controls, byHid, ctx.drawerNodeHid]);
+  }, [artifact.controls, byHid, ctx.drawerNodeHid, ctx.focusHid]);
 
   const commit = useMutation({
     mutationFn: (ops: CommitOperation[]) =>
       api.commit({ soiHid: ctx.soiHid ?? undefined, toolId: "sstpa.controls", operations: ops }),
     onSuccess: (res) => {
-      setNotice(`Controls commit ${res.commitId.slice(0, 8)} accepted.`);
+      setNotice({ kind: "success", text: `Controls commit ${res.commitId.slice(0, 8)} accepted.` });
       void qc.invalidateQueries({ queryKey: ["soi"] });
     },
-    onError: (e) => setNotice(String(e)),
+    onError: (e) => setNotice({ kind: "error", text: errorText(e) }),
   });
 
   const saveArtifact = (next: BaselineArtifact, extra: Record<string, unknown> = {}) => {
@@ -191,6 +317,109 @@ export default function ControlsTool({
     ]);
   };
 
+  // §6.5.17.6 Initial baseline generation. CNSSI 1253 Appendix D allocation
+  // tables are not available as Reference Data (documented deviation
+  // REQUIREMENTS-NOTES I-13), so the NIST SP 800-53B BaselineImpact
+  // allocation is used as the documented approximation: a control enters the
+  // initial baseline when its BaselineImpact includes the impact level of ANY
+  // of the three C/I/A values. The reference search endpoint does not return
+  // BaselineImpact, so full properties are fetched per control with bounded
+  // concurrency.
+  const generate = useMutation({
+    mutationFn: async () => {
+      const dims = [
+        { dim: "Confidentiality", impact: artifact.categorization.ConfidentialityImpact },
+        { dim: "Integrity", impact: artifact.categorization.IntegrityImpact },
+        { dim: "Availability", impact: artifact.categorization.AvailabilityImpact },
+      ].filter((d) => d.impact !== "NONE");
+      if (dims.length === 0) {
+        throw new Error("All three impact values are NONE — no NSS baseline driver (§6.5.17.3.1). Commit a categorization first.");
+      }
+      // The reference search API requires a text term; a single space matches
+      // every control statement, giving a bulk listing of NIST_Control nodes.
+      const found: ReferenceSearchResult[] = [];
+      for (let offset = 0; offset < 2000; offset += 500) {
+        const page = await api.referenceSearch({
+          label: "NIST_Control",
+          framework: "NIST SP 800-53",
+          text: " ",
+          limit: "500",
+          offset: String(offset),
+        });
+        const results = page.results ?? [];
+        found.push(...results);
+        if (results.length < 500) break;
+      }
+      const candidates = found.filter((r) => !r.isDeprecated && r.labels.includes("NIST_Control"));
+      if (candidates.length === 0) {
+        throw new Error("No NIST SP 800-53 controls found in the loaded Reference Data.");
+      }
+      setGenProgress({ done: 0, total: candidates.length });
+      const selected: BaselineControl[] = [];
+      let withAllocation = 0;
+      let done = 0;
+      const queue = [...candidates];
+      const workers = Array.from({ length: 12 }, async () => {
+        for (;;) {
+          const item = queue.shift();
+          if (!item) return;
+          try {
+            const node = (await api.referenceNode(item.uuid)) as { props?: Record<string, unknown> };
+            const props = node.props ?? {};
+            const impacts = readImpactList(props.BaselineImpact);
+            if (impacts.length > 0) withAllocation += 1;
+            const matches = dims.filter((d) => impacts.includes(d.impact));
+            if (matches.length > 0) {
+              selected.push(
+                newControl(
+                  String(props.ControlID ?? item.externalId.toUpperCase()),
+                  item.name,
+                  "BASELINE",
+                  matches.map((m) => ({
+                    Basis: m.dim,
+                    SecurityObjective: m.dim,
+                    ImpactLevel: m.impact,
+                    AllocationSymbol: "SP 800-53B",
+                    ReferenceUUID: item.uuid,
+                  })),
+                ),
+              );
+            }
+          } finally {
+            done += 1;
+            setGenProgress({ done, total: candidates.length });
+          }
+        }
+      });
+      await Promise.all(workers);
+      return { selected, scanned: candidates.length, withAllocation };
+    },
+    onSuccess: ({ selected, scanned, withAllocation }) => {
+      setGenProgress(null);
+      if (withAllocation === 0) {
+        setNotice({
+          kind: "warning",
+          text:
+            `Scanned ${scanned} NIST SP 800-53 reference controls, but none carry BaselineImpact allocation values in the loaded reference bundle, so 0 controls were selected. ` +
+            "CNSSI 1253 allocation tables are not in the reference data (deviation I-13) and the packaged NIST catalog lacks SP 800-53B annotations — load an annotated bundle or add controls via the Baseline view.",
+        });
+        return;
+      }
+      const merged = selected
+        .sort((a, b) => a.ControlID.localeCompare(b.ControlID, undefined, { numeric: true }))
+        .reduce((acc, c) => upsertControl(acc, c), artifact.controls);
+      saveArtifact({ ...artifact, controls: merged });
+      setNotice({
+        kind: "success",
+        text: `Initial baseline generated: ${selected.length} of ${scanned} NIST controls selected (NIST 800-53B allocation; CNSSI 1253 refinement pending reference bundle).`,
+      });
+    },
+    onError: (e) => {
+      setGenProgress(null);
+      setNotice({ kind: "error", text: errorText(e) });
+    },
+  });
+
   const visibleControls = artifact.controls.filter((control) => {
     if (statusFilter && control.Status !== statusFilter) return false;
     if (!controlFilter.trim()) return true;
@@ -198,7 +427,54 @@ export default function ControlsTool({
     return haystack.includes(controlFilter.toLowerCase());
   });
 
-  if (!ctx.soiHid) return <p style={{ padding: 20 }}>Select a System of Interest first.</p>;
+  if (!ctx.soiHid) return <ToolStatus needsSoI />;
+  if (soi.isLoading) return <ToolStatus loading />;
+  if (soi.error) return <ToolStatus error={soi.error} onRetry={() => void soi.refetch()} />;
+
+  // Multiple baselines (§6.5.17.2): create additional baselines at any time;
+  // exactly one is active (IsActive) and Set Active clears the flag on others.
+  const createBaseline = (name: string) => {
+    if (!system) return;
+    commit.mutate(
+      [
+        {
+          op: "createNode",
+          tempId: "baseline",
+          label: "ControlsBaseline",
+          properties: {
+            Name: name,
+            ConfidentialityImpact: "NONE",
+            IntegrityImpact: "NONE",
+            AvailabilityImpact: "NONE",
+            BaselineStatus: "DRAFT",
+            IsActive: baselines.length === 0,
+            OverlayIDs: "[]",
+            SelectedCSA: "[]",
+            SelectedPrinciples: "[]",
+            SelectedTechniques: "[]",
+            SelectedApproaches: "[]",
+            ControlsBaselineJSON: JSON.stringify(defaultArtifact()),
+          },
+        },
+        { op: "createRelationship", type: "HAS_CONTROLS_BASELINE", sourceHid: system.hid, targetHid: "$baseline" },
+      ],
+      {
+        onSuccess: (res) => {
+          const hid = res.createdNodes.baseline;
+          if (hid) setSelectedBaseline(hid);
+        },
+      },
+    );
+  };
+
+  const setActiveBaseline = () => {
+    if (!baseline) return;
+    const ops: CommitOperation[] = baselines
+      .filter((b) => b.hid !== baseline.hid && b.properties.IsActive !== false)
+      .map((b) => ({ op: "updateNode" as const, hid: b.hid, properties: { IsActive: false } }));
+    ops.push({ op: "updateNode", hid: baseline.hid, properties: { IsActive: true } });
+    commit.mutate(ops);
+  };
 
   return (
     <div className="tool-shell" style={{ height: "100%" }}>
@@ -212,44 +488,47 @@ export default function ControlsTool({
           borderBottom: "var(--sstpa-border-soft)",
         }}
       >
+        <select
+          className="sstpa-input"
+          style={{ width: "auto", maxWidth: 260 }}
+          value={baseline?.hid ?? ""}
+          onChange={(e) => setSelectedBaseline(e.target.value)}
+        >
+          {baselines.length === 0 && <option value="">No Controls Baseline</option>}
+          {baselines.map((b) => (
+            <option key={b.hid} value={b.hid}>
+              {b.hid} - {String(b.properties.Name ?? "Baseline")}
+              {b.properties.IsActive !== false ? " (active)" : ""}
+            </option>
+          ))}
+        </select>
         <button
           className="sstpa-button"
-          disabled={!system || !!baseline}
+          disabled={!system}
           onClick={() =>
-            system &&
-            commit.mutate([
-              {
-                op: "createNode",
-                tempId: "baseline",
-                label: "ControlsBaseline",
-                properties: {
-                  Name: "Active Controls Baseline",
-                  ConfidentialityImpact: "NONE",
-                  IntegrityImpact: "NONE",
-                  AvailabilityImpact: "NONE",
-                  BaselineStatus: "DRAFT",
-                  IsActive: true,
-                  OverlayIDs: "[]",
-                  SelectedCSA: "[]",
-                  SelectedPrinciples: "[]",
-                  SelectedTechniques: "[]",
-                  SelectedApproaches: "[]",
-                  ControlsBaselineJSON: JSON.stringify(defaultArtifact()),
-                },
-              },
-              { op: "createRelationship", type: "HAS_CONTROLS_BASELINE", sourceHid: system.hid, targetHid: "$baseline" },
-            ])
+            prompt.ask("New Controls Baseline name", createBaseline, {
+              placeholder: "e.g. FY26 RMF Baseline",
+              initial: baselines.length === 0 ? "Active Controls Baseline" : "",
+            })
           }
         >
-          Create Baseline
+          New Baseline
+        </button>
+        <button
+          className="sstpa-button secondary"
+          disabled={!baseline || baseline.properties.IsActive === true}
+          title="Make this the single active baseline; clears IsActive on all others (§6.5.17.2)"
+          onClick={setActiveBaseline}
+        >
+          Set Active
         </button>
         {(["categorization", "resilience", "survivability", "baseline", "mapping", "validation", "export"] as Mode[]).map((m) => (
-          <button key={m} className={`sstpa-button ${mode === m ? "" : "secondary"}`} disabled={!baseline && m !== "categorization"} onClick={() => setMode(m)}>
+          <button key={m} className={`sstpa-button ${mode === m ? "" : "secondary"}`} disabled={!baseline} onClick={() => setMode(m)}>
             {modeLabel(m)}
           </button>
         ))}
-        <input className="sstpa-input" style={{ width: 210 }} value={controlFilter} onChange={(e) => setControlFilter(e.target.value)} placeholder="Search Controls" />
-        <select className="sstpa-input" style={{ width: 150 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <input className="sstpa-input" style={{ width: 180 }} value={controlFilter} onChange={(e) => setControlFilter(e.target.value)} placeholder="Search Controls" />
+        <select className="sstpa-input" style={{ width: 140 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">All Status</option>
           {["Implemented", "Incomplete", "Tailored", "Error"].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -257,18 +536,39 @@ export default function ControlsTool({
         {baseline && <button className="icon-button" disabled={drawerOpen} onClick={() => openDrawer({ mode: "edit", hid: baseline.hid })}>Open Baseline</button>}
       </div>
       {notice && (
-        <div className="sstpa-alert-warning" style={{ margin: "6px 12px" }}>
-          {notice} <button className="icon-button" onClick={() => setNotice(null)}>x</button>
+        <div
+          className={
+            notice.kind === "success"
+              ? "sstpa-alert-success"
+              : notice.kind === "error"
+                ? "sstpa-alert-error"
+                : "sstpa-alert-warning"
+          }
+          style={{ margin: "6px 12px" }}
+        >
+          {notice.text} <button className="icon-button" onClick={() => setNotice(null)}>x</button>
         </div>
       )}
       {!baseline ? (
-        <div style={{ padding: "var(--sstpa-sp-4)", color: "var(--sstpa-navy-muted)" }}>No Controls Baseline exists for this SoI.</div>
+        <ToolStatus
+          empty="No Controls Baseline exists for this SoI."
+          emptyHint={'Use "New Baseline" above to create one, then set the C/I/A categorization and generate the initial baseline (§6.5.17.6).'}
+        />
       ) : (
         <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
           <ControlsTable controls={visibleControls} selected={selectedControl?.ControlID ?? ""} onSelect={setSelectedControlId} />
           <main style={{ flex: 1, minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
             {mode === "categorization" && (
-              <CategorizationView baseline={baseline} artifact={artifact} findings={findings} onSave={(next, props) => saveArtifact(next, props)} />
+              <CategorizationView
+                baseline={baseline}
+                artifact={artifact}
+                findings={findings}
+                errorCount={errorCount}
+                generating={generate.isPending}
+                genProgress={genProgress}
+                onGenerate={() => generate.mutate()}
+                onSave={(next, props) => saveArtifact(next, props)}
+              />
             )}
             {mode === "resilience" && (
               <ResilienceView artifact={artifact} onSave={saveArtifact} />
@@ -294,6 +594,9 @@ export default function ControlsTool({
                 countermeasures={countermeasures}
                 requirements={requirements}
                 securityNode={securityNode}
+                securityCandidates={securityInfo.candidates}
+                securityChoice={securityChoice}
+                onPickSecurity={setSecurityChoice}
                 targets={{ states, functions, interfaces, components }}
                 drawerOpen={drawerOpen}
                 onOpenDrawer={(hid) => openDrawer({ mode: "edit", hid })}
@@ -323,18 +626,27 @@ export default function ControlsTool({
           <SummaryPanel baseline={baseline} artifact={artifact} findings={findings} mappedNode={mappedNode} onOpenDrawer={(hid) => openDrawer({ mode: "edit", hid })} />
         </div>
       )}
+      {prompt.element}
     </div>
   );
 }
 
+/** Control table (§6.5.17.14): Control ID, Control Name, Source, Selected,
+ *  Tailored Out, Tailor Reason, Mapped Control, Requirement Count, Status. */
 function ControlsTable({ controls, selected, onSelect }: { controls: BaselineControl[]; selected: string; onSelect: (id: string) => void }) {
   return (
-    <aside style={{ width: 360, borderRight: "var(--sstpa-border)", overflow: "auto", background: "var(--sstpa-ivory-raised)" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
+    <aside style={{ width: 560, borderRight: "var(--sstpa-border)", overflow: "auto", background: "var(--sstpa-ivory-raised)" }}>
+      <table style={{ width: "100%", minWidth: 680, borderCollapse: "collapse", fontSize: "0.7rem" }}>
         <thead style={{ position: "sticky", top: 0, background: "var(--sstpa-ivory-raised)", zIndex: 1 }}>
           <tr>
             <th style={thStyle}>Control ID</th>
+            <th style={thStyle}>Control Name</th>
             <th style={thStyle}>Source</th>
+            <th style={thStyle} title="Selected">Sel</th>
+            <th style={thStyle} title="Tailored Out">T-Out</th>
+            <th style={thStyle}>Tailor Reason</th>
+            <th style={thStyle}>Mapped Control</th>
+            <th style={thStyle} title="Requirement Count">Reqs</th>
             <th style={thStyle}>Status</th>
           </tr>
         </thead>
@@ -349,11 +661,16 @@ function ControlsTable({ controls, selected, onSelect }: { controls: BaselineCon
                 borderBottom: "1px solid var(--sstpa-line-soft)",
               }}
             >
-              <td style={tdStyle}>
-                <strong>{control.ControlID}</strong>
-                <div style={{ color: "var(--sstpa-navy-muted)" }}>{control.ControlName}</div>
-              </td>
+              <td style={tdStyle}><strong>{control.ControlID}</strong></td>
+              <td style={tdStyle}>{control.ControlName}</td>
               <td style={tdStyle}>{control.Source.join(", ")}</td>
+              <td style={tdStyle}>{control.Selected ? "✓" : "—"}</td>
+              <td style={tdStyle}>{control.TailoredOut ? "✓" : "—"}</td>
+              <td style={{ ...tdStyle, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={control.TailorReason ?? ""}>
+                {control.TailorReason ?? "—"}
+              </td>
+              <td className="mono" style={tdStyle}>{control.MappedControl ?? "—"}</td>
+              <td style={tdStyle}>{control.RequirementCount}</td>
               <td style={tdStyle}>{control.Status}</td>
             </tr>
           ))}
@@ -368,11 +685,19 @@ function CategorizationView({
   baseline,
   artifact,
   findings,
+  errorCount,
+  generating,
+  genProgress,
+  onGenerate,
   onSave,
 }: {
   baseline: SoINode;
   artifact: BaselineArtifact;
   findings: Finding[];
+  errorCount: number;
+  generating: boolean;
+  genProgress: { done: number; total: number } | null;
+  onGenerate: () => void;
   onSave: (next: BaselineArtifact, props: Record<string, unknown>) => void;
 }) {
   const [impact, setImpact] = useState(artifact.categorization);
@@ -386,6 +711,13 @@ function CategorizationView({
     setOverlayRationale(String(baseline.properties.OverlayRationale ?? ""));
     setStatus(String(baseline.properties.BaselineStatus ?? "DRAFT") as BaselineStatus);
   }, [artifact, baseline]);
+
+  const currentStatus = String(baseline.properties.BaselineStatus ?? "DRAFT") as BaselineStatus;
+  // Status lifecycle gating (§6.5.17.1.1 Step 8): promotion to BASELINED /
+  // APPROVED is blocked while validation errors exist.
+  const statusGated = (s: BaselineStatus) =>
+    (s === "BASELINED" || s === "APPROVED") && errorCount > 0 && s !== currentStatus;
+  const allImpactsNone = impact.ConfidentialityImpact === "NONE" && impact.IntegrityImpact === "NONE" && impact.AvailabilityImpact === "NONE";
 
   const nextArtifact = (): BaselineArtifact => ({
     ...artifact,
@@ -405,10 +737,19 @@ function CategorizationView({
         ))}
         <label style={labelStyle}>Baseline Status
           <select className="sstpa-input" value={status} onChange={(e) => setStatus(e.target.value as BaselineStatus)}>
-            {STATUSES.map((v) => <option key={v} value={v}>{v}</option>)}
+            {STATUSES.map((v) => (
+              <option key={v} value={v} disabled={statusGated(v)}>
+                {v}{statusGated(v) ? " (blocked: validation errors)" : ""}
+              </option>
+            ))}
           </select>
         </label>
       </div>
+      {errorCount > 0 && (
+        <p style={{ fontSize: "0.74rem", color: "var(--sstpa-navy-muted)", margin: "6px 0 0" }}>
+          Promotion to BASELINED/APPROVED is blocked while {errorCount} validation error{errorCount === 1 ? "" : "s"} exist (§6.5.17.1.1 Step 8) — see the Validation view.
+        </p>
+      )}
       <label style={labelStyle}>Categorization Rationale
         <textarea className="sstpa-input" rows={4} value={impact.CategorizationRationale} onChange={(e) => setImpact((x) => ({ ...x, CategorizationRationale: e.target.value }))} />
       </label>
@@ -418,22 +759,40 @@ function CategorizationView({
       <label style={labelStyle}>Overlay Rationale
         <textarea className="sstpa-input" rows={3} value={overlayRationale} onChange={(e) => setOverlayRationale(e.target.value)} />
       </label>
-      <button
-        className="sstpa-button"
-        onClick={() =>
-          onSave(nextArtifact(), {
-            ConfidentialityImpact: impact.ConfidentialityImpact,
-            IntegrityImpact: impact.IntegrityImpact,
-            AvailabilityImpact: impact.AvailabilityImpact,
-            CategorizationRationale: impact.CategorizationRationale,
-            OverlayIDs: JSON.stringify(splitList(overlays)),
-            OverlayRationale: overlayRationale,
-            BaselineStatus: status,
-          })
-        }
-      >
-        Commit Categorization
-      </button>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+        <button
+          className="sstpa-button"
+          onClick={() =>
+            onSave(nextArtifact(), {
+              ConfidentialityImpact: impact.ConfidentialityImpact,
+              IntegrityImpact: impact.IntegrityImpact,
+              AvailabilityImpact: impact.AvailabilityImpact,
+              CategorizationRationale: impact.CategorizationRationale,
+              OverlayIDs: JSON.stringify(splitList(overlays)),
+              OverlayRationale: overlayRationale,
+              BaselineStatus: statusGated(status) ? currentStatus : status,
+            })
+          }
+        >
+          Commit Categorization
+        </button>
+        <button
+          className="sstpa-button secondary"
+          disabled={generating || allImpactsNone}
+          title={allImpactsNone ? "Set at least one C/I/A impact first (§6.5.17.3.1 permits all NONE, but then no baseline is generated)" : "Select NIST controls whose baseline allocation includes any committed C/I/A impact level"}
+          onClick={onGenerate}
+        >
+          {generating ? "Generating…" : "Generate Initial Baseline"}
+        </button>
+      </div>
+      <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", marginTop: 6 }}>
+        Generation uses the committed C/I/A values with the NIST 800-53B allocation; CNSSI 1253 refinement pending reference bundle (deviation I-13). Generated rows are tagged Source = BASELINE.
+      </p>
+      {genProgress && (
+        <div className="sstpa-alert-warning" style={{ marginTop: 8 }}>
+          Scanning NIST reference allocation data… {genProgress.done}/{genProgress.total}
+        </div>
+      )}
       <ValidationSummary findings={findings} />
     </div>
   );
@@ -456,12 +815,51 @@ function ResilienceView({ artifact, onSave }: { artifact: BaselineArtifact; onSa
     setDraft(emptyResilience);
     setEditIndex(null);
   };
+  const setField = (k: keyof ResilienceEntry, v: string) => setDraft((x) => ({ ...x, [k]: v }));
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)", display: "grid", gridTemplateColumns: "minmax(280px, 420px) 1fr", gap: 16 }}>
       <div>
-        {["ApproachID", "ApproachName", "PrincipleID", "TechniqueID", "UserStrategy", "UserImplementationApproach", "UserRationale", "Assumptions", "ResidualConcerns"].map((k) => (
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", margin: "0 0 4px" }}>
+          Suggestions from NIST SP 800-160 Vol. 2 Rev. 1 (App. D principles, App. E techniques and approaches).
+        </p>
+        <datalist id="sstpa-cref-principles">
+          {[...CREF_STRATEGIC_PRINCIPLES, ...CREF_STRUCTURAL_PRINCIPLES].map((p) => <option key={p} value={p} />)}
+        </datalist>
+        <datalist id="sstpa-cref-techniques">
+          {CREF_TECHNIQUES.map((t) => <option key={t} value={t} />)}
+        </datalist>
+        <datalist id="sstpa-cref-approaches">
+          {CREF_APPROACHES.map((a) => <option key={a.approach} value={a.approach}>{a.technique}</option>)}
+        </datalist>
+        <label style={labelStyle}>Approach ID
+          <input className="sstpa-input" value={draft.ApproachID} onChange={(e) => setField("ApproachID", e.target.value)} />
+        </label>
+        <label style={labelStyle}>Approach Name
+          <input
+            className="sstpa-input"
+            list="sstpa-cref-approaches"
+            value={draft.ApproachName}
+            onChange={(e) => {
+              const v = e.target.value;
+              const hit = CREF_APPROACHES.find((a) => a.approach === v);
+              setDraft((x) => ({
+                ...x,
+                ApproachName: v,
+                ApproachID: x.ApproachID || v,
+                TechniqueID: hit && !x.TechniqueID ? hit.technique : x.TechniqueID,
+              }));
+            }}
+          />
+        </label>
+        <label style={labelStyle}>Principle ID
+          <input className="sstpa-input" list="sstpa-cref-principles" value={draft.PrincipleID} onChange={(e) => setField("PrincipleID", e.target.value)} />
+        </label>
+        <label style={labelStyle}>Technique ID
+          <input className="sstpa-input" list="sstpa-cref-techniques" value={draft.TechniqueID} onChange={(e) => setField("TechniqueID", e.target.value)} />
+        </label>
+        {(["UserStrategy", "UserImplementationApproach", "UserRationale", "Assumptions", "ResidualConcerns"] as const).map((k) => (
           <label key={k} style={labelStyle}>{label(k)}
-            <textarea className="sstpa-input" rows={k.startsWith("User") || k === "Assumptions" || k === "ResidualConcerns" ? 2 : 1} value={String(draft[k as keyof ResilienceEntry] ?? "")} onChange={(e) => setDraft((x) => ({ ...x, [k]: e.target.value }))} />
+            <textarea className="sstpa-input" rows={2} value={draft[k]} onChange={(e) => setField(k, e.target.value)} />
           </label>
         ))}
         <label style={labelStyle}>Related Control IDs
@@ -482,6 +880,7 @@ function ResilienceView({ artifact, onSave }: { artifact: BaselineArtifact; onSa
             <button className="icon-button danger" onClick={() => onSave({ ...artifact, resilience: artifact.resilience.filter((_, idx) => idx !== i) })}>Remove</button>
           </div>
         ))}
+        {artifact.resilience.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Cyber Resilience approaches recorded.</p>}
       </div>
     </div>
   );
@@ -521,9 +920,33 @@ function SurvivabilityView({
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)", display: "grid", gridTemplateColumns: "minmax(280px, 420px) 1fr", gap: 16 }}>
       <div>
-        {["CSAID", "CSAName", "Description", "UserApplicabilityStatement", "UserImplementationDescription"].map((k) => (
+        <p style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)", margin: "0 0 4px" }}>
+          Suggestions: Cyber Survivability Attributes per the CSE Implementation Guide (MTR210700R1).
+        </p>
+        <datalist id="sstpa-csa-ids">
+          {CSA_SUGGESTIONS.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </datalist>
+        <datalist id="sstpa-csa-names">
+          {CSA_SUGGESTIONS.map((c) => <option key={c.id} value={c.name} />)}
+        </datalist>
+        <label style={labelStyle}>CSA ID
+          <input
+            className="sstpa-input"
+            list="sstpa-csa-ids"
+            value={draft.CSAID}
+            onChange={(e) => {
+              const v = e.target.value;
+              const hit = CSA_SUGGESTIONS.find((c) => c.id === v);
+              setDraft((x) => ({ ...x, CSAID: v, CSAName: hit && !x.CSAName ? hit.name : x.CSAName }));
+            }}
+          />
+        </label>
+        <label style={labelStyle}>CSA Name
+          <input className="sstpa-input" list="sstpa-csa-names" value={draft.CSAName} onChange={(e) => setDraft((x) => ({ ...x, CSAName: e.target.value }))} />
+        </label>
+        {(["Description", "UserApplicabilityStatement", "UserImplementationDescription"] as const).map((k) => (
           <label key={k} style={labelStyle}>{label(k)}
-            <textarea className="sstpa-input" rows={k.startsWith("User") || k === "Description" ? 3 : 1} value={String(draft[k as keyof CSAEntry] ?? "")} onChange={(e) => setDraft((x) => ({ ...x, [k]: e.target.value }))} />
+            <textarea className="sstpa-input" rows={3} value={draft[k]} onChange={(e) => setDraft((x) => ({ ...x, [k]: e.target.value }))} />
           </label>
         ))}
         <EntityMulti labelText="Related Assets" nodes={assets} values={draft.RelatedAssetHIDs} onChange={(v) => setDraft((x) => ({ ...x, RelatedAssetHIDs: v }))} />
@@ -544,6 +967,7 @@ function SurvivabilityView({
             <button className="icon-button danger" onClick={() => onSave({ ...artifact, survivability: artifact.survivability.filter((_, idx) => idx !== i) }, { SelectedCSA: JSON.stringify(artifact.survivability.filter((_, idx) => idx !== i)) })}>Remove</button>
           </div>
         ))}
+        {artifact.survivability.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Cyber Survivability Attributes recorded.</p>}
       </div>
     </div>
   );
@@ -595,6 +1019,7 @@ function BaselineView({
           <button className="sstpa-button" disabled={!manualId.trim()} onClick={() => addControl(newControl(manualId, manualName || manualId, manualSource))}>Add Control</button>
           <button className="sstpa-button secondary" style={{ marginLeft: 6 }} onClick={importExistingControls}>Import Core Controls</button>
           <label style={labelStyle}>Reference Search<input className="sstpa-input" value={refText} onChange={(e) => setRefText(e.target.value)} /></label>
+          {refSearch.error != null && <div className="sstpa-alert-error">{errorText(refSearch.error)}</div>}
           <div style={{ maxHeight: 280, overflow: "auto" }}>
             {refs.map((r) => (
               <button key={r.uuid} className="entity-card" style={{ width: "100%", textAlign: "left", marginBottom: 6 }} onClick={() => addControl(controlFromReference(r, "UserAdded"))}>
@@ -616,6 +1041,7 @@ function BaselineView({
 function ControlEditor({ artifact, selectedControl, onSave }: { artifact: BaselineArtifact; selectedControl?: BaselineControl; onSave: (next: BaselineArtifact) => void }) {
   const [tailorReason, setTailorReason] = useState("");
   const [parameters, setParameters] = useState("");
+  const [confirmRemove, setConfirmRemove] = useState(false);
   useEffect(() => {
     setTailorReason(selectedControl?.TailorReason ?? "");
     setParameters(selectedControl?.ParameterValues ?? "");
@@ -642,7 +1068,23 @@ function ControlEditor({ artifact, selectedControl, onSave }: { artifact: Baseli
       <label style={labelStyle}>Parameter Values
         <textarea className="sstpa-input" rows={2} value={parameters} onChange={(e) => setParameters(e.target.value)} onBlur={() => update({ ParameterValues: parameters })} />
       </label>
-      <button className="sstpa-button danger" onClick={() => onSave({ ...artifact, controls: artifact.controls.filter((c) => c.ControlID !== selectedControl.ControlID) })}>Remove Control</button>
+      <button className="sstpa-button danger" onClick={() => setConfirmRemove(true)}>Remove Control</button>
+      {confirmRemove && (
+        <ConfirmDialog
+          title="Remove baseline control"
+          danger
+          confirmLabel="Remove"
+          onCancel={() => setConfirmRemove(false)}
+          onConfirm={() => {
+            onSave({ ...artifact, controls: artifact.controls.filter((c) => c.ControlID !== selectedControl.ControlID) });
+            setConfirmRemove(false);
+          }}
+        >
+          <p style={{ fontSize: "0.8rem" }}>
+            Remove {selectedControl.ControlID} from the baseline? Tailoring it out with a rationale preserves RMF traceability (§6.5.17.10); removal deletes the row and its selection history.
+          </p>
+        </ConfirmDialog>
+      )}
     </div>
   );
 }
@@ -655,6 +1097,9 @@ function MappingView({
   countermeasures,
   requirements,
   securityNode,
+  securityCandidates,
+  securityChoice,
+  onPickSecurity,
   targets,
   drawerOpen,
   onOpenDrawer,
@@ -669,6 +1114,9 @@ function MappingView({
   countermeasures: SoINode[];
   requirements: SoINode[];
   securityNode?: SoINode;
+  securityCandidates: SoINode[];
+  securityChoice: string;
+  onPickSecurity: (hid: string) => void;
   targets: { states: SoINode[]; functions: SoINode[]; interfaces: SoINode[]; components: SoINode[] };
   drawerOpen: boolean;
   onOpenDrawer: (hid: string) => void;
@@ -685,9 +1133,19 @@ function MappingView({
   const mappedReqs = mappedNode ? relatedNodes(mappedNode, "HAS_REQUIREMENT", new Map(requirements.map((r) => [r.hid, r]))) : [];
   const satisfying = mappedNode ? countermeasures.filter((cm) => (cm.relationships ?? []).some((r) => r.type === "SATISFIES" && r.targetHID === mappedNode.hid)) : [];
   const targetOptions = [...targets.functions, ...targets.interfaces, ...targets.components, ...targets.states];
+  const securityAmbiguous = !securityNode && securityCandidates.length > 1;
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)" }}>
       <h3 style={{ marginTop: 0 }}>{selectedControl.ControlID} Mapping</h3>
+      {securityAmbiguous && (
+        <div className="sstpa-alert-warning" style={{ marginBottom: 8 }}>
+          Multiple (:Security) nodes exist in this SoI and none is reachable from the SoI root — pick the security context to attach new Controls and Countermeasures:
+          <select className="sstpa-input" style={{ marginLeft: 8, width: "auto" }} value={securityChoice} onChange={(e) => onPickSecurity(e.target.value)}>
+            <option value="">Select Security node</option>
+            {securityCandidates.map((s) => <option key={s.hid} value={s.hid}>{s.hid} - {String(s.properties.Name ?? "")}</option>)}
+          </select>
+        </div>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 380px) 1fr", gap: 16 }}>
         <div>
           <label style={labelStyle}>Existing Security Control
@@ -696,10 +1154,17 @@ function MappingView({
               {controls.map((c) => <option key={c.hid} value={c.hid}>{c.hid} - {String(c.properties.ReferenceID ?? c.properties.Name ?? "")}</option>)}
             </select>
           </label>
+          {/* Note: SRS §6.5.17.11 names a (:ControlsBaseline)-[:IMPLEMENTS_BY]->
+              (:SecurityControl) relationship, but IMPLEMENTS_BY is not in the
+              authorized relationship schema and the commit API rejects unknown
+              relationship types — the mapping is persisted in
+              ControlsBaselineJSON only (schema gap reported). */}
           <button className="sstpa-button" disabled={!mapHid} onClick={() => updateRow({ MappedControl: mapHid, Status: "Implemented" })}>Map Existing</button>
           <button
             className="sstpa-button secondary"
             style={{ marginLeft: 6 }}
+            disabled={securityAmbiguous}
+            title={securityAmbiguous ? "Select the Security context above first" : undefined}
             onClick={() => {
               const ops: CommitOperation[] = [
                 {
@@ -777,7 +1242,8 @@ function MappingView({
           <button
             className="sstpa-button secondary"
             style={{ marginTop: 6 }}
-            disabled={!mappedNode}
+            disabled={!mappedNode || securityAmbiguous}
+            title={securityAmbiguous ? "Select the Security context above first" : undefined}
             onClick={() => {
               if (!mappedNode) return;
               const ops: CommitOperation[] = [
@@ -818,7 +1284,7 @@ function ValidationView({ findings, onSelectControl, onOpenDrawer }: { findings:
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)" }}>
       {findings.map((f, i) => (
-        <div key={i} className="sstpa-alert-warning" style={{ marginBottom: 8 }}>
+        <div key={i} className={f.severity === "ERROR" ? "sstpa-alert-error" : "sstpa-alert-warning"} style={{ marginBottom: 8 }}>
           <strong>{f.severity}</strong> {f.message}{" "}
           {f.controlId && <button className="icon-button" onClick={() => onSelectControl(f.controlId!)}>{f.controlId}</button>}
           {f.hid && <button className="icon-button" onClick={() => onOpenDrawer(f.hid!)}>{f.hid}</button>}
@@ -853,6 +1319,12 @@ function SummaryPanel({ baseline, artifact, findings, mappedNode, onOpenDrawer }
     <aside style={{ width: 310, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)", background: "var(--sstpa-ivory-raised)" }}>
       <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{baseline.hid}</div>
       <h3 style={{ margin: "4px 0 8px" }}>{String(baseline.properties.Name ?? "Controls Baseline")}</h3>
+      <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+        <span className="type-badge">{String(baseline.properties.BaselineStatus ?? "DRAFT")}</span>
+        <span className="type-badge" style={{ background: baseline.properties.IsActive !== false ? "var(--sstpa-gold)" : "var(--sstpa-node-muted)" }}>
+          {baseline.properties.IsActive !== false ? "ACTIVE" : "INACTIVE"}
+        </span>
+      </div>
       <div className="entity-card" style={{ marginBottom: 8 }}>
         <div className="entity-card-header"><span>Total</span><strong>{artifact.controls.length}</strong></div>
         <div className="entity-card-header"><span>Implemented</span><strong>{implemented}</strong></div>
@@ -897,7 +1369,7 @@ function ValidationSummary({ findings }: { findings: Finding[] }) {
   return (
     <div style={{ marginTop: 12 }}>
       {findings.slice(0, 5).map((f, i) => (
-        <div key={i} className="sstpa-alert-warning" style={{ marginBottom: 6 }}>
+        <div key={i} className={f.severity === "ERROR" ? "sstpa-alert-error" : "sstpa-alert-warning"} style={{ marginBottom: 6 }}>
           <strong>{f.severity}</strong> {f.message}
         </div>
       ))}
@@ -1019,9 +1491,29 @@ function findActiveBaseline(system: SoINode | undefined, byHid: Map<string, SoIN
   return linked.find((b) => b.properties.IsActive !== false) ?? linked[0] ?? baselines.find((b) => b.properties.IsActive !== false) ?? baselines[0];
 }
 
-function findSecurityNode(system: SoINode | undefined, byHid: Map<string, SoINode>, nodes: SoINode[]): SoINode | undefined {
-  const perspective = (system?.relationships ?? []).map((r) => r.type === "HAS_PERSPECTIVE" ? byHid.get(r.targetHID) : undefined).find((n): n is SoINode => !!n);
-  return (perspective?.relationships ?? []).map((r) => r.type === "HAS_SECURITY" ? byHid.get(r.targetHID) : undefined).find((n): n is SoINode => !!n) ?? nodes.find((n) => n.typeName === "Security");
+/** Resolve the (:Security) node for Core Control / Countermeasure attachment:
+ *  prefer the one reachable from the SoI root via HAS_PERSPECTIVE →
+ *  HAS_SECURITY; a single SoI Security node is unambiguous; otherwise the
+ *  caller must surface a selector (never silently pick the first). */
+function resolveSecurityNode(
+  system: SoINode | undefined,
+  byHid: Map<string, SoINode>,
+  nodes: SoINode[],
+): { resolved?: SoINode; candidates: SoINode[] } {
+  const candidates = nodes.filter((n) => n.typeName === "Security");
+  const perspectives = (system?.relationships ?? [])
+    .filter((r) => r.type === "HAS_PERSPECTIVE")
+    .map((r) => byHid.get(r.targetHID))
+    .filter((n): n is SoINode => !!n);
+  for (const p of perspectives) {
+    const sec = (p.relationships ?? [])
+      .filter((r) => r.type === "HAS_SECURITY")
+      .map((r) => byHid.get(r.targetHID))
+      .find((n): n is SoINode => !!n);
+    if (sec) return { resolved: sec, candidates };
+  }
+  if (candidates.length === 1) return { resolved: candidates[0], candidates };
+  return { candidates };
 }
 
 function relatedNodes(node: SoINode, relType: string, byHid: Map<string, SoINode>): SoINode[] {
@@ -1074,6 +1566,23 @@ function upsertControl(controls: BaselineControl[], next: BaselineControl): Base
 
 function mergeSourceForControls(controls: BaselineControl[], ids: string[], source: string, basis: string): BaselineControl[] {
   return ids.filter(Boolean).reduce((acc, id) => upsertControl(acc, newControl(id, id, source, [{ Basis: source, SourceID: basis }])), controls);
+}
+
+/** Normalize a reference BaselineImpact property (list of impact levels per
+ *  NIST SP 800-53B) to upper-case strings. */
+function readImpactList(raw: unknown): string[] {
+  let values: unknown[] = [];
+  if (Array.isArray(raw)) {
+    values = raw;
+  } else if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      values = Array.isArray(parsed) ? parsed : [raw];
+    } catch {
+      values = [raw];
+    }
+  }
+  return values.map((v) => String(v).trim().toUpperCase()).filter(Boolean);
 }
 
 function readStringArray(raw: unknown): string[] {
@@ -1151,12 +1660,4 @@ function modeLabel(mode: Mode): string {
 
 function label(key: string): string {
   return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/CSA/g, "CSA");
-}
-
-function downloadText(filename: string, text: string, mime: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type: mime }));
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
 }

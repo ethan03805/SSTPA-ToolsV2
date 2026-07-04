@@ -70,12 +70,17 @@ func NewRouter(cfg config.Config, db *graph.DB, sch *schema.Schema, m *telemetry
 		r.Get("/capability", s.handleCapability)
 
 		// Authentication (SRS §4, §3.2 — placeholder security for MVP).
+		r.Get("/auth/status", s.handleAuthStatus) // first-run detection (§4)
 		r.Post("/auth/login", s.handleLogin)
 		r.Post("/auth/bootstrap", s.handleBootstrap) // RootAdmin creation on install
+		r.Post("/auth/logout", s.handleLogout)
 
 		// Authenticated routes.
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)
+
+			// Session identity (SRS §4 Startup → Frontend handover)
+			r.Get("/auth/me", s.handleMe)
 
 			// Node retrieval (SRS §5.6.6.2)
 			r.Get("/nodes/hid/{hid}", s.handleNodeByHID)
@@ -154,6 +159,14 @@ func NewRouter(cfg config.Config, db *graph.DB, sch *schema.Schema, m *telemetry
 			r.Get("/schema/node-types", s.handleSchemaNodeTypes)
 			r.Get("/schema/node-types/{label}", s.handleSchemaNodeType)
 			r.Get("/schema/relationships", s.handleSchemaRelationships)
+
+			// Model Translation (SRS §5.6.6.12, §3.7): G2M projection, the
+			// SSTPA Profile Library, and M2G validate/commit.
+			r.Get("/model/sysml", s.handleModelText("sysml"))
+			r.Get("/model/kerml", s.handleModelText("kerml"))
+			r.Get("/model/profile", s.handleModelProfile)
+			r.Post("/model/validate", s.handleModelValidate)
+			r.Post("/model/commit", s.handleModelCommit)
 		})
 	})
 
@@ -207,7 +220,6 @@ func (s *Server) handleCapability(w http.ResponseWriter, r *http.Request) {
 		},
 		"config": map[string]any{
 			"httpAddr": s.cfg.HTTPAddr,
-			"neo4jURI": s.cfg.Neo4jURI,
 		},
 	})
 }

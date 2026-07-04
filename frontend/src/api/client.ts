@@ -18,16 +18,57 @@ import type {
   ValidateRelationshipResult,
 } from "./types";
 
-/** Base URL of the Backend API; supplied by Startup Software via URL query
- *  (?backend=...) or defaults to the local development proxy. */
-function resolveBaseUrl(): string {
-  const params = new URLSearchParams(window.location.search);
-  const fromStartup = params.get("backend");
-  if (fromStartup) return fromStartup.replace(/\/$/, "");
-  return "https://localhost:8543";
+/** Base URL of the Backend API (SRS §5.4: Caddy reverse proxy on 443).
+ *  Resolution order: ?backend= query → Startup-provided launch config
+ *  (Tauri, SSTPA_BACKEND_URL) → Vite dev proxy (same-origin, browser dev)
+ *  → https://localhost.
+ *
+ *  In development (`npm run dev` / `tauri dev`) we always resolve to the
+ *  same-origin Vite proxy — the browser origin, or the Tauri devUrl
+ *  (http://localhost:5173). vite.config.ts proxies /api to the local Caddy
+ *  edge with `secure: false`, so Caddy's untrusted internal CA never has to be
+ *  validated by the webview. A production build (DEV === false) talks to
+ *  https://localhost directly, then defers to the Startup launch config; that
+ *  path requires the Caddy local root CA to be trusted on the host (installer). */
+let apiBaseUrl = import.meta.env.DEV ? "" : "https://localhost";
+
+{
+  const fromQuery = new URLSearchParams(window.location.search).get("backend");
+  if (fromQuery) apiBaseUrl = fromQuery.replace(/\/$/, "");
 }
 
-export const API_BASE = resolveBaseUrl();
+export function apiBase(): string {
+  return apiBaseUrl;
+}
+
+export interface LaunchConfig {
+  backendUrl: string | null;
+  token: string | null;
+  userName: string | null;
+}
+
+/** Read the launch configuration handed over by the Startup Software
+ *  (SRS §4): backend URL and pre-authenticated session. Resolves to null
+ *  outside Tauri (browser dev). Must run before the first API call. */
+export async function initLaunchConfig(): Promise<LaunchConfig | null> {
+  if (!("__TAURI_INTERNALS__" in window)) return null;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    const cfg = await invoke<{
+      backend_url: string | null;
+      token: string | null;
+      user_name: string | null;
+    }>("launch_config");
+    if (cfg.backend_url) apiBaseUrl = cfg.backend_url.replace(/\/$/, "");
+    return {
+      backendUrl: cfg.backend_url,
+      token: cfg.token,
+      userName: cfg.user_name,
+    };
+  } catch {
+    return null;
+  }
+}
 
 let authToken: string | null = null;
 
@@ -52,7 +93,7 @@ async function request<T>(
 ): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${apiBaseUrl}${path}`, {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -83,6 +124,13 @@ export const api = {
       password,
       email,
     }),
+
+  authStatus: () =>
+    request<{ rootAdminExists: boolean }>("GET", "/api/auth/status"),
+
+  me: () => request<{ user: LoginResponse["user"] }>("GET", "/api/auth/me"),
+
+  logout: () => request<{ status: string }>("POST", "/api/auth/logout"),
 
   nodeByHid: (hid: string) =>
     request<NodeResponse>("GET", `/api/nodes/hid/${encodeURIComponent(hid)}`),
@@ -173,6 +221,16 @@ export const api = {
       `/api/schema/node-types/${encodeURIComponent(label)}`,
     ),
 
+  schemaRelationships: () =>
+    request<{
+      relationships: {
+        type: string;
+        source: string;
+        target: string;
+        srsSection?: string;
+      }[];
+    }>("GET", "/api/schema/relationships"),
+
   messages: (params?: Record<string, string>) =>
     request<{ messages: MessageSummary[] | null }>(
       "GET",
@@ -216,13 +274,28 @@ export const api = {
     request<{ unread: number }>("GET", "/api/messages/unread-count"),
 
   listUsers: () =>
-    request<{ users: Record<string, unknown>[] }>("GET", "/api/admin/users"),
+    request<{
+      users: {
+        userName: string;
+        email: string;
+        displayName: string;
+        isAdmin: boolean;
+        isRootAdmin: boolean;
+        accountStatus: "ACTIVE" | "SUSPENDED" | "DISENROLLED";
+        createDate: string | null;
+        lastTouch: string | null;
+        ownedNodes: number;
+        unreadMessages: number;
+      }[];
+    }>("GET", "/api/admin/users"),
 
   createUser: (payload: {
     userName: string;
     password: string;
     email: string;
+    displayName?: string;
     isAdmin: boolean;
+    authorizerPassword?: string;
   }) => request<{ status: string }>("POST", "/api/admin/users", payload),
 
   updateUser: (userName: string, payload: Record<string, unknown>) =>

@@ -22,15 +22,18 @@ import (
 )
 
 type commitOperation struct {
-	Op string `json:"op"` // createNode | updateNode | deleteNode | createRelationship | deleteRelationship
+	Op string `json:"op"` // createNode | updateNode | deleteNode | createRelationship | deleteRelationship | transferOwnership
 
 	// createNode
 	TempID string         `json:"tempId,omitempty"`
 	Label  string         `json:"label,omitempty"`
 	Props  map[string]any `json:"properties,omitempty"`
 
-	// updateNode / deleteNode
+	// updateNode / deleteNode / transferOwnership
 	HID string `json:"hid,omitempty"`
+
+	// transferOwnership (SRS §5.6.6.8.2): explicit user-initiated ownership change
+	NewOwner string `json:"newOwner,omitempty"`
 
 	// relationships; source/target accept an HID or a "$tempId" reference
 	Type      string `json:"type,omitempty"`
@@ -85,6 +88,12 @@ func (s *Server) handleCommit(w http.ResponseWriter, r *http.Request) {
 				writeError(w, http.StatusBadRequest, "relationship ops need type, sourceHid, targetHid", "")
 				return
 			}
+			// Relationship types must exist in the canonical schema before they
+			// are ever interpolated into Cypher (injection guard; SRS §3.3.4).
+			if len(s.schema.RelationshipDefs(op.Type)) == 0 {
+				writeError(w, http.StatusBadRequest, "unknown relationship type", op.Type)
+				return
+			}
 			// AT_RELATES_TO is managed exclusively by the Loss Tool (§3.3.4.11).
 			if op.Type == "AT_RELATES_TO" && req.ToolID != "sstpa.loss" {
 				writeError(w, http.StatusForbidden,
@@ -94,6 +103,11 @@ func (s *Server) handleCommit(w http.ResponseWriter, r *http.Request) {
 		case "updateNode", "deleteNode":
 			if op.HID == "" {
 				writeError(w, http.StatusBadRequest, op.Op+" needs hid", "")
+				return
+			}
+		case "transferOwnership":
+			if op.HID == "" || op.NewOwner == "" {
+				writeError(w, http.StatusBadRequest, "transferOwnership needs hid and newOwner", "")
 				return
 			}
 		default:
@@ -110,6 +124,13 @@ func (s *Server) handleCommit(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnprocessableEntity, "commit rejected", err.Error())
 		return
 	}
+	// Counters increment after the transaction commits; ExecuteWrite may retry
+	// the closure on transient errors, which would over-count inside it.
+	if resp, ok := result.(*commitResponse); ok {
+		for i := 0; i < resp.MessagesGenerated; i++ {
+			s.metrics.OwnershipNotifications.Inc()
+		}
+	}
 	writeJSON(w, http.StatusOK, result)
 }
 
@@ -123,6 +144,7 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 		Owner, OwnerEmail string
 		Changes           []string
 		OldOwner          string
+		NewOwner          string
 		OwnershipChanged  bool
 	}
 	affected := map[string]*nodeChange{}
@@ -135,7 +157,14 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 		nc.Changes = append(nc.Changes, change)
 		return nc
 	}
-	traceTouched := false
+	// traceSoIs collects every SoI key whose trace data moved, so derivation
+	// recompute (§3.3.4.6.2/.3) runs even when the commit carries no soiHid.
+	traceSoIs := map[string]bool{}
+	markTrace := func(soiIndex string) {
+		if soiIndex != "" {
+			traceSoIs[soiIndex] = true
+		}
+	}
 
 	resolveHID := func(ref string) string {
 		if strings.HasPrefix(ref, "$") {
@@ -215,6 +244,7 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 				params["newOwnerEmail"] = user.Email
 				nc.OwnershipChanged = true
 				nc.OldOwner = cur.owner
+				nc.NewOwner = user.UserName
 				nc.Changes = append(nc.Changes, fmt.Sprintf("ownership: %s → %s", cur.owner, user.UserName))
 			}
 			q := "MATCH (n:SSTPA {HID: $hid}) SET n += $props, n.LastTouch = datetime()" + ownershipClause
@@ -242,7 +272,14 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 					map[string]any{"hid": op.HID}); err != nil {
 					return nil, err
 				}
-				traceTouched = true
+				markTrace(cur.soiIndex)
+			}
+			// Deleting a traced entity or an Asset removes its trace edges with
+			// it; derived criticality/assurance and protection Requirements for
+			// the SoI must be recomputed (§3.3.4.6.2/.3).
+			if cur.label == "Interface" || cur.label == "SystemFunction" ||
+				cur.label == "Component" || cur.label == "Asset" {
+				markTrace(cur.soiIndex)
 			}
 			if _, err := tx.Run(ctx,
 				`MATCH (n:SSTPA {HID: $hid}) DETACH DELETE n`,
@@ -302,8 +339,8 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 			if !tgtInfo.readOnly {
 				touch(tgt, tgtInfo.owner, tgtInfo.ownerEmail, fmt.Sprintf("relationship created: %s -[:%s]->", src, op.Type))
 			}
-			if op.Type == "HOLDS" || op.Type == "TRANSPORTS" || op.Type == "USES" {
-				traceTouched = true
+			if isTraceRel(op.Type) {
+				markTrace(srcInfo.soiIndex)
 			}
 			resp.RelationshipsChanged++
 
@@ -329,7 +366,7 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 				if _, err := tx.Run(ctx, q, map[string]any{"src": src, "tgt": tgt, "state": stateHid}); err != nil {
 					return nil, err
 				}
-				traceTouched = true
+				markTrace(srcInfo.soiIndex)
 			} else {
 				if op.Type == "AT_RELATES_TO" {
 					lossHID, _ := op.Props["LossHID"].(string)
@@ -353,12 +390,74 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 				touch(tgt, tgtInfo.owner, tgtInfo.ownerEmail, fmt.Sprintf("relationship removed: %s -[:%s]->", src, op.Type))
 			}
 			resp.RelationshipsChanged++
+
+		case "transferOwnership":
+			// Explicit user-initiated ownership change (SRS §5.6.6.8.2). The
+			// destination must be an ACTIVE, non-Admin (:User) or the RootAdmin
+			// (Admins cannot own Core Data, SRS §3.2).
+			cur, err := fetchNodeForUpdate(ctx, tx, op.HID)
+			if err != nil {
+				return nil, err
+			}
+			if cur.readOnly {
+				return nil, fmt.Errorf("node %s is read-only reference data (SRS §3.4.6.3)", op.HID)
+			}
+			if cur.owner == "SSTPA Tools" {
+				return nil, fmt.Errorf("example data owned by SSTPA Tools never changes ownership (SRS §3)")
+			}
+			ores, err := tx.Run(ctx, `
+				OPTIONAL MATCH (u:User {UserName: $name})
+				OPTIONAL MATCH (ra:RootAdmin {UserName: $name})
+				RETURN u.Email AS uEmail, coalesce(u.IsAdmin, false) AS uAdmin,
+				       coalesce(u.AccountStatus, 'ACTIVE') AS uStatus,
+				       ra.Email AS raEmail`,
+				map[string]any{"name": op.NewOwner})
+			if err != nil {
+				return nil, err
+			}
+			orec, err := ores.Single(ctx)
+			if err != nil {
+				return nil, err
+			}
+			om := orec.AsMap()
+			var newEmail string
+			if e, ok := om["raEmail"].(string); ok && e != "" {
+				newEmail = e
+			} else if e, ok := om["uEmail"].(string); ok && e != "" {
+				if adm, _ := om["uAdmin"].(bool); adm {
+					return nil, fmt.Errorf("ownership cannot transfer to an Admin account (SRS §3.2)")
+				}
+				if st, _ := om["uStatus"].(string); st != "ACTIVE" {
+					return nil, fmt.Errorf("ownership destination %s is not an ACTIVE account", op.NewOwner)
+				}
+				newEmail = e
+			} else {
+				return nil, fmt.Errorf("ownership destination user %s not found", op.NewOwner)
+			}
+			if _, err := tx.Run(ctx, `
+				MATCH (n:SSTPA {HID: $hid})
+				SET n.Owner = $owner, n.OwnerEmail = $email, n.LastTouch = datetime()`,
+				map[string]any{"hid": op.HID, "owner": op.NewOwner, "email": newEmail}); err != nil {
+				return nil, err
+			}
+			nc := touch(op.HID, cur.owner, cur.ownerEmail,
+				fmt.Sprintf("ownership: %s → %s", cur.owner, op.NewOwner))
+			nc.OwnershipChanged = true
+			nc.OldOwner = cur.owner
+			nc.NewOwner = op.NewOwner
+			resp.NodesChanged++
 		}
 	}
 
-	// Trace-derived recomputation (§3.3.4.6.2, §3.3.4.6.3) when trace edges moved.
-	if traceTouched && req.SoIHID != "" {
-		if err := s.recomputeTraceDerivations(ctx, tx, user, req.SoIHID, commitID); err != nil {
+	// Trace-derived recomputation (§3.3.4.6.2, §3.3.4.6.3) for every SoI whose
+	// trace data moved in this commit.
+	if req.SoIHID != "" && len(traceSoIs) > 0 {
+		if h, err := schema.ParseHID(req.SoIHID); err == nil {
+			traceSoIs[h.SoIKey()] = true
+		}
+	}
+	for soiKey := range traceSoIs {
+		if err := s.recomputeTraceDerivationsForKey(ctx, tx, user, soiKey, commitID); err != nil {
 			return nil, fmt.Errorf("trace derivation recompute failed: %w", err)
 		}
 	}
@@ -367,6 +466,8 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 	// per owner per commit, created in this same transaction.
 	byOwner := map[string][]string{}
 	ownerEmail := map[string]string{}
+	ownerTransfers := map[string][]string{}
+	ownerNewOwner := map[string]string{}
 	for hid, nc := range affected {
 		if nc.Owner == "" || nc.Owner == user.UserName || nc.Owner == "SSTPA Tools" {
 			continue
@@ -375,6 +476,10 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 			byOwner[nc.Owner] = append(byOwner[nc.Owner], hid+": "+c)
 		}
 		ownerEmail[nc.Owner] = nc.OwnerEmail
+		if nc.OwnershipChanged {
+			ownerTransfers[nc.Owner] = append(ownerTransfers[nc.Owner], hid)
+			ownerNewOwner[nc.Owner] = nc.NewOwner
+		}
 	}
 	for owner, changes := range byOwner {
 		sort.Strings(changes)
@@ -382,6 +487,8 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 			"User %s committed changes affecting data you own.\n\nCommit: %s\n\nChanges:\n%s",
 			user.UserName, commitID, strings.Join(changes, "\n"))
 		hids := affectedHIDs(changes)
+		transferred := ownerTransfers[owner]
+		sort.Strings(transferred)
 		res, err := tx.Run(ctx, `
 			MATCH (u)-[:OWNS_MAILBOX]->(mb:Mailbox) WHERE u.UserName = $owner
 			CREATE (m:Message {
@@ -393,6 +500,9 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 				Recipient: $owner, RecipientEmail: $ownerEmail,
 				RelatedNodeHIDs: $hids,
 				CommitID: $commitId,
+				OldOwner: $oldOwner, CurrentOwner: $currentOwner,
+				OwnershipTransferredHIDs: $transferredHids,
+				ChangeSummary: $changeSummary,
 				IsRead: false, IsDeleted: false,
 				RequiresApproval: false, ApprovalStatus: 'NOT_APPLICABLE'
 			})
@@ -408,6 +518,17 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 				"senderEmail": user.Email,
 				"hids":        hids,
 				"commitId":    commitID,
+				// Structured owner-change fields (§5.6.6.8.1): machine-readable
+				// old/current owner where ownership changed in this commit.
+				"oldOwner": func() string {
+					if len(transferred) > 0 {
+						return owner
+					}
+					return ""
+				}(),
+				"currentOwner": ownerNewOwner[owner],
+				"transferredHids": transferred,
+				"changeSummary":   strings.Join(changes, "; "),
 			})
 		if err != nil {
 			return nil, fmt.Errorf("notification creation failed (rolling back commit, SRS §5.6.6.8.1): %w", err)
@@ -423,9 +544,6 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 		resp.RecipientsNotified = append(resp.RecipientsNotified, owner)
 	}
 	sort.Strings(resp.RecipientsNotified)
-	for i := 0; i < resp.MessagesGenerated; i++ {
-		s.metrics.OwnershipNotifications.Inc()
-	}
 	return resp, nil
 }
 

@@ -8,10 +8,16 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useDrawer, useSoI } from "../state/stores";
 
+/** HID structure per the identity model (SRS §3.3.8): TYPE_INDEX_SEQUENCE,
+ *  e.g. SYS_1_0 or EL_1.2_4. The SoI index is the middle segment. */
+function hidParts(hid: string): { prefix: string; index: string; seq: string } | null {
+  const m = /^([A-Z]+)_([0-9.]+)_(\d+)$/.exec(hid);
+  return m ? { prefix: m[1], index: m[2], seq: m[3] } : null;
+}
+
 export function SoIPanel() {
   const { soiHid, setSoI } = useSoI();
-  const openDrawer = useDrawer((s) => s.openDrawer);
-  const drawerOpen = useDrawer((s) => s.open);
+  const requestOpenDrawer = useDrawer((s) => s.requestOpenDrawer);
 
   const hierarchy = useQuery({
     queryKey: ["hierarchy"],
@@ -27,26 +33,31 @@ export function SoIPanel() {
   });
 
   // Children of the current SoI: systems whose parent Component lives in this
-  // SoI, or tier-1 systems under the Project when no SoI is selected.
+  // SoI (component HIDs encode the SoI index, SRS §3.3.8), or tier-1 systems
+  // under the Project when no SoI is selected.
   const project = entries.find((e) => e.typeName === "Project");
-  const soiIndex = soiHid ? soiHid.split("_")[1] : null;
+  const soiIndex = soiHid ? (hidParts(soiHid)?.index ?? null) : null;
   const children = entries.filter((e) => {
     if (e.typeName !== "System") return false;
     if (!soiHid) return e.parentHid === project?.hid;
     if (!e.parentHid) return false;
-    // Parent is a Component in the current SoI: EL_<soiIndex>_n
-    const parts = e.parentHid.split("_");
-    return parts[0] === "EL" && parts[1] === soiIndex;
+    const parent = hidParts(e.parentHid);
+    return parent?.prefix === "EL" && parent.index === soiIndex;
   });
 
+  // Parent SoI: the System entry owning the SoI index of this system's
+  // parent Component; null (Project level) for tier-1 systems.
   const parentOfSoI = (() => {
     if (!soiHid) return null;
     const me = entries.find((e) => e.hid === soiHid);
     if (!me?.parentHid) return null;
-    if (me.parentHid.startsWith("CAP")) return { hid: null };
-    // Parent component's SoI root system
-    const parentIndex = me.parentHid.split("_")[1];
-    return { hid: `SYS_${parentIndex}_0` };
+    const parent = hidParts(me.parentHid);
+    if (!parent || parent.prefix !== "EL") return { hid: null }; // Project root
+    const parentSystem = entries.find(
+      (e) =>
+        e.typeName === "System" && hidParts(e.hid)?.index === parent.index,
+    );
+    return { hid: parentSystem?.hid ?? null };
   })();
 
   const props = soiNode.data?.properties ?? {};
@@ -58,7 +69,6 @@ export function SoIPanel() {
           <button
             className="icon-button"
             title="Navigate to parent System of Interest"
-            disabled={!parentOfSoI && !soiHid}
             onClick={() => setSoI(parentOfSoI?.hid ?? null)}
             style={{ fontSize: "1.05rem" }}
           >
@@ -67,7 +77,11 @@ export function SoIPanel() {
           <div className="soi-identity">
             <div className="soi-hid">{soiHid}</div>
             <div className="soi-name">
-              {String(props.Name ?? soiNode.data?.hid ?? "…")}
+              {soiNode.isLoading
+                ? "Loading…"
+                : soiNode.isError
+                  ? "(could not load node)"
+                  : String(props.Name ?? soiNode.data?.hid ?? "")}
             </div>
             <div style={{ fontSize: "0.8rem", color: "var(--sstpa-navy-muted)" }}>
               {String(props.ShortDescription ?? "") === "null"
@@ -78,21 +92,29 @@ export function SoIPanel() {
           <button
             className="icon-button"
             title="Edit System of Interest properties"
-            disabled={drawerOpen}
-            onClick={() => openDrawer({ mode: "edit", hid: soiHid })}
+            onClick={() => requestOpenDrawer({ mode: "edit", hid: soiHid })}
           >
             ✎ Edit
           </button>
         </>
       ) : (
         <div className="soi-identity">
-          <div className="soi-hid">{project?.hid ?? "No Capability yet"}</div>
+          <div className="soi-hid">
+            {hierarchy.isLoading
+              ? "Loading hierarchy…"
+              : (project?.hid ?? "No Capability yet")}
+          </div>
           <div className="soi-name">
             {project?.name ?? "SSTPA Tools"} — Select a System of Interest
           </div>
         </div>
       )}
       <div className="soi-children">
+        {hierarchy.isError && (
+          <span style={{ fontSize: "0.78rem", color: "var(--sstpa-status-error)" }}>
+            Hierarchy unavailable: {String(hierarchy.error)}
+          </span>
+        )}
         {children.map((c) => (
           <button
             key={c.hid}
@@ -106,7 +128,7 @@ export function SoIPanel() {
             {c.name}
           </button>
         ))}
-        {children.length === 0 && soiHid && (
+        {children.length === 0 && soiHid && !hierarchy.isError && (
           <span
             style={{ fontSize: "0.78rem", color: "var(--sstpa-navy-muted)" }}
           >

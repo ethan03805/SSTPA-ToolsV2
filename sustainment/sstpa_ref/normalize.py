@@ -364,7 +364,14 @@ def _parts_text(control: dict, name: str) -> str | None:
 
 
 def _control_record(c: dict, family_id: str, is_enh: bool, parent: str | None) -> dict:
-    props = {p.get("name"): p.get("value") for p in c.get("props", [])}
+    raw_props = c.get("props", [])
+    props = {p.get("name"): p.get("value") for p in raw_props}
+    # A control can carry multiple baseline-impact props (LOW/MODERATE/HIGH);
+    # collect them from the raw list before the name-keyed dict collapses
+    # duplicates to the last value.
+    baseline_impact = [
+        p.get("value") for p in raw_props if p.get("name") == "baseline-impact"
+    ]
     related = [
         (link.get("href") or "").lstrip("#")
         for link in c.get("links", [])
@@ -386,9 +393,7 @@ def _control_record(c: dict, family_id: str, is_enh: bool, parent: str | None) -
         "long_description": _parts_text(c, "statement"),
         "supplemental_guidance": _parts_text(c, "guidance"),
         "objectives": _parts_text(c, "objective"),
-        "baseline_impact": [
-            v for k, v in props.items() if k == "baseline-impact"
-        ] or ([props["baseline-impact"]] if "baseline-impact" in props else []),
+        "baseline_impact": baseline_impact,
         "priority": props.get("priority"),
         "related_controls": related,
         "is_enhancement": is_enh,

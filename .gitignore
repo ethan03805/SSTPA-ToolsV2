@@ -32,3 +32,4 @@ deploy/caddy-data/
 *.swp
 .DS_Store
 deploy/neo4j/import/
+sustainment/logs/

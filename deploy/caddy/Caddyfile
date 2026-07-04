@@ -15,12 +15,6 @@ https://localhost, https://127.0.0.1 {
 		reverse_proxy backend:8080
 	}
 
-	handle /metrics-proxy/* {
-		# development convenience: raw backend metrics via the proxy
-		uri strip_prefix /metrics-proxy
-		reverse_proxy backend:8080
-	}
-
 	handle /grafana/* {
 		reverse_proxy grafana:3000
 	}

@@ -120,6 +120,14 @@
         color: var(--navy-muted);
         margin-top: 16px;
       }
+      .firstrun {
+        text-align: left;
+        font-size: 0.78rem;
+        color: var(--navy-muted);
+        border-left: 3px solid var(--gold-soft);
+        padding-left: 10px;
+        margin: 12px 0 4px;
+      }
     </style>
   </head>
   <body>
@@ -137,6 +145,29 @@
           <input id="pass" type="password" autocomplete="current-password" />
         </label>
         <button id="go" type="submit">Sign in &amp; launch SSTPA Tools</button>
+      </form>
+      <form id="bootstrap" style="display: none">
+        <p class="firstrun">
+          First run: create the RootAdmin account for this installation.
+          The RootAdmin enrolls all other users through the Admin Tool.
+        </p>
+        <label>
+          User name
+          <input id="bs-user" autocomplete="username" />
+        </label>
+        <label>
+          Email
+          <input id="bs-email" type="email" autocomplete="email" />
+        </label>
+        <label>
+          Password
+          <input id="bs-pass" type="password" autocomplete="new-password" />
+        </label>
+        <label>
+          Confirm password
+          <input id="bs-pass2" type="password" autocomplete="new-password" />
+        </label>
+        <button id="bs-go" type="submit">Create RootAdmin &amp; launch SSTPA Tools</button>
       </form>
       <div class="copyright">
         2025 Nicholas Triska. All rights reserved.

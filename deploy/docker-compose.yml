@@ -33,7 +33,7 @@ services:
     environment:
       SSTPA_NEO4J_URI: bolt://neo4j:7687
       SSTPA_NEO4J_USER: neo4j
-      SSTPA_NEO4J_PASSWORD: ${SSTPA_NEO4J_PASSWORD:-sstpa-dev-password}
+      SSTPA_NEO4J_PASSWORD: ${SSTPA_NEO4J_PASSWORD:?SSTPA_NEO4J_PASSWORD must be set in deploy/.env}
       SSTPA_HTTP_ADDR: :8080
       SSTPA_OTLP_ENDPOINT: otel-collector:4317
       SSTPA_ENV: ${SSTPA_ENV:-development}
@@ -49,7 +49,9 @@ services:
     image: neo4j:2026.05.0-community
     restart: unless-stopped
     environment:
-      NEO4J_AUTH: neo4j/${SSTPA_NEO4J_PASSWORD:-sstpa-dev-password}
+      NEO4J_AUTH: neo4j/${SSTPA_NEO4J_PASSWORD:?SSTPA_NEO4J_PASSWORD must be set in deploy/.env}
+      # Exposed to the healthcheck's cypher-shell probe (not read by Neo4j).
+      SSTPA_NEO4J_PASSWORD: ${SSTPA_NEO4J_PASSWORD}
       NEO4J_server_memory_heap_initial__size: 1G
       NEO4J_server_memory_heap_max__size: 2G
       NEO4J_server_memory_pagecache_size: 1G
@@ -60,9 +62,12 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null 2>&1 || exit 1"]
+      # Bolt-level readiness (what the backend actually connects to), not just
+      # the HTTP port being up, so the backend never starts against a DB that
+      # is not yet accepting queries.
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$$SSTPA_NEO4J_PASSWORD\" 'RETURN 1;' >/dev/null 2>&1 || exit 1"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 30
       start_period: 40s
 
@@ -106,9 +111,10 @@ services:
       GF_SERVER_ROOT_URL: "https://localhost/grafana/"
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_SECURITY_ADMIN_USER: ${SSTPA_GRAFANA_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${SSTPA_GRAFANA_PASSWORD:-sstpa-dev-password}
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_PASSWORD: ${SSTPA_GRAFANA_PASSWORD:?SSTPA_GRAFANA_PASSWORD must be set in deploy/.env}
+      # Anonymous access disabled for production (SRS §5.7.3 security model);
+      # dashboards require the Grafana admin login through Caddy /grafana/.
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro

@@ -5,11 +5,15 @@
 // managed by the GUI shell (§6.3.2).
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
-import { lazy, Suspense, useMemo, useState, type ComponentType } from "react";
-import { API_BASE } from "../api/client";
+import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType } from "react";
+import { apiBase } from "../api/client";
 import { useDrawer, useSession, useSoI, useToolWindows } from "../state/stores";
+import { activeStyle } from "../styles/styles";
 import { manifestById, type ToolLaunchContext, type ToolManifest } from "./manifest";
 import { ModelTextPanel } from "./ModelTextPanel";
+
+/** Monotonic z-index so the last-clicked tool window stacks on top. */
+let topZ = 30;
 
 /** Lazy tool component registry keyed by ToolID. */
 const TOOL_COMPONENTS: Record<
@@ -60,6 +64,16 @@ function ToolWindow({ toolId }: { toolId: string }) {
     x: Math.max(30, (window.innerWidth - 900) / 2),
     y: Math.max(70, (window.innerHeight - 620) / 2),
   });
+  const [z, setZ] = useState(() => ++topZ);
+
+  // Launch context (SRS §6.4): the invoking node (drawer or cross-tool
+  // navigation) the tool should focus. Subscribed reactively so that
+  // re-launching an already-open tool with a new focus target surfaces the
+  // window and updates ctx.focusHid.
+  const launch = useToolWindows((s) => s.launchContexts[toolId]);
+  useEffect(() => {
+    if (launch) setZ(++topZ); // bring to front when refocused
+  }, [launch]);
 
   const ctx: ToolLaunchContext = useMemo(
     () => ({
@@ -70,12 +84,14 @@ function ToolWindow({ toolId }: { toolId: string }) {
       soiUuid: null,
       drawerNodeHid: drawer.open ? (drawer.request?.hid ?? null) : null,
       drawerNodeUuid: null,
-      launchMode: "CONTROL_PANEL",
-      backendBaseUrl: API_BASE,
+      focusHid: launch?.focusHid ?? null,
+      focusType: launch?.focusType ?? null,
+      launchMode: drawer.open ? "DATA_DRAWER" : "CONTROL_PANEL",
+      backendBaseUrl: apiBase(),
       editAuthorized: true,
-      themeTokens: "sstpa-default",
+      themeTokens: activeStyle(),
     }),
-    [user, soiHid, drawer.open, drawer.request],
+    [user, soiHid, drawer.open, drawer.request, launch],
   );
 
   if (!manifest) return null;
@@ -120,7 +136,7 @@ function ToolWindow({ toolId }: { toolId: string }) {
         top: pos.y,
         width: size.w,
         height: size.h,
-        zIndex: 30,
+        zIndex: z,
         display: "flex",
         flexDirection: "column",
         boxShadow: "var(--sstpa-shadow-popup)",
@@ -129,6 +145,9 @@ function ToolWindow({ toolId }: { toolId: string }) {
       }}
       role="dialog"
       aria-label={manifest.ToolName}
+      onMouseDownCapture={() => {
+        if (z < topZ) setZ(++topZ);
+      }}
     >
       <div
         className="tool-shell-header"
@@ -172,7 +191,11 @@ function ToolWindow({ toolId }: { toolId: string }) {
           </Suspense>
         </div>
         {showModelText && (
-          <ModelTextPanel languages={manifest.ModelTextLanguages} soiHid={soiHid} />
+          <ModelTextPanel
+            toolId={toolId}
+            languages={manifest.ModelTextLanguages}
+            soiHid={soiHid}
+          />
         )}
       </div>
       <div
