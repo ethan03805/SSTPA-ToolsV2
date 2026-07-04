@@ -78,6 +78,9 @@ func NewRouter(cfg config.Config, db *graph.DB, sch *schema.Schema, m *telemetry
 		r.Group(func(r chi.Router) {
 			r.Use(s.authMiddleware)
 
+			// Session identity (SRS §4 Startup → Frontend handover)
+			r.Get("/auth/me", s.handleMe)
+
 			// Node retrieval (SRS §5.6.6.2)
 			r.Get("/nodes/hid/{hid}", s.handleNodeByHID)
 			r.Get("/nodes/uuid/{uuid}", s.handleNodeByUUID)

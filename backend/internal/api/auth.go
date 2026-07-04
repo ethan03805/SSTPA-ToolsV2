@@ -224,6 +224,17 @@ func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"rootAdminExists": res.(bool)})
 }
 
+// handleMe returns the identity behind the presented bearer token. The
+// Frontend uses it to restore the session handed over by Startup (SRS §4).
+func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
+	user, ok := CurrentUser(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "no session", "")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"user": user})
+}
+
 // handleLogout revokes the presented bearer token.
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	h := r.Header.Get("Authorization")

@@ -2,7 +2,7 @@
 // before entering the GUI. Also offers first-run RootAdmin bootstrap.
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { useSession } from "../state/stores";
 
@@ -14,6 +14,19 @@ export function LoginScreen() {
   const [mode, setMode] = useState<"login" | "bootstrap">("login");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // First-run detection (SRS §3.2): present the RootAdmin creation form
+  // automatically when this installation has no RootAdmin yet.
+  useEffect(() => {
+    api
+      .authStatus()
+      .then((s) => {
+        if (!s.rootAdminExists) setMode("bootstrap");
+      })
+      .catch(() => {
+        /* backend unreachable — the login submit will surface it */
+      });
+  }, []);
 
   const submit = async () => {
     setBusy(true);
