@@ -58,3 +58,21 @@ Verification:
 - `cd frontend && npm run build`
 
 SBOM impact: none. No software applications or libraries were added.
+
+## 2026-07-04 — Use-Case Tool Implementation
+
+- Replaced the Use-Case Tool scaffold with a working SysML-style Use Case tool:
+  Use Case creation under Purpose, selection/search, actor list management,
+  Interface and SystemFunction association/removal, inter-UseCase
+  `[:INCLUDES_UC]` and `[:EXTENDS]` relationships with Extension Point capture,
+  requirement allocation through participating Interfaces/Functions, validation,
+  diagram snapshot persistence, and Markdown/JSON exports.
+- Kept Requirements attached to participating `(:Interface)` and
+  `(:SystemFunction)` nodes via `[:HAS_REQUIREMENT]`, matching the schema rule
+  that Requirements are not directly related to `(:UseCase)`.
+
+Verification:
+
+- `cd frontend && npm run build`
+
+SBOM impact: none. No software applications or libraries were added.

@@ -103,6 +103,12 @@ Users clone reference properties into owned Core nodes via `[:REFERENCES]` (§3.
   windows using a common shell (header, SoI display, Commit/Cancel/Close, validation
   display, Model Text Panel when the manifest declares model languages). Tools access
   data only through the staged-edit/Commit model backed by Backend validation.
+- **Use-Case Tool** (§6.5.12): manages `(:UseCase)` definitions under
+  `(:Purpose)-[:HAS_USECASE]->(:UseCase)`, actor lists, `[:INVOLVES]`
+  Interface links, `[:INCLUDES]` SystemFunction links, inter-use-case
+  `[:INCLUDES_UC]`/`[:EXTENDS]` links, requirement allocation through
+  participating Interfaces/Functions, validation findings, diagram snapshots, and
+  Markdown/JSON exports.
 
 ## 6. SysML 2.0 / KerML 1.0 Interchange (§3.7)
 
