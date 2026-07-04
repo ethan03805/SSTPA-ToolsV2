@@ -1,0 +1,3403 @@
+{
+  "$comment": "Generated from SSTPA Tool SRS V7 sections 3.3.3-3.3.8 (plus messaging relationships from section 3.2.4). Line references (srsLine/srsLines) point into 'SSTPA Tool SRS V7.md' and are included for audit. Duplicate (source, type, target) triples listed in more than one SRS section appear once, with additional sections in 'alsoInSections'. Relationship property transcription conventions: SRS default 'Null' -> JSON null; 'False' -> false; 'N/A' -> \"N/A\"; a null 'type'/'edit'/'default' means the SRS does not specify it. The SRS HID Format line reads '{TYPE}*{INDEX}*{SEQUENCE}' (markdown-escaped underscores); the example SYS_1.2.3_0 confirms underscore separators.",
+  "schemaVersion": "0.7",
+  "nodeLabels": [
+    {
+      "label": "Project",
+      "displayName": "Capability",
+      "modelDomain": "SYSML",
+      "hidPrefix": "CAP",
+      "category": "Project / hierarchy",
+      "srsLine": 580
+    },
+    {
+      "label": "Sandbox",
+      "displayName": "Sandbox",
+      "modelDomain": "SYSML",
+      "hidPrefix": "SB",
+      "category": "Project / hierarchy",
+      "srsLine": 581
+    },
+    {
+      "label": "System",
+      "displayName": "System",
+      "modelDomain": "SYSML",
+      "hidPrefix": "SYS",
+      "category": "Project / hierarchy",
+      "srsLine": 582
+    },
+    {
+      "label": "Environment",
+      "displayName": "Environment",
+      "modelDomain": "SYSML",
+      "hidPrefix": "ENV",
+      "category": "System structure and behavior",
+      "srsLine": 585
+    },
+    {
+      "label": "Connection",
+      "displayName": "Connection",
+      "modelDomain": "SYSML",
+      "hidPrefix": "CNN",
+      "category": "System structure and behavior",
+      "srsLine": 586
+    },
+    {
+      "label": "Interface",
+      "displayName": "Interface",
+      "modelDomain": "SYSML",
+      "hidPrefix": "INT",
+      "category": "System structure and behavior",
+      "srsLine": 587
+    },
+    {
+      "label": "SystemFunction",
+      "displayName": "Function",
+      "modelDomain": "SYSML",
+      "hidPrefix": "FUN",
+      "category": "System structure and behavior",
+      "srsLine": 588
+    },
+    {
+      "label": "Component",
+      "displayName": "Element",
+      "modelDomain": "SYSML",
+      "hidPrefix": "EL",
+      "category": "System structure and behavior",
+      "srsLine": 589
+    },
+    {
+      "label": "State",
+      "displayName": "State",
+      "modelDomain": "SYSML",
+      "hidPrefix": "ST",
+      "category": "System structure and behavior",
+      "srsLine": 590
+    },
+    {
+      "label": "Purpose",
+      "displayName": "Purpose",
+      "modelDomain": "SYSML",
+      "hidPrefix": "PUR",
+      "category": "Intent and specification",
+      "srsLine": 593
+    },
+    {
+      "label": "UseCase",
+      "displayName": "Use Case",
+      "modelDomain": "SYSML",
+      "hidPrefix": "UC",
+      "category": "Intent and specification",
+      "srsLine": 594
+    },
+    {
+      "label": "Constraint",
+      "displayName": "Constraint",
+      "modelDomain": "SYSML",
+      "hidPrefix": "CST",
+      "category": "Intent and specification",
+      "srsLine": 595
+    },
+    {
+      "label": "Requirement",
+      "displayName": "Requirement",
+      "modelDomain": "SYSML",
+      "hidPrefix": "REQ",
+      "category": "Intent and specification",
+      "srsLine": 596
+    },
+    {
+      "label": "Validation",
+      "displayName": "Validation",
+      "modelDomain": "SYSML",
+      "hidPrefix": "VAL",
+      "category": "Intent and specification",
+      "srsLine": 597
+    },
+    {
+      "label": "Verification",
+      "displayName": "Verification",
+      "modelDomain": "SYSML",
+      "hidPrefix": "VER",
+      "category": "Intent and specification",
+      "srsLine": 598
+    },
+    {
+      "label": "Perspective",
+      "displayName": "Perspective",
+      "modelDomain": "NONE (structural container)",
+      "hidPrefix": "PRS",
+      "category": "Perspectives",
+      "srsLine": 601
+    },
+    {
+      "label": "FunctionalFlow",
+      "displayName": "Functional Flow",
+      "modelDomain": "SYSML",
+      "hidPrefix": "FF",
+      "category": "Perspectives",
+      "srsLine": 602
+    },
+    {
+      "label": "ControlStructure",
+      "displayName": "Control Structure",
+      "modelDomain": "KERML",
+      "hidPrefix": "CS",
+      "category": "Perspectives",
+      "srsLine": 603
+    },
+    {
+      "label": "Security",
+      "displayName": "Security",
+      "modelDomain": "KERML (as package)",
+      "hidPrefix": "SEC",
+      "category": "Perspectives",
+      "srsLine": 604
+    },
+    {
+      "label": "ControlAlgorithm",
+      "displayName": "Control Algorithm",
+      "modelDomain": "KERML",
+      "hidPrefix": "CAL",
+      "category": "STPA control loop",
+      "srsLine": 607
+    },
+    {
+      "label": "ProcessModel",
+      "displayName": "Process Model",
+      "modelDomain": "KERML",
+      "hidPrefix": "PM",
+      "category": "STPA control loop",
+      "srsLine": 608
+    },
+    {
+      "label": "ControlAction",
+      "displayName": "Control Action",
+      "modelDomain": "KERML",
+      "hidPrefix": "ACT",
+      "category": "STPA control loop",
+      "srsLine": 609
+    },
+    {
+      "label": "Feedback",
+      "displayName": "Feedback",
+      "modelDomain": "KERML",
+      "hidPrefix": "FB",
+      "category": "STPA control loop",
+      "srsLine": 610
+    },
+    {
+      "label": "ControlledProcess",
+      "displayName": "Controlled Process",
+      "modelDomain": "KERML",
+      "hidPrefix": "CP",
+      "category": "STPA control loop",
+      "srsLine": 611
+    },
+    {
+      "label": "Asset",
+      "displayName": "Asset",
+      "modelDomain": "KERML",
+      "hidPrefix": "AST",
+      "category": "Security analysis",
+      "srsLine": 614
+    },
+    {
+      "label": "DerivedAsset",
+      "displayName": "Derived Asset",
+      "modelDomain": "KERML",
+      "hidPrefix": "DA",
+      "category": "Security analysis",
+      "srsLine": 615
+    },
+    {
+      "label": "Regime",
+      "displayName": "Regime",
+      "modelDomain": "KERML",
+      "hidPrefix": "REG",
+      "category": "Security analysis",
+      "srsLine": 616
+    },
+    {
+      "label": "Hazard",
+      "displayName": "Hazard",
+      "modelDomain": "KERML",
+      "hidPrefix": "HAZ",
+      "category": "Security analysis",
+      "srsLine": 617
+    },
+    {
+      "label": "Loss",
+      "displayName": "Loss",
+      "modelDomain": "KERML",
+      "hidPrefix": "LOS",
+      "category": "Security analysis",
+      "srsLine": 618
+    },
+    {
+      "label": "Attack",
+      "displayName": "Attack",
+      "modelDomain": "KERML",
+      "hidPrefix": "ATK",
+      "category": "Security analysis",
+      "srsLine": 619
+    },
+    {
+      "label": "Countermeasure",
+      "displayName": "Countermeasure",
+      "modelDomain": "KERML",
+      "hidPrefix": "CM",
+      "category": "Security analysis",
+      "srsLine": 620
+    },
+    {
+      "label": "SecurityControl",
+      "displayName": "Control",
+      "modelDomain": "KERML",
+      "hidPrefix": "CTRL",
+      "category": "Security analysis",
+      "srsLine": 621
+    },
+    {
+      "label": "GsnGoal",
+      "displayName": "Goal",
+      "modelDomain": "KERML",
+      "hidPrefix": "G",
+      "category": "GSN assurance case",
+      "srsLine": 624
+    },
+    {
+      "label": "GsnStrategy",
+      "displayName": "Strategy",
+      "modelDomain": "KERML",
+      "hidPrefix": "SGY",
+      "category": "GSN assurance case",
+      "srsLine": 625
+    },
+    {
+      "label": "GsnContext",
+      "displayName": "Context",
+      "modelDomain": "KERML",
+      "hidPrefix": "CX",
+      "category": "GSN assurance case",
+      "srsLine": 626
+    },
+    {
+      "label": "GsnAssumption",
+      "displayName": "Assumption",
+      "modelDomain": "KERML",
+      "hidPrefix": "ASM",
+      "category": "GSN assurance case",
+      "srsLine": 627
+    },
+    {
+      "label": "GsnJustification",
+      "displayName": "Justification",
+      "modelDomain": "KERML",
+      "hidPrefix": "JUS",
+      "category": "GSN assurance case",
+      "srsLine": 628
+    },
+    {
+      "label": "GsnSolution",
+      "displayName": "Solution",
+      "modelDomain": "KERML",
+      "hidPrefix": "SOL",
+      "category": "GSN assurance case",
+      "srsLine": 629
+    },
+    {
+      "label": "ControlsBaseline",
+      "displayName": null,
+      "modelDomain": null,
+      "hidPrefix": "CBL",
+      "category": "HID prefix list only (3.3.8.1); not present in the 3.3.3 canonical node label table",
+      "srsLine": 1440
+    }
+  ],
+  "relationships": [
+    {
+      "type": "OWNS_MAILBOX",
+      "source": "User",
+      "target": "Mailbox",
+      "srsSection": "3.2.4",
+      "srsLine": 395
+    },
+    {
+      "type": "HAS_MESSAGE",
+      "source": "Mailbox",
+      "target": "Message",
+      "srsSection": "3.2.4",
+      "srsLine": 397
+    },
+    {
+      "type": "RELATES_TO",
+      "source": "Message",
+      "target": "*",
+      "srsSection": "3.2.4",
+      "srsLine": 400,
+      "note": "(:Message)-[:RELATES_TO]->(n) where n is any Core Data Model node. Messaging data (User Data) is not part of the Engineering Translation Set (Section 3.7.2) and is never translated to SysML 2.0 or KerML 1.0."
+    },
+    {
+      "type": "REPLY_TO",
+      "source": "Message",
+      "target": "Message",
+      "srsSection": "3.2.4",
+      "srsLine": 406,
+      "note": "for replies"
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "Purpose",
+      "target": "Requirement",
+      "srsSection": "3.3.3.1",
+      "srsLine": 643,
+      "alsoInSections": [
+        "3.3.4.7",
+        "3.3.4.8"
+      ]
+    },
+    {
+      "type": "HAS_VALIDATION",
+      "source": "Purpose",
+      "target": "Validation",
+      "srsSection": "3.3.3.1",
+      "srsLine": 644,
+      "alsoInSections": [
+        "3.3.4.7"
+      ]
+    },
+    {
+      "type": "HAS_CONSTRAINT",
+      "source": "Purpose",
+      "target": "Constraint",
+      "srsSection": "3.3.3.1",
+      "srsLine": 645,
+      "alsoInSections": [
+        "3.3.4.7"
+      ]
+    },
+    {
+      "type": "HAS_USECASE",
+      "source": "Purpose",
+      "target": "UseCase",
+      "srsSection": "3.3.3.1",
+      "srsLine": 648,
+      "alsoInSections": [
+        "3.3.4.7"
+      ]
+    },
+    {
+      "type": "HAS_CONTROL_STRUCTURE",
+      "source": "Purpose",
+      "target": "ControlStructure",
+      "srsSection": "3.3.3.1",
+      "srsLine": 649,
+      "note": "Per 3.3.4.12 Note: records which Purpose motivates the Control Structure; the Perspective chain records its containment. Both relationships are permitted on the same (:ControlStructure)."
+    },
+    {
+      "type": "HAS_FUNCTIONAL_FLOW",
+      "source": "Purpose",
+      "target": "FunctionalFlow",
+      "srsSection": "3.3.3.1",
+      "srsLine": 650
+    },
+    {
+      "type": "HAS_LOSS",
+      "source": "Asset",
+      "target": "Loss",
+      "srsSection": "3.3.3.2",
+      "srsLine": 656,
+      "alsoInSections": [
+        "3.3.4.11"
+      ]
+    },
+    {
+      "type": "HAS_GOAL",
+      "source": "Asset",
+      "target": "GsnGoal",
+      "srsSection": "3.3.3.2",
+      "srsLine": 657,
+      "alsoInSections": [
+        "3.3.4.11"
+      ]
+    },
+    {
+      "type": "HAS_SYSTEM",
+      "source": "Project",
+      "target": "System",
+      "srsSection": "3.3.4.1",
+      "srsLine": 667
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "Project",
+      "target": "Requirement",
+      "srsSection": "3.3.4.1",
+      "srsLine": 668,
+      "alsoInSections": [
+        "3.3.4.8"
+      ]
+    },
+    {
+      "type": "HAS_SYSTEM",
+      "source": "Sandbox",
+      "target": "System",
+      "srsSection": "3.3.4.1",
+      "srsLine": 669
+    },
+    {
+      "type": "PARENTS",
+      "source": "Component",
+      "target": "System",
+      "srsSection": "3.3.4.1",
+      "srsLine": 670,
+      "alsoInSections": [
+        "3.3.8.2"
+      ]
+    },
+    {
+      "type": "ACTS_IN",
+      "source": "System",
+      "target": "Environment",
+      "srsSection": "3.3.4.2",
+      "srsLine": 685
+    },
+    {
+      "type": "HAS_CONNECTION",
+      "source": "System",
+      "target": "Connection",
+      "srsSection": "3.3.4.2",
+      "srsLine": 686
+    },
+    {
+      "type": "HAS_INTERFACE",
+      "source": "System",
+      "target": "Interface",
+      "srsSection": "3.3.4.2",
+      "srsLine": 687
+    },
+    {
+      "type": "HAS_FUNCTION",
+      "source": "System",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.2",
+      "srsLine": 688
+    },
+    {
+      "type": "HAS_ELEMENT",
+      "source": "System",
+      "target": "Component",
+      "srsSection": "3.3.4.2",
+      "srsLine": 689
+    },
+    {
+      "type": "REALIZES",
+      "source": "System",
+      "target": "Purpose",
+      "srsSection": "3.3.4.2",
+      "srsLine": 690
+    },
+    {
+      "type": "EXHIBITS",
+      "source": "System",
+      "target": "State",
+      "srsSection": "3.3.4.2",
+      "srsLine": 691
+    },
+    {
+      "type": "HAS_ASSET",
+      "source": "System",
+      "target": "Asset",
+      "srsSection": "3.3.4.2",
+      "srsLine": 692,
+      "alsoInSections": [
+        "3.3.4.11"
+      ]
+    },
+    {
+      "type": "HAS_HAZARD",
+      "source": "Environment",
+      "target": "Hazard",
+      "srsSection": "3.3.4.3",
+      "srsLine": 708
+    },
+    {
+      "type": "TRANSITIONS_TO",
+      "source": "State",
+      "target": "State",
+      "srsSection": "3.3.4.3",
+      "srsLine": 710,
+      "properties": [
+        {
+          "name": "TransitionKind",
+          "type": "Enum {FUNCTIONAL, COUNTERMEASURE_REQUIRED, BOTH}",
+          "edit": null,
+          "default": null,
+          "description": "TransitionKind SHALL be one of: FUNCTIONAL, COUNTERMEASURE_REQUIRED, BOTH. Defined in Section 3.3.4.3 constraint text; the SRS provides no formal property table for [:TRANSITIONS_TO]."
+        },
+        {
+          "name": "RequiredByCountermeasureHID",
+          "type": null,
+          "edit": null,
+          "default": null,
+          "description": "If TransitionKind is COUNTERMEASURE_REQUIRED or BOTH, RequiredByCountermeasureHID and/or RequiredByCountermeasureUUID SHALL identify an existing (:Countermeasure). Defined in Section 3.3.4.3 constraint text; the SRS provides no formal property table for [:TRANSITIONS_TO]."
+        },
+        {
+          "name": "RequiredByCountermeasureUUID",
+          "type": null,
+          "edit": null,
+          "default": null,
+          "description": "If TransitionKind is COUNTERMEASURE_REQUIRED or BOTH, RequiredByCountermeasureHID and/or RequiredByCountermeasureUUID SHALL identify an existing (:Countermeasure). Defined in Section 3.3.4.3 constraint text; the SRS provides no formal property table for [:TRANSITIONS_TO]."
+        }
+      ]
+    },
+    {
+      "type": "HAS_HAZARD",
+      "source": "State",
+      "target": "Hazard",
+      "srsSection": "3.3.4.3",
+      "srsLine": 711
+    },
+    {
+      "type": "HOLDS",
+      "source": "State",
+      "target": "Asset",
+      "srsSection": "3.3.4.3",
+      "srsLine": 713,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "TRANSPORTS",
+      "source": "State",
+      "target": "Asset",
+      "srsSection": "3.3.4.3",
+      "srsLine": 714,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "USES",
+      "source": "State",
+      "target": "Asset",
+      "srsSection": "3.3.4.3",
+      "srsLine": 715,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "VALID_IN",
+      "source": "State",
+      "target": "Environment",
+      "srsSection": "3.3.4.3",
+      "srsLine": 717
+    },
+    {
+      "type": "PARTICIPATES_IN",
+      "source": "Interface",
+      "target": "Connection",
+      "srsSection": "3.3.4.4",
+      "srsLine": 755
+    },
+    {
+      "type": "CONNECTS",
+      "source": "Interface",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.4",
+      "srsLine": 756
+    },
+    {
+      "type": "FLOWS_TO_FUNCTION",
+      "source": "SystemFunction",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.5",
+      "srsLine": 768
+    },
+    {
+      "type": "FLOWS_TO_INTERFACE",
+      "source": "SystemFunction",
+      "target": "Interface",
+      "srsSection": "3.3.4.5",
+      "srsLine": 769
+    },
+    {
+      "type": "CONTAINS",
+      "source": "FunctionalFlow",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.5",
+      "srsLine": 771
+    },
+    {
+      "type": "CONTAINS",
+      "source": "FunctionalFlow",
+      "target": "Interface",
+      "srsSection": "3.3.4.5",
+      "srsLine": 772
+    },
+    {
+      "type": "CONTAINS",
+      "source": "FunctionalFlow",
+      "target": "Connection",
+      "srsSection": "3.3.4.5",
+      "srsLine": 773
+    },
+    {
+      "type": "CONTAINS",
+      "source": "FunctionalFlow",
+      "target": "Component",
+      "srsSection": "3.3.4.5",
+      "srsLine": 774
+    },
+    {
+      "type": "CONTAINS",
+      "source": "FunctionalFlow",
+      "target": "Asset",
+      "srsSection": "3.3.4.5",
+      "srsLine": 775
+    },
+    {
+      "type": "ALLOCATED_TO",
+      "source": "SystemFunction",
+      "target": "Component",
+      "srsSection": "3.3.4.6",
+      "srsLine": 796
+    },
+    {
+      "type": "ALLOCATED_TO",
+      "source": "Interface",
+      "target": "Component",
+      "srsSection": "3.3.4.6",
+      "srsLine": 797
+    },
+    {
+      "type": "HOLDS",
+      "source": "SystemFunction",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 799,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "TRANSPORTS",
+      "source": "SystemFunction",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 800,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "USES",
+      "source": "SystemFunction",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 801,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "HOLDS",
+      "source": "Interface",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 803,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "TRANSPORTS",
+      "source": "Interface",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 804,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "USES",
+      "source": "Interface",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 805,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "HOLDS",
+      "source": "Component",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 807,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "TRANSPORTS",
+      "source": "Component",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 808,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "USES",
+      "source": "Component",
+      "target": "Asset",
+      "srsSection": "3.3.4.6",
+      "srsLine": 809,
+      "properties": [
+        {
+          "name": "TraceStateHID",
+          "type": "String",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:State) node in whose context this relationship was assigned by the Trace Tool. Binds the entity-Asset relationship to its analytical State context."
+        },
+        {
+          "name": "TraceDate",
+          "type": "datetime",
+          "edit": "fixed (set on creation/update)",
+          "default": "N/A",
+          "required": true,
+          "description": "Timestamp of the Trace Tool commit session that created or last updated this relationship."
+        },
+        {
+          "name": "TraceVersion",
+          "type": "Integer",
+          "edit": "fixed (system-managed)",
+          "default": 1,
+          "required": true,
+          "description": "Monotonically increasing integer, incremented on each Trace Tool commit that creates a new version of this (entity, Asset) pair. Initial value is 1."
+        },
+        {
+          "name": "TraceStatus",
+          "type": "Enum {CURRENT, SUPERSEDED, INVALIDATED}",
+          "edit": "Admin only",
+          "default": "CURRENT",
+          "required": true,
+          "description": "CURRENT: the relationship is the active authoritative trace result. SUPERSEDED: a newer Trace Tool commit has replaced this relationship with a different assignment for the same (entity, State, Asset) triple. INVALIDATED: the referenced entity or State has been removed from the SoI since this relationship was committed, making the relationship inconsistent with the current model."
+        },
+        {
+          "name": "TraceSessionID",
+          "type": "String (uuid)",
+          "edit": "fixed (set on creation)",
+          "default": "N/A",
+          "required": true,
+          "description": "The uuid of the Trace Tool commit session that created this relationship version. Enables grouping of all changes committed in a single Trace Tool session."
+        },
+        {
+          "name": "TraceNote",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Optional analyst annotation explaining the rationale for this specific relationship assignment."
+        },
+        {
+          "name": "AcknowledgedInvalidation",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, the analyst has acknowledged a TraceStatus = INVALIDATED condition and accepted it as a known state. Suppresses the finding from automated validation reports without changing TraceStatus."
+        }
+      ]
+    },
+    {
+      "type": "INCLUDES",
+      "source": "UseCase",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.7",
+      "srsLine": 916
+    },
+    {
+      "type": "INVOLVES",
+      "source": "UseCase",
+      "target": "Interface",
+      "srsSection": "3.3.4.7",
+      "srsLine": 917
+    },
+    {
+      "type": "EXTENDS",
+      "source": "UseCase",
+      "target": "UseCase",
+      "srsSection": "3.3.4.7",
+      "srsLine": 918,
+      "properties": [
+        {
+          "name": "ExtensionPoint",
+          "type": null,
+          "edit": null,
+          "default": null,
+          "description": "Per Section 3.3.4.7: [:EXTENDS] \"SHALL translate to a SysML 2.0 use case specialization annotated with the SSTPA Profile metadata keyword #extend, carrying ExtensionPoint as a metadata attribute (Section 3.7.6).\""
+        }
+      ]
+    },
+    {
+      "type": "INCLUDES_UC",
+      "source": "UseCase",
+      "target": "UseCase",
+      "srsSection": "3.3.4.7",
+      "srsLine": 919
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "Constraint",
+      "target": "Requirement",
+      "srsSection": "3.3.4.7",
+      "srsLine": 923,
+      "alsoInSections": [
+        "3.3.4.8"
+      ]
+    },
+    {
+      "type": "PARENTS",
+      "source": "Requirement",
+      "target": "Requirement",
+      "srsSection": "3.3.4.7",
+      "srsLine": 925
+    },
+    {
+      "type": "VERIFIED_BY",
+      "source": "Requirement",
+      "target": "Verification",
+      "srsSection": "3.3.4.7",
+      "srsLine": 926
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "Connection",
+      "target": "Requirement",
+      "srsSection": "3.3.4.8",
+      "srsLine": 968
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "Interface",
+      "target": "Requirement",
+      "srsSection": "3.3.4.8",
+      "srsLine": 969
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "SystemFunction",
+      "target": "Requirement",
+      "srsSection": "3.3.4.8",
+      "srsLine": 970
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "Component",
+      "target": "Requirement",
+      "srsSection": "3.3.4.8",
+      "srsLine": 971
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "Countermeasure",
+      "target": "Requirement",
+      "srsSection": "3.3.4.8",
+      "srsLine": 973,
+      "alsoInSections": [
+        "3.3.4.9"
+      ]
+    },
+    {
+      "type": "HAS_REQUIREMENT",
+      "source": "SecurityControl",
+      "target": "Requirement",
+      "srsSection": "3.3.4.8",
+      "srsLine": 975
+    },
+    {
+      "type": "HAS_PERSPECTIVE",
+      "source": "System",
+      "target": "Perspective",
+      "srsSection": "3.3.4.9",
+      "srsLine": 985,
+      "alsoInSections": [
+        "3.3.4.12"
+      ]
+    },
+    {
+      "type": "HAS_SECURITY",
+      "source": "Perspective",
+      "target": "Security",
+      "srsSection": "3.3.4.9",
+      "srsLine": 986
+    },
+    {
+      "type": "HAS_CONTROL",
+      "source": "Security",
+      "target": "SecurityControl",
+      "srsSection": "3.3.4.9",
+      "srsLine": 987
+    },
+    {
+      "type": "HAS_COUNTERMEASURE",
+      "source": "Security",
+      "target": "Countermeasure",
+      "srsSection": "3.3.4.9",
+      "srsLine": 988
+    },
+    {
+      "type": "ENFORCES",
+      "source": "SecurityControl",
+      "target": "Constraint",
+      "srsSection": "3.3.4.9",
+      "srsLine": 990
+    },
+    {
+      "type": "MITIGATES",
+      "source": "SecurityControl",
+      "target": "Hazard",
+      "srsSection": "3.3.4.9",
+      "srsLine": 991
+    },
+    {
+      "type": "SATISFIES",
+      "source": "Countermeasure",
+      "target": "SecurityControl",
+      "srsSection": "3.3.4.9",
+      "srsLine": 995
+    },
+    {
+      "type": "APPLIES_TO_FUNCTION",
+      "source": "Countermeasure",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.9",
+      "srsLine": 997
+    },
+    {
+      "type": "APPLIES_TO_INTERFACE",
+      "source": "Countermeasure",
+      "target": "Interface",
+      "srsSection": "3.3.4.9",
+      "srsLine": 998
+    },
+    {
+      "type": "APPLIES_TO_ELEMENT",
+      "source": "Countermeasure",
+      "target": "Component",
+      "srsSection": "3.3.4.9",
+      "srsLine": 999
+    },
+    {
+      "type": "APPLIES_TO_STATE",
+      "source": "Countermeasure",
+      "target": "State",
+      "srsSection": "3.3.4.9",
+      "srsLine": 1000
+    },
+    {
+      "type": "APPLIES_TO_FEEDBACK",
+      "source": "Countermeasure",
+      "target": "Feedback",
+      "srsSection": "3.3.4.9",
+      "srsLine": 1001
+    },
+    {
+      "type": "BLOCKS",
+      "source": "Countermeasure",
+      "target": "Attack",
+      "srsSection": "3.3.4.9",
+      "srsLine": 1002
+    },
+    {
+      "type": "VIOLATES",
+      "source": "Hazard",
+      "target": "Constraint",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1025
+    },
+    {
+      "type": "THREATENS",
+      "source": "Hazard",
+      "target": "Asset",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1026
+    },
+    {
+      "type": "USES_ATTACK",
+      "source": "Hazard",
+      "target": "Attack",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1027
+    },
+    {
+      "type": "SUBORDINATE_TO",
+      "source": "Attack",
+      "target": "Attack",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1029
+    },
+    {
+      "type": "EXPLOITS",
+      "source": "Attack",
+      "target": "Component",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1031
+    },
+    {
+      "type": "EXPLOITS",
+      "source": "Attack",
+      "target": "Interface",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1032
+    },
+    {
+      "type": "EXPLOITS",
+      "source": "Attack",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1033
+    },
+    {
+      "type": "DEFEATS",
+      "source": "Attack",
+      "target": "Countermeasure",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1037
+    },
+    {
+      "type": "TARGETS_LOSS",
+      "source": "Attack",
+      "target": "Loss",
+      "srsSection": "3.3.4.10",
+      "srsLine": 1038
+    },
+    {
+      "type": "HAS_REGIME",
+      "source": "Asset",
+      "target": "Regime",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1075
+    },
+    {
+      "type": "HAS_ENVIRONMENT",
+      "source": "Loss",
+      "target": "Environment",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1080
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Loss",
+      "target": "Environment",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1089,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Loss",
+      "target": "State",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1090,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "State",
+      "target": "Interface",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1091,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "State",
+      "target": "SystemFunction",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1092,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "State",
+      "target": "Component",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1093,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Interface",
+      "target": "Attack",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1094,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "SystemFunction",
+      "target": "Attack",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1095,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Component",
+      "target": "Attack",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1096,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Attack",
+      "target": "Attack",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1097,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Attack",
+      "target": "Countermeasure",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1098,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Countermeasure",
+      "target": "Attack",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1099,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "AT_RELATES_TO",
+      "source": "Countermeasure",
+      "target": "Asset",
+      "srsSection": "3.3.4.11",
+      "srsLine": 1100,
+      "properties": [
+        {
+          "name": "LossHID",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "HID of the (:Loss) node that owns this attack tree edge. Set on creation; immutable. Scopes the relationship to exactly one tree."
+        },
+        {
+          "name": "Lossuuid",
+          "type": "String",
+          "edit": "fixed (system)",
+          "default": "N/A",
+          "required": true,
+          "description": "uuid of the owning (:Loss) node. Redundant with LossHID for query performance."
+        },
+        {
+          "name": "LogicOperator",
+          "type": "Enum {AND, OR, SAND}",
+          "edit": "edit",
+          "default": "AND",
+          "required": true,
+          "description": "The logical operator governing how this child node's condition combines with sibling nodes under the same parent. AND: all siblings must be satisfied. OR: any one sibling is sufficient. SAND: siblings must be satisfied in SANDSequence order."
+        },
+        {
+          "name": "SANDSequence",
+          "type": "Integer",
+          "edit": "edit",
+          "default": null,
+          "required": true,
+          "description": "For LogicOperator = SAND: the ordinal position of this child among its SAND siblings (0-indexed). NULL for AND and OR."
+        },
+        {
+          "name": "TailoredOut",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "When True, this edge is excluded from path enumeration and metric propagation for the owning Loss. Requires non-null TailorReason."
+        },
+        {
+          "name": "TailorReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when TailoredOut = True. Analyst explanation of why this relationship does not apply in the current Loss context."
+        },
+        {
+          "name": "CompleteBlock",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when target is (:Countermeasure) and source is (:Attack). When True, the Countermeasure completely blocks the Attack with no recourse by the threat actor. Requires non-null CompleteBlockReason."
+        },
+        {
+          "name": "CompleteBlockReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when CompleteBlock = True. Justification that this Countermeasure is an absolute barrier."
+        },
+        {
+          "name": "AllowedRV",
+          "type": "Boolean",
+          "edit": "edit",
+          "default": false,
+          "required": false,
+          "description": "Applicable only when source is (:Attack) and the edge is terminal (leaf Attack with no outgoing AT_RELATES_TO to a Countermeasure). When True, this Residual Vulnerability has been reviewed and accepted. Requires non-null AllowedRVReason."
+        },
+        {
+          "name": "AllowedRVReason",
+          "type": "String",
+          "edit": "edit",
+          "default": null,
+          "required": false,
+          "description": "Mandatory when AllowedRV = True. Analyst rationale for accepting this Residual Vulnerability."
+        },
+        {
+          "name": "MetricCacheJSON",
+          "type": "String (serialized JSON)",
+          "edit": "fixed (system)",
+          "default": null,
+          "required": false,
+          "description": "Backend-computed cache of all metric values propagated through this edge. Updated on every tree recalculation Commit. Format: {\"MetricName\": value, ...}."
+        }
+      ]
+    },
+    {
+      "type": "HAS_CONTROL_STRUCTURE",
+      "source": "Perspective",
+      "target": "ControlStructure",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1196
+    },
+    {
+      "type": "HAS_CONTROL_ALGORITHM",
+      "source": "ControlStructure",
+      "target": "ControlAlgorithm",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1204
+    },
+    {
+      "type": "HAS_PROCESS_MODEL",
+      "source": "ControlStructure",
+      "target": "ProcessModel",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1205
+    },
+    {
+      "type": "HAS_CONTROLLED_PROCESS",
+      "source": "ControlStructure",
+      "target": "ControlledProcess",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1206
+    },
+    {
+      "type": "HAS_CONTROL_ACTION",
+      "source": "ControlStructure",
+      "target": "ControlAction",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1207
+    },
+    {
+      "type": "HAS_FEEDBACK",
+      "source": "ControlStructure",
+      "target": "Feedback",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1208
+    },
+    {
+      "type": "IMPLEMENTS",
+      "source": "Interface",
+      "target": "ControlAlgorithm",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1210
+    },
+    {
+      "type": "IMPLEMENTS",
+      "source": "Interface",
+      "target": "ControlledProcess",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1211
+    },
+    {
+      "type": "IMPLEMENTS",
+      "source": "SystemFunction",
+      "target": "ControlAlgorithm",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1213
+    },
+    {
+      "type": "IMPLEMENTS",
+      "source": "SystemFunction",
+      "target": "ControlledProcess",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1214
+    },
+    {
+      "type": "IMPLEMENTS",
+      "source": "SystemFunction",
+      "target": "ProcessModel",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1215
+    },
+    {
+      "type": "GENERATES",
+      "source": "ControlAlgorithm",
+      "target": "ControlAction",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1217
+    },
+    {
+      "type": "COMMANDS",
+      "source": "ControlAction",
+      "target": "ControlledProcess",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1218
+    },
+    {
+      "type": "CAUSES",
+      "source": "ControlAction",
+      "target": "Hazard",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1219
+    },
+    {
+      "type": "PRODUCES",
+      "source": "ControlledProcess",
+      "target": "Feedback",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1220
+    },
+    {
+      "type": "INFORMS",
+      "source": "Feedback",
+      "target": "ProcessModel",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1222
+    },
+    {
+      "type": "TUNES",
+      "source": "ProcessModel",
+      "target": "ControlAlgorithm",
+      "srsSection": "3.3.4.12",
+      "srsLine": 1224
+    },
+    {
+      "type": "SUPPORTED_BY",
+      "source": "GsnGoal",
+      "target": "GsnGoal",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1241
+    },
+    {
+      "type": "SUPPORTED_BY",
+      "source": "GsnGoal",
+      "target": "GsnStrategy",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1243
+    },
+    {
+      "type": "SUPPORTED_BY",
+      "source": "GsnGoal",
+      "target": "GsnSolution",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1245
+    },
+    {
+      "type": "IN_CONTEXT_OF",
+      "source": "GsnGoal",
+      "target": "GsnContext",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1249
+    },
+    {
+      "type": "IN_CONTEXT_OF",
+      "source": "GsnGoal",
+      "target": "GsnJustification",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1251
+    },
+    {
+      "type": "IN_CONTEXT_OF",
+      "source": "GsnGoal",
+      "target": "GsnAssumption",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1253
+    },
+    {
+      "type": "IN_CONTEXT_OF",
+      "source": "GsnStrategy",
+      "target": "GsnContext",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1257
+    },
+    {
+      "type": "IN_CONTEXT_OF",
+      "source": "GsnStrategy",
+      "target": "GsnJustification",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1259
+    },
+    {
+      "type": "IN_CONTEXT_OF",
+      "source": "GsnStrategy",
+      "target": "GsnAssumption",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1261
+    },
+    {
+      "type": "HAS_ENVIRONMENT",
+      "source": "GsnContext",
+      "target": "Environment",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1265
+    },
+    {
+      "type": "HAS_VALIDATION",
+      "source": "GsnSolution",
+      "target": "Validation",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1269
+    },
+    {
+      "type": "HAS_VERIFICATION",
+      "source": "GsnSolution",
+      "target": "Verification",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1271
+    },
+    {
+      "type": "HAS_LOSS",
+      "source": "GsnSolution",
+      "target": "Loss",
+      "srsSection": "3.3.4.13",
+      "srsLine": 1273
+    }
+  ],
+  "constraints": {
+    "bySection": [
+      {
+        "section": "3.3.3.1",
+        "srsLines": "641",
+        "constraints": [
+          "Purpose captures a single \"reason for being\" of the (:System).  One Default (:Purpose) node SHALL be created when a new (:System) is created."
+        ]
+      },
+      {
+        "section": "3.3.4.1",
+        "srsLines": "672-679",
+        "constraints": [
+          "A (:Project) SHALL be the root of the project hierarchy.",
+          "A (:Sandbox) SHALL be outside the Capability baseline.",
+          "A (:System) SHALL NOT be related to both (:Project) lineage and (:Sandbox) lineage.",
+          "A (:Component) SHALL parent zero or one child (:System).",
+          "(:Component)-[:PARENTS]->(:System) SHALL form a Directed Acyclic Graph.",
+          "Child (:System) HID Index SHALL be derived from the parent (:Component) HID Index and Sequence Number."
+        ]
+      },
+      {
+        "section": "3.3.4.2",
+        "srsLines": "695-702",
+        "constraints": [
+          "A (:System) SHALL have at least one (:Purpose).",
+          "A (:System) SHALL have at least one (:Environment).",
+          "A (:System) SHALL have at least one (:State).",
+          "A (:System) SHALL have exactly one (:Perspective) unless explicitly extended in a future version.",
+          "(:Connection) SHALL NOT participate in hierarchy relationships.",
+          "A (:Connection) SHALL be owned by exactly one (:System) through [:HAS_CONNECTION]."
+        ]
+      },
+      {
+        "section": "3.3.4.3",
+        "srsLines": "719-749",
+        "constraints": [
+          "[:TRANSITIONS_TO] SHALL be the canonical representation of state transition.",
+          "The Core Data Model SHALL NOT contain a (:Transition) node.",
+          "[:TRANSITIONS_TO] SHALL be cyclic-by-design.",
+          "All [:TRANSITIONS_TO] traversal SHALL be bounded.",
+          "Duplicate logical transitions between the same source and destination (:State) SHALL NOT exist unless distinguished by relationship properties.",
+          "TransitionKind SHALL be one of: FUNCTIONAL, COUNTERMEASURE_REQUIRED, BOTH.",
+          "If TransitionKind is COUNTERMEASURE_REQUIRED or BOTH, RequiredByCountermeasureHID and/or RequiredByCountermeasureUUID SHALL identify an existing (:Countermeasure).",
+          "The referenced (:Countermeasure) SHALL belong to the same SoI unless an explicitly justified cross-SoI analytical exception is recorded.",
+          "Only one of [:HOLDS], [:TRANSPORTS], or [:USES] SHALL exist between a specific (:State) and a specific (:Asset).",
+          "[:HOLDS], [:TRANSPORTS], and [:USES] on (:State) nodes are the canonical representation of the state-scoped Asset relationship; [:CONTAINS]->(:Asset) SHALL NOT be used for (:State) nodes.",
+          "All three relationship types SHALL carry the trace metadata properties defined in Section 3.3.4.6a: TraceStateHID, TraceDate, TraceVersion, TraceStatus, TraceSessionID.",
+          "[:VALID_IN] records that a (:State) is analytically relevant in a given (:Environment) for the purposes of Loss analysis. A (:State) MAY be valid in zero or more (:Environment) nodes. An (:Environment) MAY have zero or more valid (:State) nodes.",
+          "[:VALID_IN] SHALL be scoped to the same SoI. A (:State) node SHALL NOT have a [:VALID_IN] relationship to an (:Environment) that belongs to a different SoI.",
+          "The Loss Tool uses [:VALID_IN] relationships to determine which States appear at Tier 1 of the Attack Tree for a given Loss-Environment pair. A (:State) that has no [:VALID_IN] relationship to the Loss's (:Environment) SHALL NOT appear in that Loss's Attack Tree.",
+          "[:VALID_IN] does NOT replace or duplicate [:TRANSITIONS_TO]. The two relationships serve different purposes: [:TRANSITIONS_TO] models behavioral state machine transitions; [:VALID_IN] models analytical scoping of States to Environments for Loss analysis.",
+          "StateSequence on (:State) nodes SHALL be used to set default SANDSequence values on [:AT_RELATES_TO] SAND relationships in the Loss Tool. It represents the User-assigned lifecycle order of States within the SoI."
+        ]
+      },
+      {
+        "section": "3.3.4.4",
+        "srsLines": "758-764",
+        "constraints": [
+          "Cross-System interaction SHALL be modeled through (:Connection).",
+          "Each (:Connection) SHALL relate to two or more (:Interface) nodes.",
+          "An (:Interface) SHALL NOT participate more than once in the same (:Connection).",
+          "Connection ownership SHALL NOT imply that all participating Interfaces belong to the owning System.",
+          "(:Connection) Requirements SHALL belong to the owning SoI."
+        ]
+      },
+      {
+        "section": "3.3.4.5",
+        "srsLines": "777-790",
+        "constraints": [
+          "Functions and Interfaces are abstractions.",
+          "Functions and Interfaces SHALL be allocated to Elements to be realized.",
+          "Only one of [:HOLDS], [:TRANSPORTS], or [:USES] SHALL exist between a specific entity node and a specific (:Asset) node. A single entity node SHALL NOT simultaneously have more than one typed Asset relationship to the same (:Asset).",
+          "[:CONTAINS]->(:Asset) SHALL NOT be used for (:SystemFunction), (:Interface), or (:Component) nodes. The authorized relationships are [:HOLDS], [:TRANSPORTS], and [:USES].",
+          "Asset relationship types carry semantic meaning about the entity's dependency on and exposure to the Asset as follows: [:HOLDS]: the entity contains the Asset for the full duration of the associated State but does not require the Asset to perform its purpose. [:TRANSPORTS]: the entity has a transient relationship with the Asset; it does not require the Asset to perform its purpose. [:USES]: the entity requires the Asset to perform its purpose during the associated State.",
+          "Entity-to-Asset relationships are state-scoped. The TraceStateHID property on the relationship SHALL record the HID of the (:State) in which the relationship was assigned.",
+          "Asset relationship assignment SHALL NOT imply ownership transfer across SoI boundaries.",
+          "All three relationship types SHALL carry the trace metadata properties defined in Section 3.3.4.6.1."
+        ]
+      },
+      {
+        "section": "3.3.4.6",
+        "srsLines": "811-816",
+        "constraints": [
+          "Functions and Interfaces are abstractions.",
+          "Functions and Interfaces SHALL be allocated to Elements to be realized.",
+          "Assets MAY be contained by Elements, Functions, Interfaces, or States.",
+          "Asset containment SHALL NOT imply ownership transfer across SoI boundaries."
+        ]
+      },
+      {
+        "section": "3.3.4.6.1",
+        "srsLines": "836-844",
+        "constraints": [
+          "TraceStateHID SHALL reference a (:State) node that belongs to the same SoI as the entity and the Asset.",
+          "TraceVersion SHALL be assigned by the Backend at commit time; the Frontend SHALL NOT set TraceVersion directly.",
+          "TraceStatus = SUPERSEDED SHALL be set only by the Backend during a Trace Tool commit transaction; it SHALL NOT be set directly by the User.",
+          "TraceStatus = INVALIDATED SHALL be set by the Backend when a node referenced by TraceStateHID or the entity node itself is removed from the SoI.",
+          "Only relationships with TraceStatus = CURRENT SHALL be used for Criticality and Assurance inheritance computation.",
+          "Only relationships with TraceStatus = CURRENT SHALL contribute to protection Requirement generation.",
+          "SUPERSEDED and INVALIDATED relationships SHALL be retained in the database for audit purposes and SHALL NOT be deleted by normal operations.",
+          "The Backend SHALL support a query returning all CURRENT entity-to-Asset relationships for a given entity, grouped by Asset, for use in criticality source computation."
+        ]
+      },
+      {
+        "section": "3.3.4.6.2",
+        "srsLines": "871-874",
+        "constraints": [
+          "Criticality and Assurance inheritance SHALL be computed and committed by the Backend as part of the Trace Tool commit transaction.",
+          "The Backend SHALL NOT allow a User to manually set a Criticality or Assurance property to False on an entity that has a CURRENT Asset relationship contributing that flag to True.",
+          "The Frontend SHALL display inherited Criticality and Assurance properties as computed/fixed when CURRENT Asset relationships exist, and as editable when no CURRENT Asset relationships exist."
+        ]
+      },
+      {
+        "section": "3.3.4.6.3",
+        "srsLines": "902-905",
+        "constraints": [
+          "Protection Requirement generation SHALL be executed as part of the Trace Tool commit transaction.",
+          "Protection Requirements generated by the Trace Tool are standard (:Requirement) nodes subject to all Core Data Model rules including [:HAS_REQUIREMENT] bearer authorization (Section 3.3.4.8) and requirement parentage rules (Section 3.3.4.7).",
+          "Protection Requirements are not distinguished by node label or type from other (:Requirement) nodes; they are identifiable by their canonical RStatement text pattern and their relationship to the entity and Asset."
+        ]
+      },
+      {
+        "section": "3.3.4.7",
+        "srsLines": "928-957",
+        "constraints": [
+          "A (:UseCase) SHALL be owned by exactly one (:Purpose) node via [:HAS].",
+          "A (:Purpose) MAY have zero or more (:UseCase) nodes.",
+          "A (:UseCase) MAY include zero or more (:SystemFunction) nodes via [:INCLUDES].",
+          "A (:UseCase) MAY involve zero or more (:Interface) nodes via [:INVOLVES].",
+          "(:SystemFunction) and (:Interface) nodes associated to a (:UseCase) SHALL belong to the same SoI as the owning (:Purpose).",
+          "[:INCLUDES] (UseCase-to-Function participation) SHALL NOT be confused with the SysML 2.0 include-use-case relationship between Use Cases; the inter-UseCase include is modeled by [:INCLUDES_UC] and translates to a SysML 2.0 IncludeUseCaseUsage (keyword: include use case).",
+          "SysML 2.0 does not define a use-case extend relationship. [:EXTENDS] is an SSTPA modeling relationship. It SHALL translate to a SysML 2.0 use case specialization annotated with the SSTPA Profile metadata keyword #extend, carrying ExtensionPoint as a metadata attribute (Section 3.7.6). The «extend» adornment used in diagrams is an SSTPA display convention, not a SysML 2.0 notation.",
+          "[:EXTENDS] and [:INCLUDES_UC] SHALL form a DAG; cycles are prohibited.",
+          "Requirements SHALL NOT be related directly to (:UseCase).  All (:Requirement) nodes derived from Use Case analysis SHALL be owned by the (:SystemFunction) or (:Interface) participating in the (:UseCase) via [:HAS_REQUIREMENT].",
+          "(:Requirement)-[:PARENTS]->(:Requirement) SHALL form a Directed Acyclic Graph.",
+          "Requirement parentage MAY cross SoI boundaries only where allowed by Requirements Tool rules.",
+          "Duplicate parentage edges SHALL NOT exist.",
+          "Requirements allocated only to (:Purpose) SHALL be treated as unallocated for gap-analysis purposes unless explicitly exempted.",
+          "Analytical properties on (:Requirement): Orphan = True when the Requirement has no bearer other than (:Purpose); Barren = True when the Requirement has no child Requirement via [:PARENTS] and no [:VERIFIED_BY] relationship. Both are computed by the Backend."
+        ]
+      },
+      {
+        "section": "3.3.4.8",
+        "srsLines": "962-980",
+        "constraints": [
+          "The following nodes SHALL be authorized to own direct [:HAS_REQUIREMENT] relationships: (:Project), (:Purpose), (:Connection), (:Interface), (:SystemFunction), (:Component), (:Constraint), (:Countermeasure), (:SecurityControl).",
+          "When a new (:System) is created from another (:System) (:Component) all (:Requirement) nodes related to that (:Component) SHALL be cloned into new (:Requirement) nodes under the default (:Purpose) node.",
+          "No other node type SHALL create [:HAS_REQUIREMENT] relationships unless explicitly authorized by a later version of this SRS."
+        ]
+      },
+      {
+        "section": "3.3.4.9",
+        "srsLines": "1006-1015",
+        "constraints": [
+          "(:SecurityControl) SHALL represent abstract assurance intent.",
+          "(:Countermeasure) SHALL represent concrete implementation or design response.",
+          "Requirements SHALL realize Countermeasures.",
+          "Verification SHALL verify Requirements.",
+          "Countermeasure-driven state behavior SHALL be represented by properties on [:TRANSITIONS_TO], not by creating a transition node.",
+          "[:APPLIES_TO_STATE] identifies affected State nodes but SHALL NOT replace [:TRANSITIONS_TO]."
+        ]
+      },
+      {
+        "section": "3.3.4.10",
+        "srsLines": "1042-1066",
+        "constraints": [
+          "Hazard SHALL represent a threatening condition.",
+          "Attack SHALL represent an action or exploit path.",
+          "Attack MAY terminate a Loss attack-tree branch as a residual vulnerability.",
+          "Hazard and Attack SHALL remain separate node types.",
+          "[:EXPLOITS] SHALL relate an (:Attack) to the (:Component), (:Interface), or (:SystemFunction) it acts upon. An (:Attack) SHALL have at least one [:EXPLOITS] relationship before it can appear in an Attack Tree.",
+          "[:SUBORDINATE_TO] models the hierarchical relationship between a general Attack (Strategy or Tactic level) and a more specific Attack (Procedure level). A subordinate (:Attack) represents a concrete implementation of its parent Attack. The [:SUBORDINATE_TO] relationship SHALL be acyclic (see Section 3.3.6).",
+          "A subordinate (:Attack) MAY itself have subordinate (:Attack) children, allowing a three-level hierarchy: Strategy → Tactic → Procedure, consistent with the MITRE ATT&CK framework levels.",
+          "[:TARGETS_LOSS] records the analytical scoping of an (:Attack) to a specific (:Loss) context. It is optional and used when a User creates an Attack that is relevant only to a specific Loss scenario rather than generally applicable. An (:Attack) without [:TARGETS_LOSS] is considered generally applicable to all relevant entity-Asset combinations in the SoI.",
+          "[:DEFEATS] models an Attack that overcomes a specific (:Countermeasure). (:Attack)-[:DEFEATS]->(:Countermeasure) is the semantic inverse of (:Countermeasure)-[:BLOCKS]->(:Attack). Both SHALL exist independently; neither replaces the other."
+        ]
+      },
+      {
+        "section": "3.3.4.11",
+        "srsLines": "1136-1188",
+        "constraints": [
+          "(:Asset)-[:HAS_REGIME]->(:Regime) SHALL replace any use of [:HAS] or [:Has] for Regime.",
+          "(:Asset)-[:HAS_GOAL]->(:GsnGoal) SHALL replace generic [:HAS] relationships to GSN Goal nodes.",
+          "Each (:Loss) SHALL be associated with exactly one (:Environment) via [:HAS_ENVIRONMENT].",
+          "Each (:Loss) SHALL be associated with exactly one (:Asset) through the inverse path (:Asset)-[:HAS_LOSS]->(:Loss).",
+          "Each (:Loss) SHALL have exactly one true Criticality property and exactly one true Assurance property.",
+          "[:AT_RELATES_TO] relationships SHALL be scoped to a single Attack Tree by LossHID. The same entity node (e.g. a (:State) or (:Attack)) MAY participate in multiple Attack Trees across different (:Loss) nodes without conflict, because each participation is identified by a distinct LossHID on the edge.",
+          "[:AT_RELATES_TO] SHALL NOT create cycles. The resulting graph of all [:AT_RELATES_TO] edges sharing the same LossHID SHALL form a Directed Acyclic Graph (DAG) rooted at the (:Loss) node.",
+          "The (:Loss) node is the unique root of its Attack Tree. (:Loss) SHALL NOT appear as the target of any [:AT_RELATES_TO] relationship within its own tree.",
+          "SANDSequence SHALL be Null when LogicOperator = AND or OR. SANDSequence SHALL be a non-negative integer when LogicOperator = SAND. SANDSequence values among SAND siblings of the same parent SHALL be unique.",
+          "All [:AT_RELATES_TO] edges that share the same source node and the same LossHID, excluding edges with TailoredOut = True, SHALL carry the same LogicOperator value. The shared value is the gate of that parent node within that Loss's Attack Tree. The Backend SHALL reject a Commit that would violate gate consistency.",
+          "When LogicOperator = SAND, SANDSequence values SHALL be unique and contiguous from 0 among the non-TailoredOut sibling edges.",
+          "The KerML 1.0 representation of Attack Tree structure is specified in Section 3.7.6; the gate maps to the profile association AtAnd, AtOr, or AtSand, with SAND ordering additionally expressed by KerML succession.",
+          "TailoredOut = True requires non-null TailorReason before Commit.",
+          "CompleteBlock = True requires non-null CompleteBlockReason before Commit.",
+          "AllowedRV = True requires non-null AllowedRVReason before Commit.",
+          "[:AT_RELATES_TO] edges are created and managed exclusively by the Loss Tool. No other Add-on Tool or GUI operation SHALL create, modify, or delete [:AT_RELATES_TO] edges.",
+          "The Backend SHALL validate LossHID against the actual (:Loss) node HID on every [:AT_RELATES_TO] create or update operation.",
+          "[:HAS_ELEMENT], [:HAS_STATE], [:HAS_ATTACK], and [:HAS_COUNTERMEASURE] relationships originating from (:Loss) are retired. The Backend SHALL reject creation of these relationship types from a (:Loss) source node.",
+          "Loss analysis DAGs SHALL be represented by [:AT_RELATES_TO] graph relationships with layout persisted in AttackTreeJSON. AttackTreeJSON SHALL NOT be the authoritative source for Attack Tree structure; the graph IS the authoritative source."
+        ]
+      },
+      {
+        "section": "3.3.4.12",
+        "srsLines": "1198-1234",
+        "constraints": [
+          "Note: (:Purpose)-[:HAS_CONTROL_STRUCTURE]->(:ControlStructure) (Section 3.3.3.1) records which Purpose motivates the Control Structure; the Perspective chain records its containment. Both relationships are permitted on the same (:ControlStructure).",
+          "A single (:SystemFunction) SHALL have no more than one [:IMPLEMENTS] relationship into an STPA role node.",
+          "A single (:Interface) SHALL have no more than one [:IMPLEMENTS] relationship into an STPA role node.",
+          "Control-loop relationships MAY form bounded analytical cycles.",
+          "Control-loop traversal SHALL be bounded."
+        ]
+      },
+      {
+        "section": "3.3.4.13",
+        "srsLines": "1277-1283",
+        "constraints": [
+          "GSN relationships SHALL use Neo4j relationship syntax.",
+          "Generic [:HAS] relationships SHALL NOT be used where a semantic relationship exists.",
+          "[:SUPPORTED_BY] relationships SHALL form a DAG unless a future version explicitly authorizes cyclic assurance-case structures."
+        ]
+      }
+    ]
+  },
+  "crossSoIRules": {
+    "allowed": [
+      "(:Interface)-[:PARTICIPATES_IN]->(:Connection)",
+      "(:Requirement)-[:PARENTS]->(:Requirement)"
+    ],
+    "prohibited": [
+      "(:State)-[:TRANSITIONS_TO]->(:State)",
+      "(:SystemFunction)-[:FLOWS_TO_FUNCTION]->(:SystemFunction)",
+      "(:SystemFunction)-[:FLOWS_TO_INTERFACE]->(:Interface)",
+      "(:SystemFunction)-[:HOLDS]->(:Asset)",
+      "(:SystemFunction)-[:TRANSPORTS]->(:Asset)",
+      "(:SystemFunction)-[:USES]->(:Asset)",
+      "(:Interface)-[:HOLDS]->(:Asset)",
+      "(:Interface)-[:TRANSPORTS]->(:Asset)",
+      "(:Interface)-[:USES]->(:Asset)",
+      "(:Component)-[:HOLDS]->(:Asset)",
+      "(:Component)-[:TRANSPORTS]->(:Asset)",
+      "(:Component)-[:USES]->(:Asset)",
+      "(:State)-[:HOLDS]->(:Asset)",
+      "(:State)-[:TRANSPORTS]->(:Asset)",
+      "(:State)-[:USES]->(:Asset)",
+      "(:Countermeasure)-[:APPLIES_TO_STATE]->(:State)",
+      "(:Countermeasure)-[:APPLIES_TO_FUNCTION]->(:SystemFunction)",
+      "(:Countermeasure)-[:APPLIES_TO_INTERFACE]->(:Interface)",
+      "(:Countermeasure)-[:APPLIES_TO_ELEMENT]->(:Component)",
+      "(:State)-[:VALID_IN]->(:Environment) — both nodes SHALL belong to the same SoI",
+      "(any)-[:AT_RELATES_TO]->(any) — all Attack Tree relationships SHALL be scoped to the SoI of the owning (:Loss); the LossHID property SHALL match a (:Loss) node belonging to the same SoI as all participating entity nodes",
+      "(:Purpose)-[:HAS_USECASE]->(:UseCase)",
+      "(:UseCase)-[:INCLUDES]->(:SystemFunction)",
+      "(:UseCase)-[:INVOLVES]->(:Interface)"
+    ],
+    "notes": [
+      "The following relationships MAY cross SoI boundaries when validated by the Backend: (see \"allowed\").",
+      "The following relationships SHALL NOT cross SoI boundaries unless explicitly justified and recorded as an analytical exception: (see \"prohibited\").",
+      "All entity-to-Asset trace relationships are scoped to the SoI of the entity and the Asset.  The Asset referenced in a trace relationship SHALL belong to the same SoI as the entity, established through (:System)-[:HAS_ASSET]->(:Asset).  Cross-SoI Asset trace relationships are not supported in this version.",
+      "(:UseCase) nodes are scoped to the SoI of their owning (:Purpose).  All (:SystemFunction) and (:Interface) nodes associated via [:INCLUDES] and [:INVOLVES] SHALL belong to the same SoI.  Cross-SoI Use Case analysis is not supported in this version.",
+      "The Backend SHALL reject unauthorized cross-SoI relationships."
+    ],
+    "srsSection": "3.3.5",
+    "srsLines": "1291-1333"
+  },
+  "recursiveGovernance": {
+    "acyclic": [
+      "(:Component)-[:PARENTS]->(:System)",
+      "(:Requirement)-[:PARENTS]->(:Requirement)",
+      "(:GsnGoal)-[:SUPPORTED_BY]->(:GsnGoal), unless explicitly extended",
+      "[:AT_RELATES_TO] (all Attack Tree edges sharing the same LossHID SHALL form a DAG; the Backend SHALL reject any edge that would create a cycle within the tree identified by that LossHID)",
+      "(:Attack)-[:SUBORDINATE_TO]->(:Attack) (Attack hierarchy SHALL be acyclic; a Procedure SHALL NOT be an ancestor of its own Strategy or Tactic)",
+      "(:UseCase)-[:EXTENDS]->(:UseCase)",
+      "(:UseCase)-[:INCLUDES_UC]->(:UseCase)"
+    ],
+    "cyclicBounded": [
+      "(:State)-[:TRANSITIONS_TO]->(:State)",
+      "(:SystemFunction)-[:FLOWS_TO_FUNCTION]->(:SystemFunction)",
+      "Control-loop relationships involving ControlAlgorithm, ControlAction, ControlledProcess, Feedback, and ProcessModel"
+    ],
+    "notes": [
+      "The Backend SHALL enforce the declared recursive behavior.",
+      "All recursive traversal SHALL require a maximum depth parameter.",
+      "The Backend SHALL provide safe default maximum depths for all recursive traversals."
+    ],
+    "srsSection": "3.3.6",
+    "srsLines": "1337-1360"
+  },
+  "systemCreationBehavior": [
+    "When an (:System) is created from an (:Component) through the relationship: (:Component)-[:PARENTS]->(:System) the following behaviors SHALL occur:",
+    "(:System) is created with a new HID",
+    "One of each  (:Purpose), (:Environment) and (:State) node with default properties are created and related to the new (:System)",
+    "All (:Requirement) nodes related to the parent (:Component) or related to a (:SystemFunction) or an (:Interface) related to the parent (:Component) are copied to a new (:Requirement) under the new (:System) (:Purpose) node with the same properties excepting HID and uuid which is modified to reflect the new (:System).",
+    "All (:Asset) nodes related to the parent (:Component), or related to a (:SystemFunction) or an (:Interface) associated with the parent (:Component) via CURRENT [:HOLDS], [:TRANSPORTS], or [:USES] relationships, SHALL be copied to new (:Asset) nodes in the new SoI with the same properties, excepting HID and uuid which SHALL be recomputed to reflect the new (:System).  The entity-to-Asset [:HOLDS], [:TRANSPORTS], and [:USES] relationships from the parent entity SHALL NOT be copied to the new SoI; trace analysis for the new SoI SHALL be performed independently using the Trace Tool.",
+    "New (:Loss) and (:GsnGoal) nodes are created based on the new (:Asset) nodes"
+  ],
+  "identityModel": {
+    "hidFormat": "{TYPE}_{INDEX}_{SEQUENCE}",
+    "example": "SYS_1.2.3_0",
+    "uuid": "uuid: apoc.create.uuid()",
+    "indexRules": [
+      "The index uniquely identifies the Sub-graph a Node belongs to and is constructed to depict its position in the entire hierarchy.",
+      "The Index will be unique for each sub-graph and every node in the sub-graph will have the same Index.",
+      "The Index for the Capability SHALL be null as the data set only contains one capability whose only purpose is to attach tier 1 systems.",
+      "When a node is created it SHALL inherit the Index of the sub-graph it belongs to excepting (:System) nodes.",
+      "When a (:System) is created as a child of a capability the index SHALL be calculated as the next highest integer value of other System children unless there are no other System children then it gets an index of \"1\".",
+      "When a System is created as the child of an Element its Index SHALL be the index of the Parent Element concatenated with \".\" concatenated with the (:Component) Node HID Sequence Number property.  For example if an (:Component) has an HID of EL_1.2.3_4 than its child (:System) will have an HID of SYS_1.2.3.4_0.",
+      "(:Component) Nodes SHALL have zero or one child (:System) nodes and this constraint will be enforced by Frontend Software.  The Relationship between an (:Component) node and its single (:System) node is: (:Component)--[:PARENTS]-->(:System)",
+      "Note, The (:System) related to here is in a child sub-graph where the new System HID index is set to the concatenation of the (:Component) Index with the (:Component) Sequence Number."
+    ],
+    "sequenceRules": [
+      "The Sequence Number is intended to distinguish nodes of the same type within the same SoI sub-graph.",
+      "The Sequence Number for a System SHALL be \"0\" because there is only one System in the SoI sub-Graph.",
+      "The Sequence Number for a Node other than a System Node SHALL be next highest integer value of other nodes of the same node type in the sub-graph unless there are no others of that node type in the sub-graph, then it is the first and its value is \"1\"."
+    ],
+    "dbIndexes": [
+      "CREATE INDEX node_hid_index IF NOT EXISTS FOR (n) ON (n.HID);",
+      "CREATE INDEX node_uuid_index IF NOT EXISTS FOR (n) ON (n.uuid);",
+      "CREATE INDEX node_name_index IF NOT EXISTS FOR (n) ON (n.Name);",
+      "CREATE INDEX node_type_index IF NOT EXISTS FOR (n) ON (n.TypeName);"
+    ],
+    "srsSection": "3.3.8",
+    "srsLines": "1381-1493"
+  }
+}

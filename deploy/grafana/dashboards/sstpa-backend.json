@@ -1,0 +1,96 @@
+{
+  "uid": "sstpa-backend",
+  "title": "SSTPA Backend",
+  "tags": ["sstpa"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "API request rate (req/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (path, method) (rate(sstpa_http_requests_total[1m]))",
+          "legendFormat": "{{method}} {{path}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "API latency p95 (s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, path) (rate(sstpa_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{path}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "HTTP status codes",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(sstpa_http_requests_total[1m]))",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Neo4j transactions (commit/rollback per s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (outcome) (rate(sstpa_graph_transactions_total[1m]))",
+          "legendFormat": "{{outcome}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "In-flight requests",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [{ "expr": "sum(sstpa_http_requests_in_flight)" }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Go goroutines",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [{ "expr": "go_goroutines{job=\"sstpa-backend\"}" }]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Process memory (RSS)",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [{ "expr": "process_resident_memory_bytes{job=\"sstpa-backend\"}" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Commit messages generated (rate)",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "sstpa-prometheus" },
+      "targets": [{ "expr": "sum(rate(sstpa_ownership_notifications_total[5m]))" }]
+    }
+  ]
+}

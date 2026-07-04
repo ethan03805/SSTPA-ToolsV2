@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: SSTPA Dashboards
+    folder: SSTPA Tools
+    type: file
+    disableDeletion: true
+    options:
+      path: /var/lib/grafana/dashboards

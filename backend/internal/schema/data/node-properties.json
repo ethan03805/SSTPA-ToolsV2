@@ -1,0 +1,2610 @@
+{
+ "$comment": "Generated from SSTPA Tool SRS V7 sections 3.3.9-3.3.10 (SRS lines 1499-2790). Line references included for audit. Transcription conventions: SRS default \"Null\" is rendered as JSON null; SRS default \"N/A\" (system-assigned at creation, no default) is rendered as the string \"N/A\"; literal defaults are rendered as strings cast by consumers to the property type. Lowercase SRS type spellings ('string', 'integer') are normalized to 'String'/'Integer'; trailing colons on malformed SRS property names (e.g. 'SafetyDescription:') are stripped. All such normalizations and other malformed source text are flagged with 'ambiguity' notes quoting the original. Keys normalized to canonical labels (SRS 3.3.3); original 3.3.10 heading preserved in srsHeading.",
+ "schemaVersion": "0.7",
+ "generalConstraints": [
+  "Property Groups are not node properties and only for organizing the display of properties and SHALL be enforced by the Frontend.",
+  "Property types SHALL be enforced by both the Frontend and the Backend.",
+  "Property defaults and ability to edit SHALL be enforced by the Frontend.",
+  "For node types authorized in Section 1.3.10.4 to assign imported external references by [:REFERENCES], Section 1.3.8 SHALL define property groups used to capture node-local interpretation, applicability, implementation, evidence, and analysis specific to that node. These properties SHALL NOT duplicate or overwrite authoritative imported reference item properties. Imported reference item content remains read-only and authoritative. Node-local external reference properties apply only to the SSTPA node and may differ between nodes referencing the same imported item."
+ ],
+ "commonPropertyGroups": [
+  {
+   "groupName": "ID",
+   "srsLines": "1555-1577",
+   "properties": [
+    {
+     "name": "Name",
+     "displayName": "Name:",
+     "type": "String",
+     "edit": "edit",
+     "default": "New"
+    },
+    {
+     "name": "HID",
+     "displayName": "Hierarchical Identifier: ",
+     "type": "Structure",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "uuid",
+     "displayName": "UUID: ",
+     "type": "String",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "TypeName",
+     "displayName": "Node Type Name ",
+     "type": "String",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "Owner",
+     "displayName": "Data Owner: ",
+     "type": "String",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "OwnerEmail",
+     "displayName": "Owner Email ",
+     "type": "String",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "Creator",
+     "displayName": "Creator: ",
+     "type": "String",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "CreatorEmail",
+     "displayName": "Creator Email: ",
+     "type": "String",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "Created",
+     "displayName": "Created: ",
+     "type": "datetime",
+     "edit": "fixed",
+     "default": "N/A"
+    },
+    {
+     "name": "LastTouch",
+     "displayName": "Last Touch: ",
+     "type": "datetime",
+     "edit": "fixed",
+     "default": "N/A",
+     "ambiguity": "SRS line 1575 writes the type as 'datetime()' with trailing parentheses: 'LastTouch \"Last Touch: \" datetime() fixed default: \"N/A\"'. Transcribed as datetime."
+    },
+    {
+     "name": "VersionID",
+     "displayName": "Data Schema Version:  ",
+     "type": "String",
+     "edit": "fixed",
+     "default": "N/A"
+    }
+   ],
+   "constraints": [
+    "(Section 3.3.9.1 Data Ownership Rules, SRS lines 1589-1617) Every node SHALL have exactly one Owner and one Creator.",
+    "On creation of any node, Creator, CreatorEmail, Owner, and OwnerEmail SHALL be assigned to the current authenticated user.",
+    "Created SHALL be set to the current timestamp on creation.",
+    "LastTouch SHALL be set to the current timestamp on creation and on every committed modification to that node.",
+    "Creator and CreatorEmail SHALL be immutable after node creation except when current user is Admin.",
+    "Owner and OwnerEmail SHALL be editable such that the current user can assume ownership only.  If current user is Admin ownership assignment may be to any registered user.",
+    "Owner and OwnerEmail if changed are always changed as a pair from backend (:User) node properties.",
+    "Ownership change SHALL be treated as a node modification for notification purposes.",
+    "Relationship changes involving a node SHALL be treated as changes to that node for notification purposes.",
+    "For a relationship between two existing nodes with different owners, the change SHALL be considered to affect both endpoint nodes.",
+    "If the current user commits a change to a node or relationship and the current user is not the Owner of the affected node, the system SHALL generate a message to the Owner\u2019s mailbox describing the change.",
+    "Message generation SHALL occur within the same transaction as the committed data change.",
+    "Failure to create required ownership-notification messages SHALL cause the overall commit transaction to fail."
+   ]
+  },
+  {
+   "groupName": "Description",
+   "srsLines": "1581-1585",
+   "properties": [
+    {
+     "name": "ShortDescription",
+     "displayName": "Short Description: ",
+     "type": "String",
+     "edit": "fixed",
+     "default": null
+    },
+    {
+     "name": "LongDescription",
+     "displayName": "Full Description:",
+     "type": "String",
+     "edit": "fixed",
+     "default": null
+    }
+   ]
+  }
+ ],
+ "nodeTypes": {
+  "Project": {
+   "srsLines": "1637-1646",
+   "propertyGroups": [
+    {
+     "groupName": "Mission",
+     "properties": [
+      {
+       "name": "MissionAction",
+       "displayName": "A Capability To:",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS lines 1640-1641 list MissionAction twice with different display names and parenthetical section annotations: 'MissionAction \"A Capability To:\" String edit default: \"Null\"        (3.3.10.1)' and 'MissionAction \"A System To:\" String edit default: \"Null\"            (3.3.10.2)'. Best reading: the '(3.3.10.1)' variant \"A Capability To:\" applies to Capability; the '(3.3.10.2)' variant \"A System To:\" applies to System."
+      },
+      {
+       "name": "MissionMeans",
+       "displayName": "By Means Of:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionContribution",
+       "displayName": "In Order To Contribute To:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Capability"
+  },
+  "System": {
+   "srsLines": "1648-1655",
+   "propertyGroups": [
+    {
+     "groupName": "Mission",
+     "properties": [
+      {
+       "name": "MissionAction",
+       "displayName": "A System To:",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS lines 1651-1652 list MissionAction twice with different display names and parenthetical section annotations: 'MissionAction \"A Capability To:\" String edit default: \"Null\"        (3.3.10.1)' and 'MissionAction \"A System To:\" String edit default: \"Null\"            (3.3.10.2)'. Best reading: the '(3.3.10.2)' variant \"A System To:\" applies to System."
+      },
+      {
+       "name": "MissionMeans",
+       "displayName": "By Means Of:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionContribution",
+       "displayName": "In Order To Contribute To:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "System"
+  },
+  "Environment": {
+   "srsLines": "1657-1663",
+   "propertyGroups": [
+    {
+     "groupName": "Context",
+     "properties": [
+      {
+       "name": "Context",
+       "displayName": "Context",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Environment"
+  },
+  "Connection": {
+   "srsLines": "1667-1741",
+   "propertyGroups": [
+    {
+     "groupName": "Reason",
+     "properties": [
+      {
+       "name": "Connection_Description",
+       "displayName": "Rational:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Properties",
+     "properties": [
+      {
+       "name": "ConnectionType",
+       "displayName": "Connection Type: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "OSILayer",
+       "displayName": "OSI Layer: ",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 1679 writes the type in lowercase: 'OSILayer \"OSI Layer: \" integer edit default: \"Null\"'."
+      },
+      {
+       "name": "Protocol",
+       "displayName": "Protocol: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 1681 writes the property name with a trailing colon and no space before the type: 'Protocol: \"Protocol: \"String edit default: \"Null\"'. Transcribed as property name 'Protocol'."
+      },
+      {
+       "name": "Directionality",
+       "displayName": "Directionality: ",
+       "type": "Enum",
+       "enumValues": [
+        "Unidirectional",
+        "Bidirectional",
+        "Multicast",
+        "Null"
+       ],
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "TimingClass",
+       "displayName": "Timing Class: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 1685 writes the type with a parenthetical: 'TimingClass \"Timing Class: \" String (default \"Null\") edit default: \"Null\"'."
+      },
+      {
+       "name": "SecurityClass",
+       "displayName": "Security Classification: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 1687 writes the type with a parenthetical: 'SecurityClass \"Security Classification: \" String (default \"Null\") edit default: \"Null\"'."
+      },
+      {
+       "name": "PayloadDescription",
+       "displayName": "Payload Description",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 1689 omits editability and the formal 'default:' clause: 'PayloadDescription \"Payload Description\" String (default \"Null\")'. Best reading: edit, default Null."
+      }
+     ]
+    },
+    {
+     "groupName": "Criticality",
+     "ambiguity": "SRS Criticality listings are malformed in places: some property names carry trailing colons ('SafetyDescription:', 'MissionCritical:', 'MissionLevel:'), Description lines use lowercase 'string' and 'default \"Null\"' without a colon. Transcribed with names normalized (colons stripped) and types capitalized.",
+     "properties": [
+      {
+       "name": "SafetyCritical",
+       "displayName": "Safety:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SafetyLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SafetyDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionCritical",
+       "displayName": "Mission:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "MissionLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightCritical",
+       "displayName": "Flight: ",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "FlightLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityCritical",
+       "displayName": "Security:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SecurityLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Assurances",
+     "properties": [
+      {
+       "name": "Confidentiality",
+       "displayName": "Confidentiality",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Availability",
+       "displayName": "Availability",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Authenticity",
+       "displayName": "Authenticity",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "NonRepudiation",
+       "displayName": "Non-Repudiation",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Certifiable",
+       "displayName": "Certifiable",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Privacy",
+       "displayName": "Privacy",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Trustworthy",
+       "displayName": "Trust",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Connection"
+  },
+  "Interface": {
+   "srsLines": "1747-1828",
+   "propertyGroups": [
+    {
+     "groupName": "Criticality",
+     "ambiguity": "Same malformations as Connection Criticality: trailing colons on some property names, lowercase 'string', 'default \"Null\"' without colon. Names normalized, types capitalized.",
+     "properties": [
+      {
+       "name": "SafetyCritical",
+       "displayName": "Safety:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SafetyLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SafetyDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionCritical",
+       "displayName": "Mission:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "MissionLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightCritical",
+       "displayName": "Flight: ",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "FlightLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityCritical",
+       "displayName": "Security:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SecurityLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Assurances",
+     "properties": [
+      {
+       "name": "Confidentiality",
+       "displayName": "Confidentiality",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Availability",
+       "displayName": "Availability",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Authenticity",
+       "displayName": "Authenticity",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "NonRepudiation",
+       "displayName": "Non-Repudiation",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Certifiable",
+       "displayName": "Certifiable",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Privacy",
+       "displayName": "Privacy",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Trustworthy",
+       "displayName": "Trust",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      }
+     ],
+     "constraints": [
+      "Inheritance Note: When a CURRENT [:HOLDS], [:TRANSPORTS], or [:USES] relationship to any (:Asset) exists for this (:Interface), all Criticality and Assurance Boolean properties are computed by the Backend per Section 3.3.4.6.2 and are fixed (not directly editable by the User). When no such CURRENT relationships exist, these properties are directly editable."
+     ]
+    },
+    {
+     "groupName": "Interface Outgoing Relationship Properties ([:PARTICIPATES_IN] and [:CONNECTS])",
+     "srsLines": "1804-1826",
+     "ambiguity": "These are relationship properties, not node properties. SRS 3.3.10.5.1: 'Only outgoing relationships with properties are identified here.' Original text (with typo): '[:PARTICIPATES_IN] and [:CONNECTS] SHALL have hte following properties:'.",
+     "properties": [
+      {
+       "name": "RelationshipNature",
+       "displayName": "Nature:",
+       "type": "Enum",
+       "enumValues": [
+        "PHYSICAL",
+        "LOGICAL",
+        "BOTH"
+       ],
+       "edit": "edit",
+       "default": "LOGICAL"
+      },
+      {
+       "name": "PhysicalType",
+       "displayName": "Physical Type:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "LogicalLayer",
+       "displayName": "OSI Layer:",
+       "type": "Enum",
+       "enumValues": [
+        "N/A",
+        "Layer 1: Physical",
+        "Layer2: Data Link",
+        "Layer 3: Network",
+        "Layer 4: Transport",
+        "Layer 5 Session",
+        "Layer 6: Presentation",
+        "Layer 7: Application"
+       ],
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 1818 gives default \"Null\", which is not among the listed enum values (the enum includes 'N/A'). Enum values transcribed exactly as written, including 'Layer2: Data Link' (missing space) and 'Layer 5 Session' (missing colon)."
+      },
+      {
+       "name": "Protocol",
+       "displayName": "Protocol:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlowDirectionality",
+       "displayName": "Directionality:",
+       "type": "Enum",
+       "enumValues": [
+        "Unidirectional",
+        "Bidirectional",
+        "Multicast"
+       ],
+       "edit": "edit",
+       "default": "Unidirectional"
+      },
+      {
+       "name": "TimingClass",
+       "displayName": "Timing Class:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityClass",
+       "displayName": "Security Classification:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "PhysicalType Example: universal joint, shaft, hydraulic linkage"
+     ]
+    }
+   ],
+   "relationshipGroups": [
+    "[:PARTICIPATES_IN]",
+    "[:CONNECTS]"
+   ],
+   "srsHeading": "Interface"
+  },
+  "SystemFunction": {
+   "srsLines": "1834-1912",
+   "description": "SRS heading is 'Function'; the Inheritance Note in this section refers to the node as (:SystemFunction).",
+   "propertyGroups": [
+    {
+     "groupName": "Criticality",
+     "ambiguity": "All four Description property lines in this section omit the data type entirely, e.g. SRS line 1842: 'SafetyDescription: \"Description:  \" edit default \"Null\"'. Best reading: String. Trailing colons on some names normalized.",
+     "properties": [
+      {
+       "name": "SafetyCritical",
+       "displayName": "Safety:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SafetyLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SafetyDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Type omitted in SRS; assumed String."
+      },
+      {
+       "name": "MissionCritical",
+       "displayName": "Mission:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "MissionLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Type omitted in SRS; assumed String."
+      },
+      {
+       "name": "FlightCritical",
+       "displayName": "Flight: ",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "FlightLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Type omitted in SRS; assumed String."
+      },
+      {
+       "name": "SecurityCritical",
+       "displayName": "Security:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SecurityLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Type omitted in SRS; assumed String."
+      }
+     ]
+    },
+    {
+     "groupName": "Assurances",
+     "properties": [
+      {
+       "name": "Confidentiality",
+       "displayName": "Confidentiality",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Availability",
+       "displayName": "Availability",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Authenticity",
+       "displayName": "Authenticity",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "NonRepudiation",
+       "displayName": "Non-Repudiation",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Certifiable",
+       "displayName": "Certifiable",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Privacy",
+       "displayName": "Privacy",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Trustworthy",
+       "displayName": "Trust",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      }
+     ],
+     "constraints": [
+      "Inheritance Note: When a CURRENT [:HOLDS], [:TRANSPORTS], or [:USES] relationship to any (:Asset) exists for this (:SystemFunction), all Criticality and Assurance Boolean properties are computed by the Backend per Section 3.3.4.6.2 and are fixed (not directly editable by the User). When no such CURRENT relationships exist, these properties are directly editable."
+     ]
+    },
+    {
+     "groupName": "Function Outgoing Relationship Properties ([:FLOWS_TO_FUNCTION] and [:FLOWS_TO_INTERFACE])",
+     "srsLines": "1890-1912",
+     "ambiguity": "These are relationship properties, not node properties. SRS 3.3.10.6.1: 'Only outgoing relationships with properties are identified here.' Original text (with typo): '[:FLOWS_TO_FUNCTION] and [:FLOWS_TO_INTERFACE] SHALLhave the following properties:'.",
+     "properties": [
+      {
+       "name": "RelationshipNature",
+       "displayName": "Nature:",
+       "type": "Enum",
+       "enumValues": [
+        "PHYSICAL",
+        "LOGICAL",
+        "BOTH"
+       ],
+       "edit": "edit",
+       "default": "LOGICAL"
+      },
+      {
+       "name": "PhysicalType",
+       "displayName": "Physical Type:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "LogicalLayer",
+       "displayName": "OSI Layer:",
+       "type": "Enum",
+       "enumValues": [
+        "N/A",
+        "Layer 1: Physical",
+        "Layer2: Data Link",
+        "Layer 3: Network",
+        "Layer 4: Transport",
+        "Layer 5 Session",
+        "Layer 6: Presentation",
+        "Layer 7: Application"
+       ],
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 1904 gives default \"Null\", which is not among the listed enum values (the enum includes 'N/A'). Enum values transcribed exactly as written."
+      },
+      {
+       "name": "Protocol",
+       "displayName": "Protocol:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlowDirectionality",
+       "displayName": "Directionality:",
+       "type": "Enum",
+       "enumValues": [
+        "Unidirectional",
+        "Bidirectional",
+        "Multicast"
+       ],
+       "edit": "edit",
+       "default": "Unidirectional"
+      },
+      {
+       "name": "TimingClass",
+       "displayName": "Timing Class:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityClass",
+       "displayName": "Security Classification:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "PhysicalType Example: universal joint, shaft, hydraulic linkage"
+     ]
+    }
+   ],
+   "relationshipGroups": [
+    "[:FLOWS_TO_FUNCTION]",
+    "[:FLOWS_TO_INTERFACE]"
+   ],
+   "srsHeading": "Function"
+  },
+  "Component": {
+   "srsLines": "1918-1992",
+   "description": "SRS heading is 'Element'; the Inheritance Note in this section refers to the node as (:Component).",
+   "propertyGroups": [
+    {
+     "groupName": "Criticality",
+     "ambiguity": "Same malformations as Connection Criticality: trailing colons on some property names, lowercase 'string', 'default \"Null\"' without colon. Names normalized, types capitalized.",
+     "properties": [
+      {
+       "name": "SafetyCritical",
+       "displayName": "Safety:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SafetyLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SafetyDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionCritical",
+       "displayName": "Mission:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "MissionLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightCritical",
+       "displayName": "Flight: ",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "FlightLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityCritical",
+       "displayName": "Security:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SecurityLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Assurances",
+     "properties": [
+      {
+       "name": "Confidentiality",
+       "displayName": "Confidentiality",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Availability",
+       "displayName": "Availability",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Authenticity",
+       "displayName": "Authenticity",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "NonRepudiation",
+       "displayName": "Non-Repudiation",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Certifiable",
+       "displayName": "Certifiable",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Privacy",
+       "displayName": "Privacy",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Trustworthy",
+       "displayName": "Trust",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      }
+     ],
+     "constraints": [
+      "Inheritance Note: When a CURRENT [:HOLDS], [:TRANSPORTS], or [:USES] relationship to any (:Asset) exists for this (:Component), all Criticality and Assurance Boolean properties are computed by the Backend per Section 3.3.4.6.2 and are fixed (not directly editable by the User). When no such CURRENT relationships exist, these properties are directly editable."
+     ]
+    },
+    {
+     "groupName": "Reference Characterization",
+     "properties": [
+      {
+       "name": "ReferenceApplicabilityStatement",
+       "displayName": "Applicability Statement:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "ReferenceExposureDescription",
+       "displayName": "Exposure Description:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "ReferenceAssumption",
+       "displayName": "Assumption:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Threat / Property Context",
+     "properties": [
+      {
+       "name": "ThreatSurface",
+       "displayName": "Threat Surface:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "TechnologyType",
+       "displayName": "Technology Type:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "DeploymentContext",
+       "displayName": "Deployment Context:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Element"
+  },
+  "Purpose": {
+   "srsLines": "2000-2002",
+   "description": "None \u2014 type-unique properties are defined on the (:UseCase) node type, which is the primary subordinate of (:Purpose).  See Section 3.3.10.34 for (:UseCase) type-unique properties.",
+   "propertyGroups": [],
+   "srsHeading": "Purpose"
+  },
+  "State": {
+   "srsLines": "2004-2041",
+   "propertyGroups": [
+    {
+     "groupName": "(ungrouped)",
+     "ambiguity": "SRS line 2006 lists StateSequence directly under the 3.3.10.9 State heading with no preceding Property Group name: 'StateSequence  \"Sequence:\"  Integer  edit  default: Null'.",
+     "properties": [
+      {
+       "name": "StateSequence",
+       "displayName": "Sequence:",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "StateSequence is the User-assigned ordinal position of this (:State) in the system operational lifecycle (e.g. Off = 0, Boot = 1, Ready = 2, Operate = 3). It is used by the Loss Tool to assign default SANDSequence values on SAND [:AT_RELATES_TO] edges when the User designates that States must be traversed in sequence for an attack path. StateSequence is optional; States without a StateSequence value may still participate in Attack Trees using manually assigned SANDSequence values on the [:AT_RELATES_TO] edge.",
+      "StateSequence values within a SoI SHOULD be unique but the Backend SHALL NOT enforce uniqueness; two States at the same lifecycle position are analytically valid (e.g. parallel operational modes at sequence 3)."
+     ]
+    },
+    {
+     "groupName": "Transitions",
+     "ambiguity": "These are relationship properties on [:TRANSITIONS_TO], not node properties: 'The [:TRANSITIONS_TO] relationship SHALL support the following properties:'.",
+     "properties": [
+      {
+       "name": "TransitionKind",
+       "displayName": "Transition Kind:",
+       "type": "Enum",
+       "enumValues": [
+        "FUNCTIONAL",
+        "COUNTERMEASURE_REQUIRED",
+        "BOTH"
+       ],
+       "edit": "edit",
+       "default": "FUNCTIONAL"
+      },
+      {
+       "name": "Trigger",
+       "displayName": "Trigger:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "GuardCondition",
+       "displayName": "Guard Condition:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "Rationale",
+       "displayName": "Rationale:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "Where TransitionKind = COUNTERMEASURE_REQUIRED or BOTH, RequiredByCountermeasureHID and/or RequiredByCountermeasureUUID SHALL identify the governing (:Countermeasure).",
+      "Inheritance Note: (:State) nodes do not carry Criticality or Assurance properties. [:HOLDS], [:TRANSPORTS], and [:USES] relationships from (:State) to (:Asset) are permitted per Section 3.3.4.3 but do not generate criticality inheritance on the (:State) node itself. State-scoped Asset relationships govern the state context of entity-to-Asset relationships recorded in TraceStateHID."
+     ]
+    },
+    {
+     "groupName": "Countermeasure Traceability",
+     "properties": [
+      {
+       "name": "RequiredByCountermeasureHID",
+       "displayName": "Required By Countermeasure HID:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "RequiredByCountermeasureUUID",
+       "displayName": "Required By Countermeasure UUID:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Analysis",
+     "properties": [
+      {
+       "name": "Priority",
+       "displayName": "Priority:",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "ResidualRiskNote",
+       "displayName": "Residual Risk Note:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "relationshipGroups": [
+    "[:TRANSITIONS_TO]"
+   ],
+   "srsHeading": "State"
+  },
+  "ControlStructure": {
+   "srsLines": "2044-2049",
+   "propertyGroups": [
+    {
+     "groupName": "Control Structures",
+     "properties": [
+      {
+       "name": "ControlStructureJSON",
+       "displayName": "Diagram Layout:",
+       "type": "JSON",
+       "edit": "fixed",
+       "default": "N/A",
+       "ambiguity": "SRS line 2048 writes the type as 'serialized JSON document': 'ControlStructureJSON \"Diagram Layout:\" serialized JSON document fixed default: N/A'."
+      }
+     ],
+     "constraints": [
+      "The Backend graph is the sole authoritative source for semantic structure; this property stores visual layout and display state only."
+     ]
+    }
+   ],
+   "srsHeading": "ControlStructure"
+  },
+  "Asset": {
+   "srsLines": "2051-2108",
+   "propertyGroups": [
+    {
+     "groupName": "Type",
+     "properties": [
+      {
+       "name": "AssetType",
+       "displayName": "Type: ",
+       "type": "Enum",
+       "enumValues": [
+        "Organic",
+        "Horizontal",
+        "Derived"
+       ],
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "AssetParent",
+       "displayName": "Parent:",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 2058 writes the type as a node reference rather than a standard data type: 'AssetParent  \"Parent:\" (:Asset {uuid}) edit default: \"Null\"'. Best reading: String holding the uuid of the parent (:Asset)."
+      }
+     ],
+     "constraints": [
+      "Note:  An Asset may be either Organic (where it is important to this particular system), Horizontal (it is important to something else but not this system) or Derived (it is only important because of its relationship to a parent Asset).  If an Asset is Organic or Horizontal, it will have no parent (AssetParent=\"Null\").  If  an Asset is derived, it must have at least one parent which may be of any AssetType.  Tools will make use of this parentage relationship to create trees from Assets to show their derived children."
+     ]
+    },
+    {
+     "groupName": "Criticality",
+     "ambiguity": "Same malformations as Connection Criticality: trailing colons on some property names, lowercase 'string', 'default \"Null\"' without colon. Names normalized, types capitalized.",
+     "properties": [
+      {
+       "name": "SafetyCritical",
+       "displayName": "Safety:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SafetyLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SafetyDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionCritical",
+       "displayName": "Mission:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "MissionLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightCritical",
+       "displayName": "Flight: ",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "FlightLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityCritical",
+       "displayName": "Security:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SecurityLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Assurances",
+     "properties": [
+      {
+       "name": "Confidentiality",
+       "displayName": "Confidentiality",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Availability",
+       "displayName": "Availability",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Authenticity",
+       "displayName": "Authenticity",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "NonRepudiation",
+       "displayName": "Non-Repudiation",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Certifiable",
+       "displayName": "Certifiable",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Privacy",
+       "displayName": "Privacy",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Trustworthy",
+       "displayName": "Trust",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Asset"
+  },
+  "Constraint": {
+   "srsLines": "2114-2118",
+   "propertyGroups": [
+    {
+     "groupName": "Constraint",
+     "properties": [
+      {
+       "name": "CStatement",
+       "displayName": "Constraint Statement:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Constraint"
+  },
+  "Requirement": {
+   "srsLines": "2120-2134",
+   "propertyGroups": [
+    {
+     "groupName": "Requirement",
+     "properties": [
+      {
+       "name": "RStatement",
+       "displayName": "Text: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 2124 writes the property name with a trailing colon: 'RStatement: \"Text: \" String edit default: \"Null\"'. Transcribed as 'RStatement'."
+      },
+      {
+       "name": "VMethod",
+       "displayName": "Method: ",
+       "type": "Enum",
+       "enumValues": [
+        "Inspection",
+        "Demonstration",
+        "Analysis",
+        "Test",
+        "Similarity"
+       ],
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "VStatement",
+       "displayName": "Verification Statement: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 2126 writes the property name with a trailing colon: 'VStatement: \"Verification Statement: \" String edit default: \"Null\"'. Transcribed as 'VStatement'."
+      }
+     ]
+    },
+    {
+     "groupName": "Analytical State",
+     "properties": [
+      {
+       "name": "Baseline",
+       "displayName": "Baseline:  ",
+       "type": "String",
+       "edit": "fixed",
+       "default": "None"
+      },
+      {
+       "name": "Orphan",
+       "displayName": "Orphan",
+       "type": "Boolean",
+       "edit": "fixed",
+       "default": "True"
+      },
+      {
+       "name": "Barren",
+       "displayName": "Barren",
+       "type": "Boolean",
+       "edit": "fixed",
+       "default": "True"
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Requirement"
+  },
+  "Validation": {
+   "srsLines": "2140-2146",
+   "propertyGroups": [
+    {
+     "groupName": "Validation",
+     "properties": [
+      {
+       "name": "VStatement",
+       "displayName": "Validation Statement: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "VMethod",
+       "displayName": "Method: ",
+       "type": "Enum",
+       "enumValues": [
+        "Inspection",
+        "Demonstration",
+        "Analysis",
+        "Test",
+        "Similarity"
+       ],
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Validation"
+  },
+  "SecurityControl": {
+   "srsLines": "2150-2172",
+   "description": "SRS heading is 'Control'; the prose in this section refers to the node as the SecurityControl (cloned from (:NIST_Control) or (:NIST_Enhancement) Reference nodes).",
+   "propertyGroups": [
+    {
+     "groupName": "Control",
+     "properties": [
+      {
+       "name": "ControlStatement",
+       "displayName": "Control Statement: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 2154 writes the property name with a trailing colon: 'ControlStatement: \"Control Statement: \" String edit default: \"Null\"'. Transcribed as 'ControlStatement'."
+      },
+      {
+       "name": "SatisfactionStatement",
+       "displayName": "Satisfaction Statement: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Reference",
+     "ambiguity": "A stray line reading 'NIST SP 800-53r5' appears between the Control group and the 'Reference:' group name at SRS line 2158; its intent is unclear (possibly a caption for the Reference group).",
+     "properties": [
+      {
+       "name": "ReferenceFramework",
+       "displayName": "Framework:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "ReferenceID",
+       "displayName": "Reference ID:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "ReferenceURL",
+       "displayName": "Reference URL:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "ReferenceFramework, ReferenceID, and ReferenceURL are populated automatically when the SecurityControl is cloned from a (:NIST_Control) or (:NIST_Enhancement) Reference node per Section 3.4.6.2. NIST catalog content (control statement, discussion, related controls, enhancements) is NOT copied onto the SecurityControl node; it remains readable through the [:REFERENCES] relationship in the Reference Tool."
+     ]
+    },
+    {
+     "groupName": "Implementation",
+     "properties": [
+      {
+       "name": "EvidenceOfImplementation",
+       "displayName": "Evidence of Implementation:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Control"
+  },
+  "Countermeasure": {
+   "srsLines": "2175-2193",
+   "propertyGroups": [
+    {
+     "groupName": "Attack Tree Metrics",
+     "properties": [
+      {
+       "name": "MetricsJSON",
+       "displayName": "Tree Metrics:",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 2179 writes the type as 'String (serialized JSON)': 'MetricsJSON  \"Tree Metrics:\"  String (serialized JSON)  edit  default: Null'."
+      }
+     ],
+     "constraints": [
+      "MetricsJSON SHALL be a JSON object where each key is a metric name matching a metric defined in the MetricDefinitionsJSON of the (:Loss) nodes whose Attack Trees include this Countermeasure, and each value is the metric contribution of this Countermeasure when it partially blocks an Attack path (e.g. raising the cost or reducing the probability of an attack succeeding through this Countermeasure).",
+      "A null MetricsJSON means no metric modification is applied when this Countermeasure appears in an Attack Tree; the Countermeasure is treated as a structural node only (its presence affects path structure but not metric values unless explicitly configured).",
+      "Example: {\"AttackCost\": 50000, \"AttackProbability\": 0.001}"
+     ]
+    }
+   ],
+   "srsHeading": "Countermeasure"
+  },
+  "Verification": {
+   "srsLines": "2197-2200",
+   "propertyGroups": [
+    {
+     "groupName": "Verification",
+     "properties": [
+      {
+       "name": "Procedure",
+       "displayName": "Procedure:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "VStatus",
+       "displayName": "Status:",
+       "type": "Enum",
+       "enumValues": [
+        "NOT_RUN",
+        "PASSED",
+        "FAILED",
+        "WAIVED"
+       ],
+       "edit": "edit",
+       "default": "NOT_RUN"
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Verification"
+  },
+  "ControlAlgorithm": {
+   "srsLines": "2203-2205",
+   "description": "cloned from related node",
+   "propertyGroups": [],
+   "srsHeading": "ControlAlgorithm"
+  },
+  "ProcessModel": {
+   "srsLines": "2209-2211",
+   "description": "cloned from related node",
+   "propertyGroups": [],
+   "srsHeading": "ProcessModel"
+  },
+  "ControlAction": {
+   "srsLines": "2215-2217",
+   "description": "User defined",
+   "propertyGroups": [],
+   "srsHeading": "ControlAction"
+  },
+  "Feedback": {
+   "srsLines": "2221-2223",
+   "description": "User defined",
+   "propertyGroups": [],
+   "srsHeading": "Feedback"
+  },
+  "ControlledProcess": {
+   "srsLines": "2227-2229",
+   "description": "cloned from related node",
+   "propertyGroups": [],
+   "srsHeading": "ControlledProcess"
+  },
+  "Hazard": {
+   "srsLines": "2233-2235",
+   "description": "User defined or cloned from reference data",
+   "propertyGroups": [],
+   "srsHeading": "Hazard"
+  },
+  "Loss": {
+   "srsLines": "2239-2533",
+   "propertyGroups": [
+    {
+     "groupName": "Criticality",
+     "ambiguity": "Same malformations as Connection Criticality: trailing colons on some property names, lowercase 'string', 'default \"Null\"' without colon. MissionDescription (SRS line 2257) omits the data type entirely; assumed String.",
+     "properties": [
+      {
+       "name": "SafetyCritical",
+       "displayName": "Safety:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SafetyLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SafetyDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionCritical",
+       "displayName": "Mission:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "MissionLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Type omitted in SRS line 2257: 'MissionDescription \"Description:  \" edit default \"Null\"'. Assumed String."
+      },
+      {
+       "name": "FlightCritical",
+       "displayName": "Flight: ",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "FlightLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityCritical",
+       "displayName": "Security:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SecurityLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "Constraint on Criticality properties: The Frontend SHALL enforce the rule that a (:Loss) has a single true criticality.  All others must be \"False\"."
+     ]
+    },
+    {
+     "groupName": "Attack Tree Metadata",
+     "srsLines": "2283-2308",
+     "properties": [
+      {
+       "name": "AttackTreeFormat",
+       "displayName": "Format:",
+       "type": "String",
+       "edit": "fixed",
+       "default": "SSTPA-ATF-2.0"
+      },
+      {
+       "name": "AttackTreeVersion",
+       "displayName": "Version:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": "0"
+      },
+      {
+       "name": "AttackTreeCreated",
+       "displayName": "Tree Created:",
+       "type": "datetime",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "AttackTreeLastModified",
+       "displayName": "Tree Last Modified:",
+       "type": "datetime",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "AttackTreeCreatedBy",
+       "displayName": "Created By:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "AttackTreeCreatedByEmail",
+       "displayName": "Contact:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "AttackTreeStatus",
+       "displayName": "Tree Status:",
+       "type": "Enum",
+       "enumValues": [
+        "NOT_BUILT",
+        "AUTO_GENERATED",
+        "ANALYST_REFINED",
+        "BASELINED",
+        "EXPORTED",
+        "INVALIDATED"
+       ],
+       "edit": "edit",
+       "default": "NOT_BUILT"
+      }
+     ],
+     "constraints": [
+      "AttackTreeVersion is incremented by 1 on every successful Loss Tool Commit that modifies the Attack Tree graph or its layout. Version 0 indicates the tree has never been built.",
+      "AttackTreeStatus semantics: NOT_BUILT: No Attack Tree has been built for this Loss. AUTO_GENERATED: Tree was built automatically from Trace and Attack Tool data without analyst modification. ANALYST_REFINED: Analyst has made at least one modification to the auto-generated tree. BASELINED: Tree has been formally approved and baselined. Modifications require re-baseline. EXPORTED: Tree has been exported for certification package inclusion. INVALIDATED: Core Data has changed since the last build in a way that makes the tree inconsistent. See ValidationFindings in AttackTreeJSON."
+     ]
+    },
+    {
+     "groupName": "Attack Tree Computed Properties",
+     "srsLines": "2311-2327",
+     "properties": [
+      {
+       "name": "TreeIsValid",
+       "displayName": "Tree Valid:",
+       "type": "Boolean",
+       "edit": "fixed",
+       "default": "False"
+      },
+      {
+       "name": "TreeHasRVs",
+       "displayName": "Has Residual Vulnerabilities:",
+       "type": "Boolean",
+       "edit": "fixed",
+       "default": "False"
+      },
+      {
+       "name": "PathCount",
+       "displayName": "Path Count:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": null
+      },
+      {
+       "name": "LastTreeBuild",
+       "displayName": "Last Built:",
+       "type": "datetime",
+       "edit": "fixed",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "TreeIsValid: True when the Attack Tree passes all structural validity rules: root present, at least one complete path from Loss to a leaf, no cycles, all LossHID references match this node's HID, no dangling references. Computed by the Backend on every Commit.",
+      "TreeHasRVs: True when at least one leaf (:Attack) node exists in the tree that has no outgoing [:AT_RELATES_TO] edge to a (:Countermeasure) and is not marked TailoredOut = True. Computed by the Backend on every Commit.",
+      "PathCount: The number of distinct root-to-leaf paths in the Attack Tree. A path is any sequence of nodes from the (:Loss) root to a terminal leaf node following [:AT_RELATES_TO] edges where TailoredOut = False. Computed by the Backend on every Commit. May be large (>1,000,000 for complex trees); the Backend SHALL support this computation with bounded traversal.",
+      "LastTreeBuild: Timestamp of the most recent successful full tree computation (auto-build or rebuild). Updated on every Commit that triggers a full recomputation."
+     ]
+    },
+    {
+     "groupName": "Attack Tree Metric Definitions",
+     "srsLines": "2331-2367",
+     "properties": [
+      {
+       "name": "MetricDefinitionsJSON",
+       "displayName": "Metric Definitions:",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 2333 writes the type as 'String (serialized JSON)': 'MetricDefinitionsJSON  \"Metric Definitions:\"  String (serialized JSON)  edit  default: Null'."
+      }
+     ],
+     "constraints": [
+      "MetricDefinitionsJSON stores the User-defined metric configurations for this Loss's Attack Tree. It is an array of metric definition objects. Each object SHALL conform to the following structure: {\"MetricName\": \"AttackCost\", \"MetricDirection\": \"MINIMIZE\", \"LeafDefault\": 0, \"ANDFormula\": \"SUM\", \"ORFormula\": \"MIN\", \"SANDFormula\": \"SUM\", \"AcceptanceThreshold\": 1000000, \"ThresholdDirection\": \"ABOVE\", \"Description\": \"Estimated cost in USD for an attacker to execute this path\"}",
+      "MetricDirection: MINIMIZE means a lower root value is safer (cost, probability of success). MAXIMIZE means a higher root value is safer (e.g. detection probability).",
+      "Formula options: SUM, PRODUCT, MIN, MAX.",
+      "Common configurations: Attack Cost: ANDFormula=SUM (must defeat all), ORFormula=MIN (attacker picks cheapest path), SANDFormula=SUM. Attack Probability: ANDFormula=PRODUCT, ORFormula=MAX, SANDFormula=PRODUCT.",
+      "MetricDefinitionsJSON is editable by the User at any time. Changing it invalidates all MetricCacheJSON entries on [:AT_RELATES_TO] edges; a full recomputation is required.",
+      "MetricName values SHALL be unique within a single Loss's MetricDefinitionsJSON.",
+      "MetricDefinitionsJSON content is engineering data: the G2M translator (Section 3.7) SHALL materialize each metric definition as attribute values on the KerML Loss element, and leaf/contribution values from MetricsJSON on (:Attack) and (:Countermeasure) nodes as attribute values on the corresponding KerML elements. MetricCacheJSON is computed tool state and is never translated."
+     ]
+    },
+    {
+     "groupName": "Attack Tree JSON (Layout and Validation Snapshot)",
+     "srsLines": "2372-2505",
+     "properties": [
+      {
+       "name": "AttackTreeJSON",
+       "displayName": null,
+       "type": "JSON",
+       "edit": null,
+       "default": null,
+       "ambiguity": "The SRS specifies the content and behavior of AttackTreeJSON in prose and a full JSON example (SRS lines 2372-2505) but never gives a formal property declaration line (no display name, editability, or default is stated). Type reading: serialized JSON document."
+      }
+     ],
+     "constraints": [
+      "AttackTreeJSON serves two purposes: 1. Layout persistence: stores the visual presentation state of the Attack Tree diagram, including node positions, tier assignments, horizontal ordering, and viewport state. This allows the Loss Tool to restore the diagram exactly as the analyst last left it. 2. Validation snapshot: stores a fingerprint of the Core Data state at the time of the last successful tree build. This allows the Loss Tool to detect when Core Data has changed in ways that may invalidate the tree, and to surface those changes as specific findings to the analyst.",
+      "AttackTreeJSON SHALL have the following top-level structure (full worked example at SRS lines 2382-2466): schema, lossHID, lossuuid, assetHID, environmentHID, builtAt, attackTreeVersion, layout {viewport, nodes, edges, metricDisplayEnabled, visibleMetrics, tierLabelVisible}, validationSnapshot {snapshotAt, environmentHID, environmentName, states, attacks, countermeasures}, validationFindings.",
+      "The validationSnapshot section records the identity and key properties of all nodes and relationships that the Attack Tree depends on at the time of the last build. On every open of the Loss Tool, the Backend compares this snapshot against the current graph state and populates validationFindings with any discrepancies.",
+      "Validation finding types and severities (table at SRS lines 2475-2490): ENTITY_REMOVED (ERROR), ENTITY_RENAMED (WARNING), TRACE_SUPERSEDED (WARNING), TRACE_INVALIDATED (ERROR), ATTACK_REMOVED (ERROR), ATTACK_EXPLOITS_BROKEN (ERROR), COUNTERMEASURE_REMOVED (ERROR), COUNTERMEASURE_BLOCKS_BROKEN (ERROR), ENVIRONMENT_CHANGED (WARNING), STATE_VALID_IN_REMOVED (WARNING), DERIVED_ASSET_REMOVED (ERROR), METRIC_DEFINITION_CHANGED (WARNING), NEW_TRACE_ENTITY (INFO), NEW_ATTACK (INFO).",
+      "Severity semantics: ERROR: The tree cannot be trusted as accurate. Loss Tool SHALL display INVALIDATED status and block export until resolved or acknowledged. WARNING: The tree may be stale. Loss Tool SHALL display WARNING badge. Export is permitted with analyst acknowledgment. INFO: New data is available that might extend the tree. Loss Tool SHALL display an information notification.",
+      "Findings are generated by the Backend on Loss Tool open, on explicit \"Validate Tree\" command, and after every Commit that modifies nodes or relationships referenced in the snapshot. The Backend SHALL update the validationFindings array and set AttackTreeStatus = INVALIDATED if any ERROR findings are present.",
+      "When an analyst resolves a finding (e.g. by rebuilding the tree after removing the affected node), the resolved finding SHALL be removed from validationFindings by the next Commit.",
+      "NOTE: The schema version, snapshot structure, and finding types described here are the authoritative specification for AttackTreeJSON content. Section 3.4.7 (previously referenced as containing an example) SHALL be updated to reflect this schema or removed."
+     ]
+    },
+    {
+     "groupName": "Assurances on Loss",
+     "srsLines": "2513-2533",
+     "properties": [
+      {
+       "name": "Confidentiality",
+       "displayName": "Confidentiality",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Availability",
+       "displayName": "Availability",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Authenticity",
+       "displayName": "Authenticity",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "NonRepudiation",
+       "displayName": "Non-Repudiation",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Certifiable",
+       "displayName": "Certifiable",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Privacy",
+       "displayName": "Privacy",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "Trustworthy",
+       "displayName": "Trust",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      }
+     ],
+     "constraints": [
+      "Constraint on Assurance properties: The Frontend SHALL enforce the rule that a (:Loss) has a single true Assurance.  All others must be \"False\"."
+     ]
+    }
+   ],
+   "srsHeading": "Loss"
+  },
+  "Attack": {
+   "srsLines": "2539-2590",
+   "description": "User defined or cloned from Reference Data (ATT&CK Tactic, ATT&CK Technique, ATT&CK Sub-Technique, ATLAS Technique, EMB3D Vulnerability).",
+   "propertyGroups": [
+    {
+     "groupName": "Classification",
+     "properties": [
+      {
+       "name": "AttackLevel",
+       "displayName": "Level:",
+       "type": "Enum",
+       "enumValues": [
+        "STRATEGY",
+        "TACTIC",
+        "PROCEDURE"
+       ],
+       "edit": "edit",
+       "default": "TACTIC"
+      },
+      {
+       "name": "IsRVCandidate",
+       "displayName": "Residual Vulnerability Candidate:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      }
+     ],
+     "constraints": [
+      "AttackLevel records the abstraction level of this Attack node, consistent with the MITRE ATT&CK framework: STRATEGY: High-level attack concept (analogous to ATT&CK Tactic group). TACTIC: A specific method or technique (analogous to ATT&CK Technique). PROCEDURE: A concrete, system-specific exploit (analogous to ATT&CK Procedure or Sub-Technique).",
+      "IsRVCandidate: When True, this Attack is considered a plausible Residual Vulnerability for the SoI. Set by the analyst in the Attack Tool."
+     ]
+    },
+    {
+     "groupName": "Reference",
+     "properties": [
+      {
+       "name": "ReferenceFramework",
+       "displayName": "Framework:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "ReferenceID",
+       "displayName": "Reference ID:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "ReferenceURL",
+       "displayName": "Reference URL:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "ReferenceFramework, ReferenceID, and ReferenceURL record the external framework item from which this Attack was cloned (e.g. \"ATT&CK\", \"T1059.001\", \"https://attack.mitre.org/techniques/T1059/001/\"). These fields are populated automatically when the Attack is created from Reference Data via the Reference Tool. User-created Attacks may leave these Null."
+     ]
+    },
+    {
+     "groupName": "Attack Tree Metrics",
+     "properties": [
+      {
+       "name": "MetricsJSON",
+       "displayName": "Tree Metrics:",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "SRS line 2577 writes the type as 'String (serialized JSON)': 'MetricsJSON  \"Tree Metrics:\"  String (serialized JSON)  edit  default: Null'. A stray markdown code fence (```) follows this section at SRS line 2592."
+      }
+     ],
+     "constraints": [
+      "MetricsJSON stores the leaf-node metric values for this Attack when it appears as a leaf in an Attack Tree. Each key is a metric name matching a metric defined in MetricDefinitionsJSON on the owning (:Loss), and each value is the numeric leaf value for that metric.",
+      "Example: {\"AttackCost\": 5000, \"AttackProbability\": 0.15}",
+      "A null MetricsJSON at a leaf node causes the tree to use the LeafDefault value from MetricDefinitionsJSON for that metric.",
+      "MetricsJSON values on branch (non-leaf) (:Attack) nodes are ignored; branch values are computed from children per the formula in MetricDefinitionsJSON."
+     ]
+    }
+   ],
+   "srsHeading": "Attack"
+  },
+  "FunctionalFlow": {
+   "srsLines": "2597-2602",
+   "propertyGroups": [
+    {
+     "groupName": "Flow Diagram",
+     "properties": [
+      {
+       "name": "FunctionalFlowJSON",
+       "displayName": "Diagram Layout:",
+       "type": "JSON",
+       "edit": "fixed",
+       "default": "N/A",
+       "ambiguity": "SRS line 2600 writes the type as 'serialized JSON document': 'FunctionalFlowJSON \"Diagram Layout:\" serialized JSON document fixed default: N/A'."
+      }
+     ],
+     "constraints": [
+      "The Backend graph is the sole authoritative source for semantic structure; this property stores visual layout and display state only."
+     ]
+    }
+   ],
+   "srsHeading": "FunctionalFlow"
+  },
+  "GsnGoal": {
+   "srsLines": "2604-2617",
+   "propertyGroups": [
+    {
+     "groupName": "GSN Info",
+     "properties": [
+      {
+       "name": "GoalID",
+       "displayName": "GSN ID:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": "N/A"
+      },
+      {
+       "name": "GoalStatement",
+       "displayName": "Goal Statement",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Diagram Layout",
+     "properties": [
+      {
+       "name": "GoalStructure",
+       "displayName": "Diagram Layout:",
+       "type": "String",
+       "edit": "fixed",
+       "default": null,
+       "ambiguity": "SRS line 2615 writes the type as 'String (serialized JSON)': 'GoalStructure \"Diagram Layout:\" String (serialized JSON) fixed default: \"Null\"'."
+      }
+     ],
+     "constraints": [
+      "The Backend graph is the sole authoritative source for semantic structure; this property stores visual layout and display state only."
+     ]
+    }
+   ],
+   "srsHeading": "Goal"
+  },
+  "GsnContext": {
+   "srsLines": "2619-2625",
+   "propertyGroups": [
+    {
+     "groupName": "GSN Info",
+     "properties": [
+      {
+       "name": "ContextID",
+       "displayName": "GSN ID:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": "N/A"
+      },
+      {
+       "name": "ContextStatement",
+       "displayName": "Context: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Context"
+  },
+  "GsnAssumption": {
+   "srsLines": "2629-2635",
+   "propertyGroups": [
+    {
+     "groupName": "GSN Info",
+     "properties": [
+      {
+       "name": "AssumptionID",
+       "displayName": "GSN ID:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": "N/A"
+      },
+      {
+       "name": "AssumptionStatement",
+       "displayName": "Assumption: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Assumption"
+  },
+  "GsnJustification": {
+   "srsLines": "2639-2645",
+   "propertyGroups": [
+    {
+     "groupName": "GSN Info",
+     "properties": [
+      {
+       "name": "JustificationID",
+       "displayName": "GSN ID:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": "N/A"
+      },
+      {
+       "name": "JustificationStatement",
+       "displayName": "Justification: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Justification"
+  },
+  "GsnStrategy": {
+   "srsLines": "2649-2655",
+   "propertyGroups": [
+    {
+     "groupName": "GSN Info",
+     "properties": [
+      {
+       "name": "StrategyID",
+       "displayName": "GSN ID:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": "N/A"
+      },
+      {
+       "name": "StrategyStatement",
+       "displayName": "Strategy: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Strategy"
+  },
+  "GsnSolution": {
+   "srsLines": "2659-2665",
+   "propertyGroups": [
+    {
+     "groupName": "GSN Info",
+     "properties": [
+      {
+       "name": "SolutionID",
+       "displayName": "GSN ID:",
+       "type": "Integer",
+       "edit": "fixed",
+       "default": "N/A"
+      },
+      {
+       "name": "SolutionStatement",
+       "displayName": "Solution: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Solution"
+  },
+  "Regime": {
+   "srsLines": "2669-2721",
+   "propertyGroups": [
+    {
+     "groupName": "Criticality",
+     "ambiguity": "SafetyDescription (SRS line 2677) and MissionDescription (SRS line 2685) omit the data type entirely, e.g. 'SafetyDescription: \"Description:  \" edit default \"Null\"'; assumed String. FlightDescription (SRS line 2693) display name is 'Description: ' with a single trailing space, unlike the double space used elsewhere. Trailing colons on some names normalized; lowercase 'string' capitalized.",
+     "properties": [
+      {
+       "name": "SafetyCritical",
+       "displayName": "Safety:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SafetyLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SafetyDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Type omitted in SRS; assumed String."
+      },
+      {
+       "name": "MissionCritical",
+       "displayName": "Mission:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "MissionLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "MissionDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Type omitted in SRS; assumed String."
+      },
+      {
+       "name": "FlightCritical",
+       "displayName": "Flight: ",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "FlightLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "FlightDescription",
+       "displayName": "Description: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityCritical",
+       "displayName": "Security:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "False"
+      },
+      {
+       "name": "SecurityLevel",
+       "displayName": "Level",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SecurityDescription",
+       "displayName": "Description:  ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Contact Info",
+     "properties": [
+      {
+       "name": "AuthorityName",
+       "displayName": "Name: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "AuthorityTitle",
+       "displayName": "Title: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "AuthorityOrg",
+       "displayName": "Organization: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "AuthorityEmail",
+       "displayName": "Email: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SupInfo",
+       "displayName": "Supplumental: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null,
+       "ambiguity": "Display name 'Supplumental: ' is transcribed verbatim from SRS line 2715 (apparent misspelling of 'Supplemental')."
+      }
+     ]
+    },
+    {
+     "groupName": "Authoritative Documentation",
+     "properties": [
+      {
+       "name": "DomainGuidance",
+       "displayName": "Guidance: ",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    }
+   ],
+   "srsHeading": "Regime"
+  },
+  "UseCase": {
+   "srsLines": "2725-2786",
+   "description": "A (:UseCase) node represents a named scenario in which external Actors interact with the SoI through (:Interface) nodes, which enables the SoI to deliver behavior realized by (:SystemFunction) nodes, in satisfaction of the owning (:Purpose).",
+   "propertyGroups": [
+    {
+     "groupName": "Use Case Definition",
+     "properties": [
+      {
+       "name": "UCStatement",
+       "displayName": "Use Case Statement:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "Precondition",
+       "displayName": "Precondition:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "Postcondition",
+       "displayName": "Postcondition:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "NormalFlow",
+       "displayName": "Normal Flow:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "AlternateFlows",
+       "displayName": "Alternate Flows:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "ExceptionFlows",
+       "displayName": "Exception Flows:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ]
+    },
+    {
+     "groupName": "Actors",
+     "properties": [
+      {
+       "name": "ActorList",
+       "displayName": "Actors:",
+       "type": "JSON",
+       "edit": "edit",
+       "default": "[]"
+      }
+     ],
+     "constraints": [
+      "ActorList SHALL be a JSON array.  Each element in the array SHALL conform to the following structure: ActorID (String): Unique identifier within this (:UseCase); short token, e.g. \"A1\". ActorName (String): Human-readable name of the external Actor. ActorType (Enum {Human, System, ExternalSystem, Device, Organization}): Type of Actor for SysML diagram rendering. ActorDescription (String): Free-text description of the Actor's role in this Use Case. InterfaceHIDs (Array of String): HIDs of (:Interface) nodes through which this Actor interacts with the SoI.",
+      "ActorID SHALL be unique within the ActorList of a single (:UseCase).",
+      "Every HID in InterfaceHIDs SHALL reference an (:Interface) node that is associated to the same (:UseCase) via [:INVOLVES]."
+     ]
+    },
+    {
+     "groupName": "Diagram Persistence",
+     "properties": [
+      {
+       "name": "UseCaseDiagramJSON",
+       "displayName": "Diagram Source:",
+       "type": "JSON",
+       "edit": "fixed",
+       "default": "N/A"
+      }
+     ],
+     "constraints": [
+      "UseCaseDiagramJSON SHALL be a serialized JSON document sufficient to reproduce the full SysML 2 Use Case Diagram without reference to any external file.  The Backend graph SHALL be the sole source of truth for semantic data; UseCaseDiagramJSON stores only visual layout and display state.",
+      "UseCaseDiagramJSON SHALL contain at minimum: Schema version identifier; (:UseCase) HID and uuid; SoI (:System) HID and Name (for the system boundary label); Actor positions and display labels (keyed by ActorID); (:Interface) node positions and display labels (keyed by HID); (:SystemFunction) node positions and display labels (keyed by HID); Relationship layout data for all [:INVOLVES], [:INCLUDES], [:EXTENDS], and [:INCLUDES_UC] relationships; Viewport center coordinates and zoom level at last save; Layout version timestamp.",
+      "UseCaseDiagramJSON SHALL be updated on every successful Commit that changes the diagram layout.",
+      "UseCaseDiagramJSON SHALL NOT be used to infer, reconstruct, or substitute for the semantic graph relationships stored in the Backend."
+     ]
+    },
+    {
+     "groupName": "Analytical State",
+     "properties": [
+      {
+       "name": "IsComplete",
+       "displayName": "Complete:",
+       "type": "Boolean",
+       "edit": "fixed",
+       "default": "False"
+      },
+      {
+       "name": "ValidationStatus",
+       "displayName": "Validation Status:",
+       "type": "Enum",
+       "enumValues": [
+        "NotValidated",
+        "Valid",
+        "Invalid",
+        "Warning"
+       ],
+       "edit": "fixed",
+       "default": "NotValidated"
+      },
+      {
+       "name": "Priority",
+       "displayName": "Priority:",
+       "type": "Integer",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "Rationale",
+       "displayName": "Rationale:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "IsComplete SHALL be computed by the Backend on every Commit and set to True only when all completeness conditions defined in Section 6.5.12.9 are satisfied."
+     ]
+    },
+    {
+     "groupName": "Outgoing Relationship Properties",
+     "ambiguity": "ExtensionPoint is a relationship property carried on [:EXTENDS], not a node property. The SRS explanatory sentence at lines 2781-2785 is duplicated/garbled; transcribed verbatim in constraints.",
+     "properties": [
+      {
+       "name": "ExtensionPoint",
+       "displayName": "Extension Point:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "[:INCLUDES] has no additional properties beyond the standard relationship.",
+      "[:INVOLVES] has no additional properties beyond the standard relationship.",
+      "[:EXTENDS] SHALL carry the following property: ExtensionPoint.",
+      "Extension point identifies the named location in the base (:UseCase) at which the extending (:UseCase) inserts behavior, ExtensionPoint identifies the named location in the base (:UseCase) at which the extending (:UseCase) inserts behavior. SysML 2.0 does not define an extend relationship; see Section 3.3.4.7 and Section 3.7.6 for the standard translation ([:EXTENDS] \u2192 use case specialization annotated #extend with an extensionPoint metadata attribute).",
+      "[:INCLUDES_UC] has no additional properties beyond the standard relationship."
+     ]
+    }
+   ],
+   "relationshipGroups": [
+    "[:INVOLVES]",
+    "[:INCLUDES]",
+    "[:EXTENDS]",
+    "[:INCLUDES_UC]"
+   ],
+   "srsHeading": "UseCase"
+  }
+ }
+}

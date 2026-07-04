@@ -1,0 +1,31 @@
+# SSTPA Tools reverse proxy (SRS §5.4)
+# - terminate TLS (Caddy internal CA for the air-gapped/MVP deployment)
+# - expose 443, redirect 80 -> 443 (automatic in Caddy for HTTPS sites)
+# - proxy /api/* to the Go backend
+# - expose Grafana during development
+
+{
+	local_certs
+}
+
+https://localhost, https://127.0.0.1 {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle /metrics-proxy/* {
+		# development convenience: raw backend metrics via the proxy
+		uri strip_prefix /metrics-proxy
+		reverse_proxy backend:8080
+	}
+
+	handle /grafana/* {
+		reverse_proxy grafana:3000
+	}
+
+	handle {
+		respond "SSTPA Tools Backend. API at /api, dashboards at /grafana." 200
+	}
+}
