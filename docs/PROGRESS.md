@@ -129,6 +129,8 @@ SBOM impact: none. No software applications or libraries were added.
   `sustainment/artifacts/sstpa-ref-data-*.tar.gz` is checksum-verified, staged
   under `payload/reference-data/`, recorded in `package.properties`, and surfaced
   by the install helpers with the load command.
+- Updated Startup Software Frontend discovery so release-binary fallback
+  packages launch the GUI from the installed `bundles/frontend/bin` directory.
 - Updated `FloorPlan.md` for the new installer subdirectories and documented the
   installer path in README and architecture notes.
 - Verified the lightweight package path with
@@ -144,6 +146,7 @@ Verification:
   release-binary fallback remains the supported package path on this host)
 - Reference Data artifact verification through package staging:
   `sustainment/artifacts/sstpa-ref-data-2026-07-04-v1.tar.gz.sha256`
+- `cd startup/src-tauri && cargo check`
 
 SBOM impact: documented the Tauri CLI build tool version and the packaged
 Reference Data artifact versions; container image tag entries were aligned to

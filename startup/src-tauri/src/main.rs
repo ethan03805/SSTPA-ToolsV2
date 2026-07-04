@@ -140,8 +140,14 @@ fn frontend_bin() -> Result<PathBuf, String> {
     if sibling.exists() {
         return Ok(sibling);
     }
+    if let Some(bundles_dir) = dir.parent().and_then(|startup_dir| startup_dir.parent()) {
+        let packaged = bundles_dir.join("frontend").join("bin").join(name);
+        if packaged.exists() {
+            return Ok(packaged);
+        }
+    }
     Err(format!(
-        "Frontend binary {name} not found next to the Startup Software. Set SSTPA_GUI_BIN."
+        "Frontend binary {name} not found next to Startup or under bundles/frontend/bin. Set SSTPA_GUI_BIN."
     ))
 }
 
