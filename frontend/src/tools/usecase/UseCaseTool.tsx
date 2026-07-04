@@ -4,11 +4,13 @@
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../api/client";
-import type { CommitOperation, SoINode } from "../../api/types";
+import type { CommitOperation, CommitResponse, SoINode } from "../../api/types";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useDrawer } from "../../state/stores";
 import type { ToolLaunchContext, ToolManifest } from "../manifest";
+import { ToolStatus, downloadText, errorText } from "../shared";
 
 type Mode = "diagram" | "validation" | "export";
 type ActorType = "Human" | "System" | "ExternalSystem" | "Device" | "Organization";
@@ -27,6 +29,10 @@ interface Finding {
   hid?: string;
 }
 
+type Notice = { kind: "success" | "error" | "info"; text: string } | null;
+
+type Pos = { x: number; y: number };
+
 const ACTOR_TYPES: ActorType[] = ["Human", "System", "ExternalSystem", "Device", "Organization"];
 
 export default function UseCaseTool({
@@ -37,13 +43,22 @@ export default function UseCaseTool({
 }) {
   const qc = useQueryClient();
   const openDrawer = useDrawer((s) => s.openDrawer);
+  const requestOpenDrawer = useDrawer((s) => s.requestOpenDrawer);
   const drawerOpen = useDrawer((s) => s.open);
   const [mode, setMode] = useState<Mode>("diagram");
   const [selectedUseCase, setSelectedUseCase] = useState("");
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
   const [newOpen, setNewOpen] = useState(false);
+  /** §6.5.12.3: selection prompt when the invoked Interface/Function
+   *  participates in more than one Use Case. */
+  const [ucChoices, setUcChoices] = useState<SoINode[] | null>(null);
+  const contextHandled = useRef(false);
+  /** Diagram element positions (§6.5.12.15), keyed by node HID or
+   *  "actor:<ActorID>". Initialized from UseCaseDiagramJSON; persisted via
+   *  the Commit Diagram action. */
+  const [positions, setPositions] = useState<Record<string, Pos>>({});
 
   const soi = useQuery({
     queryKey: ["soi", ctx.soiHid],
@@ -62,34 +77,67 @@ export default function UseCaseTool({
   const selected = selectedUseCase ? byHid.get(selectedUseCase) : undefined;
 
   useEffect(() => {
-    const hid = ctx.drawerNodeHid;
-    if (!hid) return;
+    const hid = ctx.focusHid ?? ctx.drawerNodeHid;
+    if (!hid || contextHandled.current) return;
     const node = byHid.get(hid);
     if (!node) return;
+    contextHandled.current = true;
     if (node.typeName === "UseCase") setSelectedUseCase(hid);
     if (node.typeName === "Purpose") {
       const first = useCases.find((u) => (node.relationships ?? []).some((r) => r.type === "HAS_USECASE" && r.targetHID === u.hid));
       if (first) setSelectedUseCase(first.hid);
     }
     if (node.typeName === "SystemFunction" || node.typeName === "Interface") {
-      const containing = useCases.find((u) => (u.relationships ?? []).some((r) => r.targetHID === hid));
-      if (containing) setSelectedUseCase(containing.hid);
+      const containing = useCases.filter((u) =>
+        (u.relationships ?? []).some((r) => (r.type === "INVOLVES" || r.type === "INCLUDES") && r.targetHID === hid),
+      );
+      if (containing.length > 1) {
+        setUcChoices(containing); // §6.5.12.3 selection prompt
+      } else if (containing[0]) {
+        setSelectedUseCase(containing[0].hid);
+      }
       setSelectedElement(hid);
     }
-  }, [byHid, ctx.drawerNodeHid, useCases]);
+  }, [byHid, ctx.drawerNodeHid, ctx.focusHid, useCases]);
 
   useEffect(() => {
     if (!selectedUseCase && useCases[0]) setSelectedUseCase(useCases[0].hid);
   }, [selectedUseCase, useCases]);
 
+  // Reconstruct diagram layout from UseCaseDiagramJSON (§6.5.12.15); stale
+  // entries for removed nodes are dropped with a notification.
+  useEffect(() => {
+    if (!selected) {
+      setPositions({});
+      return;
+    }
+    const stored = parseDiagramPositions(selected.properties.UseCaseDiagramJSON);
+    setPositions(stored.positions);
+    if (stored.hadDiagram) {
+      const liveKeys = new Set<string>([
+        selected.hid,
+        ...(selected.relationships ?? []).map((r) => r.targetHID),
+        ...parseActors(selected.properties.ActorList).map((a) => `actor:${a.ActorID}`),
+      ]);
+      const stale = Object.keys(stored.positions).filter((k) => !liveKeys.has(k));
+      if (stale.length > 0) {
+        setNotice({
+          kind: "info",
+          text: `Diagram layout partially regenerated: ${stale.length} stored position(s) reference elements no longer in the graph.`,
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.hid, selected?.properties.UseCaseDiagramJSON]);
+
   const commit = useMutation({
     mutationFn: (ops: CommitOperation[]) =>
       api.commit({ soiHid: ctx.soiHid ?? undefined, toolId: "sstpa.usecase", operations: ops }),
     onSuccess: (res) => {
-      setNotice(`Use-Case commit ${res.commitId.slice(0, 8)} accepted.`);
+      setNotice({ kind: "success", text: `Use-Case commit ${res.commitId.slice(0, 8)} accepted.` });
       void qc.invalidateQueries({ queryKey: ["soi"] });
     },
-    onError: (e) => setNotice(String(e)),
+    onError: (e) => setNotice({ kind: "error", text: errorText(e) }),
   });
 
   const actors = parseActors(selected?.properties.ActorList);
@@ -100,7 +148,10 @@ export default function UseCaseTool({
   const findings = selected ? validateUseCase(selected, actors, participantInterfaces, participantFunctions) : [];
   const visibleUseCases = useCases.filter((u) => matchesUseCase(u, search, byHid));
 
-  if (!ctx.soiHid) return <p style={{ padding: 20 }}>Select a System of Interest first.</p>;
+  if (!ctx.soiHid) return <ToolStatus needsSoI />;
+  if (soi.isLoading || soi.error) {
+    return <ToolStatus loading={soi.isLoading} error={soi.error} onRetry={() => void soi.refetch()} />;
+  }
 
   return (
     <div className="tool-shell" style={{ height: "100%" }}>
@@ -125,23 +176,42 @@ export default function UseCaseTool({
         <button
           className="icon-button"
           disabled={!selected}
+          title="Persist diagram layout and computed completeness to UseCaseDiagramJSON (§6.5.12.15)"
           onClick={() =>
             selected &&
             commit.mutate([
               {
                 op: "updateNode",
                 hid: selected.hid,
-                properties: computedUseCaseProps(selected, actors, participantInterfaces, participantFunctions, includedUseCases, extendedUseCases, system),
+                properties: computedUseCaseProps(
+                  selected,
+                  actors,
+                  participantInterfaces,
+                  participantFunctions,
+                  includedUseCases,
+                  extendedUseCases,
+                  system,
+                  positions,
+                ),
               },
             ])
           }
         >
-          Save Diagram
+          Commit Diagram
         </button>
       </div>
       {notice && (
-        <div className="sstpa-alert-warning" style={{ margin: "6px 12px" }}>
-          {notice} <button className="icon-button" onClick={() => setNotice(null)}>x</button>
+        <div
+          className={
+            notice.kind === "success"
+              ? "sstpa-alert-success"
+              : notice.kind === "error"
+                ? "sstpa-alert-error"
+                : "sstpa-alert-warning"
+          }
+          style={{ margin: "6px 12px" }}
+        >
+          {notice.text} <button className="icon-button" onClick={() => setNotice(null)}>x</button>
         </div>
       )}
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
@@ -166,6 +236,8 @@ export default function UseCaseTool({
               extendedUseCases={extendedUseCases}
               selectedElement={selectedElement}
               onSelect={setSelectedElement}
+              positions={positions}
+              onMove={(key, pos) => setPositions((p) => ({ ...p, [key]: pos }))}
             />
           )}
           {mode === "validation" && selected && <ValidationView findings={findings} onSelect={setSelectedElement} />}
@@ -186,6 +258,7 @@ export default function UseCaseTool({
         <DetailPanel
           useCase={selected}
           selectedElement={selectedElement ? byHid.get(selectedElement) : undefined}
+          systemHid={ctx.soiHid}
           actors={actors}
           interfaces={interfaces}
           functions={functions}
@@ -198,10 +271,41 @@ export default function UseCaseTool({
           drawerOpen={drawerOpen}
           onOpenDrawer={(hid) => openDrawer({ mode: "edit", hid })}
           onCommit={(ops) => commit.mutate(ops)}
+          onCommitAsync={(ops) =>
+            commit.mutateAsync(ops) as Promise<CommitResponse>
+          }
+          onEditNode={(hid) => requestOpenDrawer({ mode: "edit", hid })}
           onUpdateActors={(next) => selected && commit.mutate([{ op: "updateNode", hid: selected.hid, properties: { ActorList: JSON.stringify(next) } }])}
           onSelect={setSelectedElement}
         />
       </div>
+      {ucChoices && (
+        <div className="sstpa-dialog-overlay" onClick={() => setUcChoices(null)}>
+          <div className="sstpa-frame sstpa-dialog" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Select Use Case">
+            <h2>Select Use Case</h2>
+            <p style={{ fontSize: "0.82rem" }}>
+              The invoked node participates in {ucChoices.length} Use Cases (§6.5.12.3). Choose one to open:
+            </p>
+            {ucChoices.map((u) => (
+              <button
+                key={u.hid}
+                className="entity-card"
+                style={{ width: "100%", margin: "4px 0", textAlign: "left", cursor: "pointer" }}
+                onClick={() => {
+                  setSelectedUseCase(u.hid);
+                  setUcChoices(null);
+                }}
+              >
+                <span className="entity-hid">{u.hid}</span>{" "}
+                <strong style={{ fontSize: "0.82rem" }}>{String(u.properties.Name ?? "")}</strong>
+              </button>
+            ))}
+            <div style={{ textAlign: "right", marginTop: 10 }}>
+              <button className="sstpa-button secondary" onClick={() => setUcChoices(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
       {newOpen && activePurpose && (
         <NewUseCaseDialog
           purpose={activePurpose}
@@ -237,7 +341,9 @@ function UseCaseList({
         const actors = parseActors(u.properties.ActorList);
         const interfaces = relatedNodes(u, "INVOLVES", byHid);
         const functions = relatedNodes(u, "INCLUDES", byHid);
-        const complete = validateUseCase(u, actors, interfaces, functions).filter((f) => f.severity === "ERROR").length === 0;
+        // §6.5.12.9: the list badge mirrors computed IsComplete — every
+        // completeness condition (errors AND warnings) must be satisfied.
+        const complete = validateUseCase(u, actors, interfaces, functions).length === 0;
         return (
           <button
             key={u.hid}
@@ -263,6 +369,9 @@ function UseCaseList({
   );
 }
 
+/** SysML-style Use Case canvas with draggable, persisted element positions
+ *  (§6.5.12.10/§6.5.12.15). Actors sit outside the system boundary;
+ *  Interfaces straddle it; the Use Case oval and Functions sit inside. */
 function DiagramView({
   system,
   useCase,
@@ -273,6 +382,8 @@ function DiagramView({
   extendedUseCases,
   selectedElement,
   onSelect,
+  positions,
+  onMove,
 }: {
   system?: SoINode;
   useCase: SoINode;
@@ -283,92 +394,185 @@ function DiagramView({
   extendedUseCases: SoINode[];
   selectedElement: string | null;
   onSelect: (hid: string) => void;
+  positions: Record<string, Pos>;
+  onMove: (key: string, pos: Pos) => void;
 }) {
+  const BOUNDARY_LEFT = 210;
+  const pos = (key: string, fallback: Pos): Pos => positions[key] ?? fallback;
+  const canvasHeight = Math.max(
+    520,
+    120 + Math.max(interfaces.length, functions.length, actors.length) * 110,
+  );
+
   return (
     <div style={{ flex: 1, overflow: "auto", padding: "var(--sstpa-sp-4)" }}>
-      <div
-        style={{
-          border: "2px solid var(--sstpa-navy)",
-          minHeight: 460,
-          position: "relative",
-          padding: 24,
-          background: "var(--sstpa-ivory-raised)",
-        }}
-      >
-        <div style={{ position: "absolute", top: 6, left: 12, fontFamily: "var(--sstpa-font-brand)", fontSize: "1.1rem" }}>
-          {String(system?.properties.Name ?? system?.hid ?? "System Boundary")}
-        </div>
-        <button
-          className="entity-card"
+      <div style={{ position: "relative", minHeight: canvasHeight, minWidth: 880 }}>
+        {/* System boundary rectangle labeled with the SoI Name (§6.5.12.10). */}
+        <div
           style={{
-            width: 260,
-            minHeight: 120,
-            borderRadius: 999,
-            textAlign: "center",
-            margin: "90px auto 30px",
-            borderColor: selectedElement === useCase.hid ? "var(--sstpa-gold)" : undefined,
+            position: "absolute",
+            left: BOUNDARY_LEFT,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            border: "2px solid var(--sstpa-navy)",
+            background: "var(--sstpa-ivory-raised)",
           }}
-          onClick={() => onSelect(useCase.hid)}
         >
-          <div className="entity-hid">{useCase.hid}</div>
-          <div style={{ fontWeight: 700 }}>{String(useCase.properties.Name ?? "")}</div>
-          <div style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{String(useCase.properties.UCStatement ?? "")}</div>
-        </button>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-          <div>
-            <h4>Interfaces</h4>
-            {interfaces.map((n) => <DiagramNode key={n.hid} node={n} selected={selectedElement === n.hid} onSelect={onSelect} />)}
-          </div>
-          <div>
-            <h4>Functions</h4>
-            {functions.map((n) => <DiagramNode key={n.hid} node={n} selected={selectedElement === n.hid} onSelect={onSelect} />)}
+          <div style={{ position: "absolute", top: 6, left: 12, fontFamily: "var(--sstpa-font-brand)", fontSize: "1.1rem" }}>
+            {String(system?.properties.Name ?? system?.hid ?? "System Boundary")}
           </div>
         </div>
-        {(includedUseCases.length > 0 || extendedUseCases.length > 0) && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
-            <div>
-              <h4>Includes Use Cases</h4>
-              {includedUseCases.map((n) => <DiagramNode key={n.hid} node={n} selected={selectedElement === n.hid} onSelect={onSelect} />)}
-            </div>
-            <div>
-              <h4>Extends Use Cases</h4>
-              {extendedUseCases.map((n) => <DiagramNode key={n.hid} node={n} selected={selectedElement === n.hid} onSelect={onSelect} />)}
-            </div>
+
+        {/* Actors — outside the boundary. */}
+        {actors.map((a, idx) => {
+          const key = `actor:${a.ActorID}`;
+          return (
+            <DraggableElement key={key} id={key} pos={pos(key, { x: 8, y: 50 + idx * 120 })} onMove={onMove} onSelect={() => onSelect(useCase.hid)}>
+              <div className="entity-card" style={{ width: 180, textAlign: "center", borderRadius: a.ActorType === "Human" ? 999 : 4 }}>
+                <div className="type-badge" style={{ background: "var(--sstpa-node-purpose)" }}>{a.ActorType}</div>
+                <div style={{ fontWeight: 700 }}>{a.ActorName}</div>
+                <div className="mono" style={{ fontSize: "0.66rem" }}>{a.InterfaceHIDs.join(", ") || "No Interface"}</div>
+              </div>
+            </DraggableElement>
+          );
+        })}
+
+        {/* Interfaces — on the boundary. */}
+        {interfaces.map((n, idx) => (
+          <DraggableElement
+            key={n.hid}
+            id={n.hid}
+            pos={pos(n.hid, { x: BOUNDARY_LEFT - 90, y: 50 + idx * 100 })}
+            onMove={onMove}
+            onSelect={() => onSelect(n.hid)}
+          >
+            <DiagramNode node={n} selected={selectedElement === n.hid} />
+          </DraggableElement>
+        ))}
+
+        {/* Use Case oval — inside the boundary. */}
+        <DraggableElement
+          id={useCase.hid}
+          pos={pos(useCase.hid, { x: BOUNDARY_LEFT + 190, y: 60 })}
+          onMove={onMove}
+          onSelect={() => onSelect(useCase.hid)}
+        >
+          <div
+            className="entity-card"
+            style={{
+              width: 260,
+              minHeight: 110,
+              borderRadius: 999,
+              textAlign: "center",
+              borderColor: selectedElement === useCase.hid ? "var(--sstpa-gold)" : undefined,
+            }}
+          >
+            <div className="entity-hid">{useCase.hid}</div>
+            <div style={{ fontWeight: 700 }}>{String(useCase.properties.Name ?? "")}</div>
+            <div style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{String(useCase.properties.UCStatement ?? "")}</div>
           </div>
-        )}
-      </div>
-      <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
-        {actors.map((a) => (
-          <div key={a.ActorID} className="entity-card" style={{ width: 180, textAlign: "center", borderRadius: a.ActorType === "Human" ? 999 : 4 }}>
-            <div className="type-badge" style={{ background: "var(--sstpa-node-purpose)" }}>{a.ActorType}</div>
-            <div style={{ fontWeight: 700 }}>{a.ActorName}</div>
-            <div className="mono" style={{ fontSize: "0.66rem" }}>{a.InterfaceHIDs.join(", ") || "No Interface"}</div>
-          </div>
+        </DraggableElement>
+
+        {/* Functions — inside the boundary. */}
+        {functions.map((n, idx) => (
+          <DraggableElement
+            key={n.hid}
+            id={n.hid}
+            pos={pos(n.hid, { x: BOUNDARY_LEFT + 480, y: 50 + idx * 100 })}
+            onMove={onMove}
+            onSelect={() => onSelect(n.hid)}
+          >
+            <DiagramNode node={n} selected={selectedElement === n.hid} />
+          </DraggableElement>
         ))}
       </div>
+
+      {(includedUseCases.length > 0 || extendedUseCases.length > 0) && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 }}>
+          <div>
+            <h4>«include» Use Cases</h4>
+            {includedUseCases.map((n) => (
+              <button key={n.hid} className="entity-card" style={{ width: "100%", marginBottom: 8, textAlign: "left", borderColor: selectedElement === n.hid ? "var(--sstpa-gold)" : undefined }} onClick={() => onSelect(n.hid)}>
+                <span className="entity-hid">{n.hid}</span> <strong>{String(n.properties.Name ?? "")}</strong>
+              </button>
+            ))}
+          </div>
+          <div>
+            <h4>«extend» Use Cases</h4>
+            {extendedUseCases.map((n) => (
+              <button key={n.hid} className="entity-card" style={{ width: "100%", marginBottom: 8, textAlign: "left", borderColor: selectedElement === n.hid ? "var(--sstpa-gold)" : undefined }} onClick={() => onSelect(n.hid)}>
+                <span className="entity-hid">{n.hid}</span> <strong>{String(n.properties.Name ?? "")}</strong>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <p style={{ fontSize: "0.7rem", color: "var(--sstpa-navy-muted)", marginTop: 8 }}>
+        Drag elements to arrange the diagram; use Commit Diagram to persist positions to the Backend (§6.5.12.15).
+      </p>
     </div>
   );
 }
 
-function DiagramNode({ node, selected, onSelect }: { node: SoINode; selected: boolean; onSelect: (hid: string) => void }) {
+/** Minimal absolute-position drag wrapper (§6.5.12.12 node drag). */
+function DraggableElement({
+  id,
+  pos,
+  onMove,
+  onSelect,
+  children,
+}: {
+  id: string;
+  pos: Pos;
+  onMove: (key: string, pos: Pos) => void;
+  onSelect: () => void;
+  children: React.ReactNode;
+}) {
+  const startDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const orig = pos;
+    const move = (ev: MouseEvent) =>
+      onMove(id, { x: Math.max(0, orig.x + (ev.clientX - startX)), y: Math.max(0, orig.y + (ev.clientY - startY)) });
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
   return (
-    <button
+    <div
+      style={{ position: "absolute", left: pos.x, top: pos.y, cursor: "grab", zIndex: 1 }}
+      onMouseDown={startDrag}
+      onClick={onSelect}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DiagramNode({ node, selected }: { node: SoINode; selected: boolean }) {
+  return (
+    <div
       className="entity-card"
-      style={{ width: "100%", marginBottom: 8, textAlign: "left", borderColor: selected ? "var(--sstpa-gold)" : undefined }}
-      onClick={() => onSelect(node.hid)}
+      style={{ width: 200, textAlign: "left", borderColor: selected ? "var(--sstpa-gold)" : undefined }}
     >
       <div className="entity-card-header">
         <span className="entity-hid">{node.hid}</span>
         <span className="type-badge" style={{ background: node.typeName === "Interface" ? "var(--sstpa-node-interface)" : "var(--sstpa-node-function)" }}>{node.typeName}</span>
       </div>
       <div style={{ fontWeight: 700 }}>{String(node.properties.Name ?? "")}</div>
-    </button>
+    </div>
   );
 }
 
 function DetailPanel({
   useCase,
   selectedElement,
+  systemHid,
   actors,
   interfaces,
   functions,
@@ -381,11 +585,14 @@ function DetailPanel({
   drawerOpen,
   onOpenDrawer,
   onCommit,
+  onCommitAsync,
+  onEditNode,
   onUpdateActors,
   onSelect,
 }: {
   useCase?: SoINode;
   selectedElement?: SoINode;
+  systemHid: string | null;
   actors: ActorEntry[];
   interfaces: SoINode[];
   functions: SoINode[];
@@ -398,19 +605,26 @@ function DetailPanel({
   drawerOpen: boolean;
   onOpenDrawer: (hid: string) => void;
   onCommit: (ops: CommitOperation[]) => void;
+  onCommitAsync: (ops: CommitOperation[]) => Promise<CommitResponse>;
+  onEditNode: (hid: string) => void;
   onUpdateActors: (actors: ActorEntry[]) => void;
   onSelect: (hid: string) => void;
 }) {
   const [edit, setEdit] = useState<Record<string, string>>({});
   const [actorDraft, setActorDraft] = useState({ name: "", type: "Human" as ActorType, description: "", interfaceHid: "" });
+  const [actorEditId, setActorEditId] = useState<string | null>(null);
+  const [actorEdit, setActorEdit] = useState({ name: "", type: "Human" as ActorType, description: "" });
   const [interfaceToAdd, setInterfaceToAdd] = useState("");
   const [functionToAdd, setFunctionToAdd] = useState("");
+  const [newInterfaceName, setNewInterfaceName] = useState("");
+  const [newFunctionName, setNewFunctionName] = useState("");
   const [includeUseCaseToAdd, setIncludeUseCaseToAdd] = useState("");
   const [extendUseCaseToAdd, setExtendUseCaseToAdd] = useState("");
   const [extensionPoint, setExtensionPoint] = useState("");
   const [actorInterfaceToAdd, setActorInterfaceToAdd] = useState<Record<string, string>>({});
   const [requirementOwner, setRequirementOwner] = useState("");
   const [requirementToAdd, setRequirementToAdd] = useState("");
+  const [confirm, setConfirm] = useState<{ title: string; body: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     if (!useCase) return;
@@ -437,6 +651,24 @@ function DetailPanel({
   const availableIncludes = allUseCases.filter((n) => n.hid !== useCase.hid && !includedUseCases.some((p) => p.hid === n.hid));
   const availableExtends = allUseCases.filter((n) => n.hid !== useCase.hid && !extendedUseCases.some((p) => p.hid === n.hid));
   const requirementOwners = [...participantInterfaces, ...participantFunctions];
+
+  /** §6.5.12.13: warn when removing an Actor leaves an Interface with no
+   *  remaining Actor association. */
+  const removeActor = (a: ActorEntry) => {
+    const orphaned = a.InterfaceHIDs.filter(
+      (hid) => !actors.some((x) => x.ActorID !== a.ActorID && x.InterfaceHIDs.includes(hid)),
+    );
+    const doRemove = () => onUpdateActors(actors.filter((x) => x.ActorID !== a.ActorID));
+    if (orphaned.length > 0) {
+      setConfirm({
+        title: "Remove Actor",
+        body: `Removing ${a.ActorName || a.ActorID} leaves Interface(s) ${orphaned.join(", ")} with no remaining Actor association (§6.5.12.13). Commit removal anyway?`,
+        onConfirm: doRemove,
+      });
+    } else {
+      doRemove();
+    }
+  };
 
   return (
     <div style={{ width: 360, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)" }}>
@@ -474,10 +706,51 @@ function DetailPanel({
           <h4>Actors</h4>
           {actors.map((a) => (
             <div key={a.ActorID} style={{ borderBottom: "1px solid var(--sstpa-line-soft)", padding: "4px 0", fontSize: "0.74rem" }}>
-              <strong>{a.ActorID}</strong> {a.ActorName} ({a.ActorType})<br />
-              {a.ActorDescription && <span>{a.ActorDescription}<br /></span>}
-              <span className="mono">{a.InterfaceHIDs.join(", ") || "No Interface"}</span>{" "}
-              <button className="icon-button danger" onClick={() => onUpdateActors(actors.filter((x) => x.ActorID !== a.ActorID))}>Remove</button>
+              {actorEditId === a.ActorID ? (
+                <div style={{ display: "grid", gap: 4 }}>
+                  <input className="sstpa-input" value={actorEdit.name} placeholder="Actor name" onChange={(e) => setActorEdit((x) => ({ ...x, name: e.target.value }))} />
+                  <select className="sstpa-input" value={actorEdit.type} onChange={(e) => setActorEdit((x) => ({ ...x, type: e.target.value as ActorType }))}>
+                    {ACTOR_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  </select>
+                  <textarea className="sstpa-input" rows={2} value={actorEdit.description} placeholder="Actor description" onChange={(e) => setActorEdit((x) => ({ ...x, description: e.target.value }))} />
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      className="sstpa-button"
+                      disabled={!actorEdit.name.trim()}
+                      onClick={() => {
+                        onUpdateActors(
+                          actors.map((x) =>
+                            x.ActorID === a.ActorID
+                              ? { ...x, ActorName: actorEdit.name.trim(), ActorType: actorEdit.type, ActorDescription: actorEdit.description }
+                              : x,
+                          ),
+                        );
+                        setActorEditId(null);
+                      }}
+                    >
+                      Commit Actor
+                    </button>
+                    <button className="sstpa-button secondary" onClick={() => setActorEditId(null)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <strong>{a.ActorID}</strong> {a.ActorName} ({a.ActorType}){" "}
+                  <button
+                    className="icon-button"
+                    onClick={() => {
+                      setActorEditId(a.ActorID);
+                      setActorEdit({ name: a.ActorName, type: a.ActorType, description: a.ActorDescription });
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <br />
+                  {a.ActorDescription && <span>{a.ActorDescription}<br /></span>}
+                  <span className="mono">{a.InterfaceHIDs.join(", ") || "No Interface"}</span>{" "}
+                  <button className="icon-button danger" onClick={() => removeActor(a)}>Commit Remove</button>
+                </>
+              )}
               <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
                 <select
                   className="sstpa-input"
@@ -498,7 +771,7 @@ function DetailPanel({
                     setActorInterfaceToAdd((x) => ({ ...x, [a.ActorID]: "" }));
                   }}
                 >
-                  Add
+                  Commit Link
                 </button>
               </div>
               {a.InterfaceHIDs.map((hid) => (
@@ -509,7 +782,7 @@ function DetailPanel({
                     onUpdateActors(actors.map((x) => x.ActorID === a.ActorID ? { ...x, InterfaceHIDs: x.InterfaceHIDs.filter((i) => i !== hid) } : x))
                   }
                 >
-                  Unlink {hid}
+                  Commit Unlink {hid}
                 </button>
               ))}
             </div>
@@ -542,7 +815,7 @@ function DetailPanel({
                 setActorDraft({ name: "", type: "Human", description: "", interfaceHid: "" });
               }}
             >
-              Add Actor
+              Commit Actor
             </button>
           </div>
 
@@ -560,7 +833,26 @@ function DetailPanel({
               <option value="">Interface</option>
               {availableInterfaces.map((i) => <option key={i.hid} value={i.hid}>{i.hid} - {String(i.properties.Name ?? "")}</option>)}
             </select>
-            <button className="sstpa-button" disabled={!interfaceToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "INVOLVES", sourceHid: useCase.hid, targetHid: interfaceToAdd }])}>Add</button>
+            <button className="sstpa-button" disabled={!interfaceToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "INVOLVES", sourceHid: useCase.hid, targetHid: interfaceToAdd }])}>Commit Add</button>
+          </div>
+          {/* §6.5.12.14 (:Interface) creation: HAS_INTERFACE from the SoI root
+              plus INVOLVES to this Use Case in one commit. */}
+          <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+            <input className="sstpa-input" placeholder="New Interface name" value={newInterfaceName} onChange={(e) => setNewInterfaceName(e.target.value)} />
+            <button
+              className="sstpa-button secondary"
+              disabled={!newInterfaceName.trim() || !systemHid}
+              onClick={() => {
+                onCommit([
+                  { op: "createNode", tempId: "iface", label: "Interface", properties: { Name: newInterfaceName.trim() } },
+                  { op: "createRelationship", type: "HAS_INTERFACE", sourceHid: systemHid!, targetHid: "$iface" },
+                  { op: "createRelationship", type: "INVOLVES", sourceHid: useCase.hid, targetHid: "$iface" },
+                ]);
+                setNewInterfaceName("");
+              }}
+            >
+              Commit New Interface
+            </button>
           </div>
           <RelationshipList title="Functions" items={participantFunctions} relType="INCLUDES" sourceHid={useCase.hid} onCommit={onCommit} onSelect={onSelect} />
           <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
@@ -568,7 +860,26 @@ function DetailPanel({
               <option value="">Function</option>
               {availableFunctions.map((f) => <option key={f.hid} value={f.hid}>{f.hid} - {String(f.properties.Name ?? "")}</option>)}
             </select>
-            <button className="sstpa-button" disabled={!functionToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "INCLUDES", sourceHid: useCase.hid, targetHid: functionToAdd }])}>Add</button>
+            <button className="sstpa-button" disabled={!functionToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "INCLUDES", sourceHid: useCase.hid, targetHid: functionToAdd }])}>Commit Add</button>
+          </div>
+          {/* §6.5.12.14 (:SystemFunction) creation: HAS_FUNCTION from the SoI
+              root plus INCLUDES to this Use Case in one commit. */}
+          <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+            <input className="sstpa-input" placeholder="New Function name" value={newFunctionName} onChange={(e) => setNewFunctionName(e.target.value)} />
+            <button
+              className="sstpa-button secondary"
+              disabled={!newFunctionName.trim() || !systemHid}
+              onClick={() => {
+                onCommit([
+                  { op: "createNode", tempId: "func", label: "SystemFunction", properties: { Name: newFunctionName.trim() } },
+                  { op: "createRelationship", type: "HAS_FUNCTION", sourceHid: systemHid!, targetHid: "$func" },
+                  { op: "createRelationship", type: "INCLUDES", sourceHid: useCase.hid, targetHid: "$func" },
+                ]);
+                setNewFunctionName("");
+              }}
+            >
+              Commit New Function
+            </button>
           </div>
 
           <h4>Use Case Relationships</h4>
@@ -578,7 +889,7 @@ function DetailPanel({
               <option value="">Included Use Case</option>
               {availableIncludes.map((u) => <option key={u.hid} value={u.hid}>{u.hid} - {String(u.properties.Name ?? "")}</option>)}
             </select>
-            <button className="sstpa-button" disabled={!includeUseCaseToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "INCLUDES_UC", sourceHid: useCase.hid, targetHid: includeUseCaseToAdd }])}>Add</button>
+            <button className="sstpa-button" disabled={!includeUseCaseToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "INCLUDES_UC", sourceHid: useCase.hid, targetHid: includeUseCaseToAdd }])}>Commit Add</button>
           </div>
           <RelationshipList title="Extends Use Cases" items={extendedUseCases} relType="EXTENDS" sourceHid={useCase.hid} onCommit={onCommit} onSelect={onSelect} />
           <div style={{ display: "grid", gap: 6, marginTop: 6 }}>
@@ -594,7 +905,7 @@ function DetailPanel({
                 onCommit([{ op: "createRelationship", type: "EXTENDS", sourceHid: useCase.hid, targetHid: extendUseCaseToAdd, properties: { ExtensionPoint: extensionPoint } }])
               }
             >
-              Add Extension
+              Commit Extension
             </button>
           </div>
         </>
@@ -604,7 +915,7 @@ function DetailPanel({
           {(selectedElement.relationships ?? []).filter((r) => r.type === "HAS_REQUIREMENT").map((r) => (
             <span key={r.targetHID} style={{ display: "inline-flex", gap: 4, margin: 2 }}>
               <button className="icon-button" onClick={() => onSelect(r.targetHID)}>{r.targetHID}</button>
-              <button className="icon-button danger" onClick={() => onCommit([{ op: "deleteRelationship", type: "HAS_REQUIREMENT", sourceHid: selectedElement.hid, targetHid: r.targetHID }])}>Remove</button>
+              <button className="icon-button danger" onClick={() => onCommit([{ op: "deleteRelationship", type: "HAS_REQUIREMENT", sourceHid: selectedElement.hid, targetHid: r.targetHID }])}>Commit Remove</button>
             </span>
           ))}
         </>
@@ -620,20 +931,43 @@ function DetailPanel({
         {requirements.map((r) => <option key={r.hid} value={r.hid}>{r.hid} - {String(r.properties.Name ?? "")}</option>)}
       </select>
       <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-        <button className="sstpa-button" disabled={!requirementOwner || !requirementToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "HAS_REQUIREMENT", sourceHid: requirementOwner, targetHid: requirementToAdd }])}>Associate</button>
+        <button className="sstpa-button" disabled={!requirementOwner || !requirementToAdd} onClick={() => onCommit([{ op: "createRelationship", type: "HAS_REQUIREMENT", sourceHid: requirementOwner, targetHid: requirementToAdd }])}>Commit Association</button>
         <button
           className="sstpa-button secondary"
           disabled={!requirementOwner}
-          onClick={() =>
-            onCommit([
+          onClick={() => {
+            // §6.5.12.14: the created Requirement opens for editing in the
+            // Data Drawer once the commit returns its HID.
+            void onCommitAsync([
               { op: "createNode", tempId: "req", label: "Requirement", properties: { Name: "New Use Case Requirement", RStatement: "TBD", Orphan: true, Barren: true } },
               { op: "createRelationship", type: "HAS_REQUIREMENT", sourceHid: requirementOwner, targetHid: "$req" },
             ])
-          }
+              .then((res) => {
+                const hid = res.createdNodes?.req;
+                if (hid) onEditNode(hid);
+              })
+              .catch(() => {
+                /* commit errors already surfaced by the mutation notice */
+              });
+          }}
         >
-          New Requirement
+          Commit New Requirement
         </button>
       </div>
+      {confirm && (
+        <ConfirmDialog
+          title={confirm.title}
+          danger
+          confirmLabel="Commit"
+          onConfirm={() => {
+            confirm.onConfirm();
+            setConfirm(null);
+          }}
+          onCancel={() => setConfirm(null)}
+        >
+          <p>{confirm.body}</p>
+        </ConfirmDialog>
+      )}
     </div>
   );
 }
@@ -661,7 +995,7 @@ function RelationshipList({
         <div key={`${relType}-${item.hid}`} style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 3 }}>
           <button className="icon-button" onClick={() => onSelect(item.hid)}>{item.hid}</button>
           <span style={{ flex: 1, fontSize: "0.72rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(item.properties.Name ?? "")}</span>
-          <button className="icon-button danger" onClick={() => onCommit([{ op: "deleteRelationship", type: relType, sourceHid, targetHid: item.hid }])}>Remove</button>
+          <button className="icon-button danger" onClick={() => onCommit([{ op: "deleteRelationship", type: relType, sourceHid, targetHid: item.hid }])}>Commit Remove</button>
         </div>
       ))}
     </div>
@@ -819,20 +1153,26 @@ function computedUseCaseProps(
   includedUseCases: SoINode[],
   extendedUseCases: SoINode[],
   system?: SoINode,
+  positions: Record<string, Pos> = {},
 ): Record<string, unknown> {
   const findings = validateUseCase(useCase, actors, interfaces, functions);
   const hasError = findings.some((f) => f.severity === "ERROR");
   const hasWarning = findings.some((f) => f.severity === "WARNING");
+  const posOf = (key: string) => positions[key] ?? null;
   return {
     IsComplete: !hasError && !hasWarning,
     ValidationStatus: hasError ? "Invalid" : hasWarning ? "Warning" : "Valid",
+    // §6.5.12.15: UseCaseDiagramJSON is the canonical layout record — element
+    // positions and viewport are embedded so the diagram reconstructs from
+    // Backend data alone.
     UseCaseDiagramJSON: JSON.stringify({
       ...emptyDiagram(system),
       useCaseHID: useCase.hid,
       useCaseUUID: useCase.uuid,
-      actors,
-      interfaces: interfaces.map((i) => ({ hid: i.hid, name: i.properties.Name })),
-      functions: functions.map((f) => ({ hid: f.hid, name: f.properties.Name })),
+      actors: actors.map((a) => ({ ...a, position: posOf(`actor:${a.ActorID}`) })),
+      interfaces: interfaces.map((i) => ({ hid: i.hid, name: i.properties.Name, position: posOf(i.hid) })),
+      functions: functions.map((f) => ({ hid: f.hid, name: f.properties.Name, position: posOf(f.hid) })),
+      positions,
       useCaseRelationships: [
         ...includedUseCases.map((u) => ({ type: "INCLUDES_UC", targetHID: u.hid, targetName: u.properties.Name })),
         ...extendedUseCases.map((u) => {
@@ -840,9 +1180,26 @@ function computedUseCaseProps(
           return { type: "EXTENDS", targetHID: u.hid, targetName: u.properties.Name, extensionPoint: rel?.props?.ExtensionPoint ?? null };
         }),
       ],
+      layoutVersion: new Date().toISOString(),
       savedAt: new Date().toISOString(),
     }),
   };
+}
+
+/** Read stored element positions and viewport back out of UseCaseDiagramJSON
+ *  (§6.5.12.15 reconciliation). */
+function parseDiagramPositions(raw: unknown): { positions: Record<string, Pos>; hadDiagram: boolean } {
+  if (typeof raw !== "string" || raw.trim() === "") return { positions: {}, hadDiagram: false };
+  try {
+    const d = JSON.parse(raw) as { positions?: Record<string, { x?: unknown; y?: unknown } | null> };
+    const positions: Record<string, Pos> = {};
+    for (const [key, v] of Object.entries(d.positions ?? {})) {
+      if (v && typeof v.x === "number" && typeof v.y === "number") positions[key] = { x: v.x, y: v.y };
+    }
+    return { positions, hadDiagram: true };
+  } catch {
+    return { positions: {}, hadDiagram: false };
+  }
 }
 
 function matchesUseCase(u: SoINode, search: string, byHid: Map<string, SoINode>): boolean {
@@ -904,12 +1261,4 @@ function buildUseCaseMarkdown(
   if (findings.length === 0) md += "Complete.\n";
   for (const f of findings) md += `- ${f.severity}: ${f.hid ? `${f.hid} ` : ""}${f.message}\n`;
   return md;
-}
-
-function downloadText(filename: string, text: string, mime: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type: mime }));
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
 }

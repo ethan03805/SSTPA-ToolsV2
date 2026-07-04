@@ -14,6 +14,7 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -37,6 +38,37 @@ type atEdge struct {
 	SANDSequence  *int64         `json:"sandSequence"`
 	TailoredOut   bool           `json:"tailoredOut"`
 	Props         map[string]any `json:"props"`
+}
+
+// snapNode is one node fingerprint in the validation snapshot (§6.5.10.12).
+type snapNode struct {
+	HID      string `json:"hid"`
+	TypeName string `json:"typeName"`
+	Name     string `json:"name"`
+}
+
+// snapTrace is one CURRENT trace (entity, State) pair recorded at build time.
+type snapTrace struct {
+	EntityHID string `json:"entityHid"`
+	StateHID  string `json:"stateHid"`
+}
+
+// treeSnapshot is the validationSnapshot section of AttackTreeJSON: a
+// fingerprint of the Core Data state at the last successful build/Commit,
+// used for change detection on open (§6.5.10.12).
+type treeSnapshot struct {
+	BuiltAt     string      `json:"builtAt"`
+	Environment string      `json:"environment"`
+	Nodes       []snapNode  `json:"nodes"`
+	Traces      []snapTrace `json:"traces"`
+}
+
+// validationFinding is one reconciliation result row (§6.5.10.12/§6.5.10.16).
+type validationFinding struct {
+	Severity string `json:"severity"` // ERROR | WARNING | INFO
+	Type     string `json:"type"`     // e.g. ATTACK_REMOVED, TRACE_INVALIDATED
+	NodeHID  string `json:"nodeHid,omitempty"`
+	Message  string `json:"message"`
 }
 
 // handleLossTree returns the assembled Attack Tree for a Loss: root, tiered
@@ -123,27 +155,12 @@ func (s *Server) assembleTree(ctx context.Context, tx neo4j.ManagedTransaction, 
 		return nil, err
 	}
 
-	// Tier assignment by BFS from the Loss root.
+	// Tier assignment by BFS from the Loss root (§6.5.10.6 T0..T6+).
 	rootHid := lossHid
 	if lossProps, ok := m["loss"].(map[string]any); ok {
 		addNode(lossProps)
 	}
-	tier := map[string]int{rootHid: 0}
-	children := map[string][]string{}
-	for _, e := range edges {
-		children[e.SourceHID] = append(children[e.SourceHID], e.TargetHID)
-	}
-	queue := []string{rootHid}
-	for len(queue) > 0 {
-		cur := queue[0]
-		queue = queue[1:]
-		for _, c := range children[cur] {
-			if _, seen := tier[c]; !seen {
-				tier[c] = tier[cur] + 1
-				queue = append(queue, c)
-			}
-		}
-	}
+	tier := assignTiers(rootHid, edges)
 	nodeList := make([]atNode, 0, len(nodes))
 	for hid, n := range nodes {
 		n.Tier = tier[hid]
@@ -184,16 +201,191 @@ func (s *Server) assembleTree(ctx context.Context, tx neo4j.ManagedTransaction, 
 		coverage = append(coverage, cm)
 	}
 
+	// Snapshot reconciliation (§6.5.10.12): compare the AttackTreeJSON
+	// validationSnapshot against the live graph and emit findings.
+	findings := s.reconcileTreeFindings(ctx, tx, lossHid, m["loss"], nodeList)
+
 	return map[string]any{
-		"loss":          m["loss"],
-		"asset":         m["asset"],
-		"environment":   m["env"],
-		"nodes":         nodeList,
-		"edges":         edges,
-		"traceCoverage": coverage,
-		"statesCovered": statesCovered,
-		"statesTotal":   statesTotal,
+		"loss":               m["loss"],
+		"asset":              m["asset"],
+		"environment":        m["env"],
+		"nodes":              nodeList,
+		"edges":              edges,
+		"traceCoverage":      coverage,
+		"statesCovered":      statesCovered,
+		"statesTotal":        statesTotal,
+		"validationFindings": findings,
 	}, nil
+}
+
+// assignTiers BFS-assigns each node's tier depth from the Loss root
+// (§6.5.10.6). A node reachable through several branches takes its shallowest
+// depth. Pure helper shared by assembleTree and unit tests.
+func assignTiers(rootHid string, edges []atEdge) map[string]int {
+	tier := map[string]int{rootHid: 0}
+	children := map[string][]string{}
+	for _, e := range edges {
+		children[e.SourceHID] = append(children[e.SourceHID], e.TargetHID)
+	}
+	queue := []string{rootHid}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		for _, c := range children[cur] {
+			if _, seen := tier[c]; !seen {
+				tier[c] = tier[cur] + 1
+				queue = append(queue, c)
+			}
+		}
+	}
+	return tier
+}
+
+// reconcileTreeFindings loads the stored validationSnapshot from the Loss's
+// AttackTreeJSON and compares it against the live graph (§6.5.10.12 steps
+// 1–6). It returns an empty slice when no comparable snapshot exists.
+func (s *Server) reconcileTreeFindings(ctx context.Context, tx neo4j.ManagedTransaction, lossHid string, lossProps any, treeNodes []atNode) []validationFinding {
+	props, ok := lossProps.(map[string]any)
+	if !ok {
+		return []validationFinding{}
+	}
+	raw, _ := props["AttackTreeJSON"].(string)
+	snap := parseTreeSnapshot(raw)
+	if snap == nil || len(snap.Nodes) == 0 {
+		return []validationFinding{}
+	}
+
+	// Live existence + current names for every snapshot node.
+	hids := make([]string, 0, len(snap.Nodes))
+	for _, n := range snap.Nodes {
+		hids = append(hids, n.HID)
+	}
+	liveNodes := map[string]snapNode{}
+	if res, err := tx.Run(ctx, `
+		UNWIND $hids AS h
+		MATCH (n {HID: h})
+		RETURN n.HID AS hid, n.Name AS name, n.TypeName AS typeName`,
+		map[string]any{"hids": hids}); err == nil {
+		for res.Next(ctx) {
+			rm := res.Record().AsMap()
+			hid := str2s(rm["hid"])
+			liveNodes[hid] = snapNode{HID: hid, Name: str2s(rm["name"]), TypeName: str2s(rm["typeName"])}
+		}
+	}
+
+	// Live CURRENT trace (entity, State) pairs for the Loss's Asset.
+	liveTraces := map[string]bool{}
+	if res, err := tx.Run(ctx, `
+		MATCH (loss:Loss {HID: $hid})
+		MATCH (asset:Asset)-[:HAS_LOSS]->(loss)
+		MATCH (e)-[t:HOLDS|TRANSPORTS|USES]->(asset)
+		WHERE t.TraceStatus = 'CURRENT'
+		RETURN e.HID AS entityHid, t.TraceStateHID AS stateHid`,
+		map[string]any{"hid": lossHid}); err == nil {
+		for res.Next(ctx) {
+			rm := res.Record().AsMap()
+			liveTraces[str2s(rm["entityHid"])+"|"+str2s(rm["stateHid"])] = true
+		}
+	}
+
+	treeHids := map[string]bool{}
+	for _, n := range treeNodes {
+		treeHids[n.HID] = true
+	}
+	return reconcileFindings(*snap, liveNodes, treeHids, liveTraces, treeNodes)
+}
+
+// reconcileFindings is the pure snapshot-vs-live comparison (§6.5.10.12):
+//   - snapshot node gone from graph          → ERROR *_REMOVED
+//   - snapshot node in graph but not in tree → WARNING EDGE_REMOVED
+//   - snapshot node renamed                  → INFO NAME_CHANGED
+//   - snapshot trace no longer CURRENT       → ERROR TRACE_INVALIDATED
+//   - tree node absent from snapshot         → INFO NODE_ADDED
+func reconcileFindings(snap treeSnapshot, liveNodes map[string]snapNode, treeHids map[string]bool, liveTraces map[string]bool, treeNodes []atNode) []validationFinding {
+	findings := []validationFinding{}
+	snapSet := map[string]bool{}
+	for _, sn := range snap.Nodes {
+		snapSet[sn.HID] = true
+		live, exists := liveNodes[sn.HID]
+		if !exists {
+			findings = append(findings, validationFinding{
+				Severity: "ERROR",
+				Type:     removedFindingType(sn.TypeName),
+				NodeHID:  sn.HID,
+				Message:  fmt.Sprintf("%s %q (%s) was removed from the graph since the last tree build. Rebuild the tree.", sn.TypeName, sn.Name, sn.HID),
+			})
+			continue
+		}
+		if !treeHids[sn.HID] {
+			findings = append(findings, validationFinding{
+				Severity: "WARNING",
+				Type:     "EDGE_REMOVED",
+				NodeHID:  sn.HID,
+				Message:  fmt.Sprintf("%s %q (%s) still exists but is no longer connected in this Attack Tree.", sn.TypeName, sn.Name, sn.HID),
+			})
+		}
+		if live.Name != sn.Name {
+			findings = append(findings, validationFinding{
+				Severity: "INFO",
+				Type:     "NAME_CHANGED",
+				NodeHID:  sn.HID,
+				Message:  fmt.Sprintf("%s %s was renamed from %q to %q since the last tree build.", sn.TypeName, sn.HID, sn.Name, live.Name),
+			})
+		}
+	}
+	for _, tr := range snap.Traces {
+		if !liveTraces[tr.EntityHID+"|"+tr.StateHID] {
+			findings = append(findings, validationFinding{
+				Severity: "ERROR",
+				Type:     "TRACE_INVALIDATED",
+				NodeHID:  tr.EntityHID,
+				Message:  fmt.Sprintf("Trace for entity %s in State %s is no longer CURRENT. Verify with the Trace Tool, then Rebuild Tree.", tr.EntityHID, tr.StateHID),
+			})
+		}
+	}
+	for _, n := range treeNodes {
+		if !snapSet[n.HID] {
+			findings = append(findings, validationFinding{
+				Severity: "INFO",
+				Type:     "NODE_ADDED",
+				NodeHID:  n.HID,
+				Message:  fmt.Sprintf("%s %q (%s) was added to the tree since the last snapshot.", n.TypeName, n.Name, n.HID),
+			})
+		}
+	}
+	return findings
+}
+
+func removedFindingType(typeName string) string {
+	switch typeName {
+	case "Attack":
+		return "ATTACK_REMOVED"
+	case "Countermeasure":
+		return "COUNTERMEASURE_REMOVED"
+	case "State":
+		return "STATE_REMOVED"
+	case "Environment":
+		return "ENVIRONMENT_REMOVED"
+	case "Loss":
+		return "LOSS_REMOVED"
+	default:
+		return "ENTITY_REMOVED"
+	}
+}
+
+// parseTreeSnapshot extracts the validationSnapshot from an AttackTreeJSON
+// document; nil when absent or unparseable.
+func parseTreeSnapshot(raw string) *treeSnapshot {
+	if raw == "" {
+		return nil
+	}
+	var wrapper struct {
+		ValidationSnapshot treeSnapshot `json:"validationSnapshot"`
+	}
+	if err := json.Unmarshal([]byte(raw), &wrapper); err != nil {
+		return nil
+	}
+	return &wrapper.ValidationSnapshot
 }
 
 // handleLossAutoBuild builds the Attack Tree from graph data per §6.5.10.7 and
@@ -283,6 +475,49 @@ func (s *Server) autoBuildTree(ctx context.Context, tx neo4j.ManagedTransaction,
 		return nil, fmt.Errorf("tree construction: %w", err)
 	}
 
+	// T5+ counter-attack recursion (§6.5.10.6 T5/T6+, §6.5.10.7 step 6):
+	// alternate (:Attack)-[:DEFEATS]->(:Countermeasure) counter-attacks and
+	// the countermeasures that [:BLOCKS] them, until fixpoint or the maximum
+	// tree depth (12 tiers → 4 rounds past T4). The ancestor NOT EXISTS
+	// guards keep the per-Loss edge set acyclic.
+	counterAttacks := `
+		MATCH ()-[:AT_RELATES_TO {LossHID: $hid}]->(cm:Countermeasure)
+		MATCH (catk:Attack)-[:DEFEATS]->(cm)
+		WITH DISTINCT cm, catk
+		WHERE NOT EXISTS { MATCH (cm)-[:AT_RELATES_TO {LossHID: $hid}]->(catk) }
+		  AND NOT EXISTS { MATCH (catk)-[:AT_RELATES_TO*1..12 {LossHID: $hid}]->(cm) }
+		MERGE (cm)-[ca:AT_RELATES_TO {LossHID: $hid, counterKey: catk.HID}]->(catk)
+		ON CREATE SET ca.Lossuuid = $lossUuid, ca.LogicOperator = 'OR', ca.TailoredOut = false
+		RETURN count(*) AS created`
+	counterBlocks := `
+		MATCH (:Countermeasure)-[:AT_RELATES_TO {LossHID: $hid}]->(catk:Attack)
+		MATCH (cm2:Countermeasure)-[:BLOCKS]->(catk)
+		WITH DISTINCT catk, cm2
+		WHERE NOT EXISTS { MATCH (catk)-[:AT_RELATES_TO {LossHID: $hid}]->(cm2) }
+		  AND NOT EXISTS { MATCH (cm2)-[:AT_RELATES_TO*1..12 {LossHID: $hid}]->(catk) }
+		MERGE (catk)-[ce:AT_RELATES_TO {LossHID: $hid, cmKey: cm2.HID}]->(cm2)
+		ON CREATE SET ce.Lossuuid = $lossUuid, ce.LogicOperator = 'AND', ce.TailoredOut = false
+		RETURN count(*) AS created`
+	for round := 0; round < 4; round++ {
+		created := int64(0)
+		for _, q := range []string{counterAttacks, counterBlocks} {
+			res, err := tx.Run(ctx, q, map[string]any{"hid": lossHid, "lossUuid": lossUUID})
+			if err != nil {
+				return nil, fmt.Errorf("counter-attack tier construction: %w", err)
+			}
+			rec, err := res.Single(ctx)
+			if err != nil {
+				return nil, err
+			}
+			if n, ok := rec.AsMap()["created"].(int64); ok {
+				created += n
+			}
+		}
+		if created == 0 {
+			break
+		}
+	}
+
 	// Post-build computation (§6.5.10.7): compute paths, RVs, validity.
 	tree, err := s.assembleTree(ctx, tx, lossHid)
 	if err != nil {
@@ -290,10 +525,29 @@ func (s *Server) autoBuildTree(ctx context.Context, tx neo4j.ManagedTransaction,
 	}
 	stats := computeTreeStats(tree, nil)
 
-	// Persist tree properties on the Loss (single transaction).
-	snapshot := map[string]any{
-		"builtAt":     "auto",
-		"environment": envHid,
+	// Validation snapshot (§6.5.10.12): fingerprint of the built tree plus
+	// the CURRENT trace pairs it was derived from, for change detection.
+	treeNodes, _ := tree["nodes"].([]atNode)
+	snapshot := treeSnapshot{
+		BuiltAt:     timeNow().UTC().Format(time.RFC3339),
+		Environment: envHid,
+	}
+	for _, n := range treeNodes {
+		snapshot.Nodes = append(snapshot.Nodes, snapNode{HID: n.HID, TypeName: n.TypeName, Name: n.Name})
+	}
+	if res, err := tx.Run(ctx, `
+		MATCH (loss:Loss {HID: $hid})
+		MATCH (asset:Asset)-[:HAS_LOSS]->(loss)
+		MATCH (e)-[t:HOLDS|TRANSPORTS|USES]->(asset)
+		WHERE t.TraceStatus = 'CURRENT'
+		RETURN e.HID AS entityHid, t.TraceStateHID AS stateHid`,
+		map[string]any{"hid": lossHid}); err == nil {
+		for res.Next(ctx) {
+			rm := res.Record().AsMap()
+			snapshot.Traces = append(snapshot.Traces, snapTrace{
+				EntityHID: str2s(rm["entityHid"]), StateHID: str2s(rm["stateHid"]),
+			})
+		}
 	}
 	snapJSON, _ := json.Marshal(map[string]any{
 		"schemaVersion":      "1.0",
@@ -309,6 +563,8 @@ func (s *Server) autoBuildTree(ctx context.Context, tx neo4j.ManagedTransaction,
 		    loss.PathCount = $paths,
 		    loss.AttackTreeVersion = coalesce(loss.AttackTreeVersion, 0) + 1,
 		    loss.AttackTreeJSON = $json,
+		    loss.LastTreeBuild = datetime(),
+		    loss.AttackTreeLastModified = datetime(),
 		    loss.LastTouch = datetime()`,
 		map[string]any{
 			"hid": lossHid, "valid": stats.valid, "hasRVs": stats.hasRVs,

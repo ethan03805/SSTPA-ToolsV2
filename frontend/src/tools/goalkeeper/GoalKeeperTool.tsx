@@ -6,8 +6,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import type { CommitOperation, SoINode } from "../../api/types";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useDrawer } from "../../state/stores";
 import type { ToolLaunchContext, ToolManifest } from "../manifest";
+import { ToolStatus, downloadText, errorText } from "../shared";
 
 type Mode = "structure" | "evidence" | "validation" | "export";
 type GsnLabel = "GsnGoal" | "GsnStrategy" | "GsnContext" | "GsnJustification" | "GsnAssumption" | "GsnSolution";
@@ -15,6 +17,8 @@ type GsnRel = "SUPPORTED_BY" | "IN_CONTEXT_OF";
 
 const GSN_LABELS: GsnLabel[] = ["GsnGoal", "GsnStrategy", "GsnContext", "GsnJustification", "GsnAssumption", "GsnSolution"];
 const EVIDENCE_RELS = ["HAS_VALIDATION", "HAS_VERIFICATION", "HAS_LOSS"] as const;
+const CRITICALITIES = ["SafetyCritical", "MissionCritical", "FlightCritical", "SecurityCritical"] as const;
+const ASSURANCES = ["Confidentiality", "Availability", "Authenticity", "NonRepudiation", "Certifiable", "Privacy", "Trustworthy"] as const;
 
 interface StructureOption {
   asset?: SoINode;
@@ -28,6 +32,10 @@ interface Finding {
   message: string;
 }
 
+type Notice = { kind: "success" | "error" | "info"; text: string } | null;
+
+type GsnEdge = { source: string; target: string; type: string };
+
 export default function GoalKeeperTool({
   ctx,
 }: {
@@ -40,7 +48,7 @@ export default function GoalKeeperTool({
   const [mode, setMode] = useState<Mode>("structure");
   const [rootHid, setRootHid] = useState("");
   const [selectedHid, setSelectedHid] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
   const [search, setSearch] = useState("");
 
   const soi = useQuery({
@@ -61,17 +69,12 @@ export default function GoalKeeperTool({
   const findings = useMemo(() => validateStructure(rootHid, graph.nodes, gsnNodes), [rootHid, graph.nodes, gsnNodes]);
 
   useEffect(() => {
-    const hid = ctx.drawerNodeHid;
+    // Cross-tool focus context wins over Data Drawer context (SRS §6.4).
+    const hid = ctx.focusHid ?? ctx.drawerNodeHid;
     if (!hid || rootHid) return;
     const node = byHid.get(hid);
     if (!node) return;
-    if (node.typeName === "GsnGoal") {
-      const root = rootForNode(hid, gsnNodes);
-      if (root) {
-        setRootHid(root);
-        setSelectedHid(hid);
-      }
-    } else if (GSN_LABELS.includes(node.typeName as GsnLabel)) {
+    if (GSN_LABELS.includes(node.typeName as GsnLabel)) {
       const root = rootForNode(hid, gsnNodes);
       if (root) {
         setRootHid(root);
@@ -84,7 +87,7 @@ export default function GoalKeeperTool({
       const root = structures.find((s) => s.loss?.hid === hid)?.root.hid;
       if (root) setRootHid(root);
     }
-  }, [byHid, ctx.drawerNodeHid, gsnNodes, rootHid, structures]);
+  }, [byHid, ctx.drawerNodeHid, ctx.focusHid, gsnNodes, rootHid, structures]);
 
   useEffect(() => {
     if (!rootHid && structures[0]) setRootHid(structures[0].root.hid);
@@ -94,13 +97,16 @@ export default function GoalKeeperTool({
     mutationFn: (ops: CommitOperation[]) =>
       api.commit({ soiHid: ctx.soiHid ?? undefined, toolId: "sstpa.goalkeeper", operations: ops }),
     onSuccess: (res) => {
-      setNotice(`Goal Keeper commit ${res.commitId.slice(0, 8)} accepted.`);
+      setNotice({ kind: "success", text: `Goal Keeper commit ${res.commitId.slice(0, 8)} accepted.` });
       void qc.invalidateQueries({ queryKey: ["soi"] });
     },
-    onError: (e) => setNotice(String(e)),
+    onError: (e) => setNotice({ kind: "error", text: errorText(e) }),
   });
 
-  if (!ctx.soiHid) return <p style={{ padding: 20 }}>Select a System of Interest first.</p>;
+  if (!ctx.soiHid) return <ToolStatus needsSoI />;
+  if (soi.isLoading || soi.error) {
+    return <ToolStatus loading={soi.isLoading} error={soi.error} onRetry={() => void soi.refetch()} />;
+  }
 
   return (
     <div className="tool-shell" style={{ height: "100%" }}>
@@ -147,17 +153,30 @@ export default function GoalKeeperTool({
               {
                 op: "updateNode",
                 hid: rootHid,
-                properties: { GoalStructure: JSON.stringify(layoutSnapshot(rootHid, graph.nodes)) },
+                properties: {
+                  GoalStructure: JSON.stringify(
+                    layoutSnapshot(rootHid, byHid.get(rootHid)?.uuid, graph.nodes),
+                  ),
+                },
               },
             ])
           }
         >
-          Save Layout
+          Commit Layout
         </button>
       </div>
       {notice && (
-        <div className="sstpa-alert-warning" style={{ margin: "6px 12px" }}>
-          {notice} <button className="icon-button" onClick={() => setNotice(null)}>x</button>
+        <div
+          className={
+            notice.kind === "success"
+              ? "sstpa-alert-success"
+              : notice.kind === "error"
+                ? "sstpa-alert-error"
+                : "sstpa-alert-warning"
+          }
+          style={{ margin: "6px 12px" }}
+        >
+          {notice.text} <button className="icon-button" onClick={() => setNotice(null)}>x</button>
         </div>
       )}
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
@@ -180,13 +199,21 @@ export default function GoalKeeperTool({
             <ValidationView findings={findings} allGsnNodes={gsnNodes} graphNodes={graph.nodes} onSelect={setSelectedHid} />
           )}
           {mode === "export" && (
-            <ExportView rootHid={rootHid} nodes={graph.nodes} edges={graph.edges} findings={findings} />
+            <ExportView
+              rootHid={rootHid}
+              rootUuid={byHid.get(rootHid)?.uuid}
+              nodes={graph.nodes}
+              edges={graph.edges}
+              byHid={byHid}
+              findings={findings}
+            />
           )}
         </div>
         <DetailPanel
           node={selectedNode}
           rootHid={rootHid}
           graphNodes={graph.nodes}
+          graphEdges={graph.edges}
           evidenceNodes={evidenceNodes}
           drawerOpen={drawerOpen}
           onOpenDrawer={(hid) => openDrawer({ mode: "edit", hid })}
@@ -316,13 +343,39 @@ function EvidenceView({
           <div key={s.hid} className="entity-card" style={{ marginBottom: 8 }}>
             <div className="entity-card-header">
               <span className="entity-hid">{s.hid}</span>
-              <span className="type-badge" style={{ background: ev.length > 0 ? "var(--sstpa-status-ok)" : "var(--sstpa-status-warn)" }}>{ev.length} evidence</span>
+              <span className="type-badge" style={{ background: ev.length > 0 ? "var(--sstpa-status-ok)" : "var(--sstpa-status-warn)" }}>
+                {ev.length > 0 ? `${ev.length} evidence` : "incomplete — no evidence"}
+              </span>
             </div>
             <div style={{ fontWeight: 700 }}>{String(s.properties.Name ?? "")}</div>
-            {ev.map((e) => (
-              <button key={e.hid} className="icon-button" style={{ margin: 4 }} onClick={() => onSelect(e.hid)}>
-                {e.typeName} {e.hid}
-              </button>
+            {/* Evidence rows per §6.5.11.12: type, HID, Name, ShortDescription,
+                V-method/procedure, Loss Criticality/Assurance. */}
+            {ev.map(({ node: e, relType }) => (
+              <div
+                key={`${relType}-${e.hid}`}
+                style={{ borderTop: "1px solid var(--sstpa-line-soft)", padding: "4px 0", fontSize: "0.72rem" }}
+              >
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <span className="type-badge" style={{ background: "var(--sstpa-status-info)" }}>{e.typeName}</span>
+                  <button className="icon-button" onClick={() => onSelect(e.hid)}>{e.hid}</button>
+                  <strong>{String(e.properties.Name ?? "")}</strong>
+                  <span className="mono" style={{ fontSize: "0.62rem", color: "var(--sstpa-navy-muted)" }}>{relType}</span>
+                </div>
+                {String(e.properties.ShortDescription ?? "").trim() !== "" && (
+                  <div style={{ color: "var(--sstpa-navy-muted)" }}>{String(e.properties.ShortDescription)}</div>
+                )}
+                {e.typeName === "Validation" && String(e.properties.VMethod ?? "").trim() !== "" && (
+                  <div>Validation method: {String(e.properties.VMethod)}</div>
+                )}
+                {e.typeName === "Verification" && String(e.properties.Procedure ?? "").trim() !== "" && (
+                  <div>Verification procedure: {String(e.properties.Procedure)}</div>
+                )}
+                {e.typeName === "Loss" && (
+                  <div>
+                    Criticality: {singleTrueProp(e, CRITICALITIES)} / Assurance: {singleTrueProp(e, ASSURANCES)}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         );
@@ -330,6 +383,10 @@ function EvidenceView({
       {solutions.length === 0 && <p style={{ color: "var(--sstpa-navy-muted)" }}>No Solution nodes in this structure.</p>}
     </div>
   );
+}
+
+function singleTrueProp(n: SoINode, keys: readonly string[]): string {
+  return keys.find((k) => n.properties[k] === true) ?? "—";
 }
 
 function ValidationView({
@@ -368,22 +425,59 @@ function ValidationView({
 
 function ExportView({
   rootHid,
+  rootUuid,
   nodes,
   edges,
+  byHid,
   findings,
 }: {
   rootHid: string;
+  rootUuid?: string;
   nodes: SoINode[];
-  edges: { source: string; target: string; type: string }[];
+  edges: GsnEdge[];
+  byHid: Map<string, SoINode>;
   findings: Finding[];
 }) {
   const md = exportMarkdown(rootHid, nodes, edges, findings);
-  const json = JSON.stringify({ schemaVersion: "1.0", rootHid, nodes, edges, findings }, null, 2);
+  // Full diagram JSON per §6.5.11.9/§6.5.11.19: authoritative GSN content
+  // plus layout, viewport, and display settings sufficient to reconstruct
+  // the diagram from Backend data alone.
+  const json = JSON.stringify(
+    {
+      ...layoutSnapshot(rootHid, rootUuid, nodes),
+      gsnNodes: nodes.map((n) => ({
+        hid: n.hid,
+        uuid: n.uuid,
+        typeName: n.typeName,
+        gsnId: gsnId(n) || null,
+        name: String(n.properties.Name ?? ""),
+        statement: statement(n),
+      })),
+      gsnRelationships: edges,
+      evidenceReferences: nodes
+        .filter((n) => n.typeName === "GsnSolution")
+        .map((n) => ({
+          solutionHid: n.hid,
+          evidence: evidenceFor(n, byHid).map(({ node: e, relType }) => ({
+            relType,
+            hid: e.hid,
+            typeName: e.typeName,
+            name: String(e.properties.Name ?? ""),
+          })),
+        })),
+      validationFindings: findings,
+    },
+    null,
+    2,
+  );
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ padding: "var(--sstpa-sp-2) var(--sstpa-sp-3)", borderBottom: "var(--sstpa-border-soft)", display: "flex", gap: 8 }}>
+      <div style={{ padding: "var(--sstpa-sp-2) var(--sstpa-sp-3)", borderBottom: "var(--sstpa-border-soft)", display: "flex", gap: 8, alignItems: "center" }}>
         <button className="sstpa-button" onClick={() => downloadText(`sstpa-${rootHid}-gsn.md`, md, "text/markdown")}>Markdown</button>
         <button className="sstpa-button" onClick={() => downloadText(`sstpa-${rootHid}-gsn.json`, json, "application/json")}>JSON</button>
+        <span style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>
+          PNG/SVG export deferred: the structure view renders as DOM tiers, not a canvas.
+        </span>
       </div>
       <pre style={{ flex: 1, overflow: "auto", margin: 0, padding: "var(--sstpa-sp-3)", whiteSpace: "pre-wrap", fontSize: "0.76rem" }}>{md}</pre>
     </div>
@@ -394,6 +488,7 @@ function DetailPanel({
   node,
   rootHid,
   graphNodes,
+  graphEdges,
   evidenceNodes,
   drawerOpen,
   onOpenDrawer,
@@ -403,6 +498,7 @@ function DetailPanel({
   node?: SoINode;
   rootHid: string;
   graphNodes: SoINode[];
+  graphEdges: GsnEdge[];
   evidenceNodes: SoINode[];
   drawerOpen: boolean;
   onOpenDrawer: (hid: string) => void;
@@ -414,6 +510,7 @@ function DetailPanel({
   const [existingTarget, setExistingTarget] = useState("");
   const [evidenceTarget, setEvidenceTarget] = useState("");
   const [edit, setEdit] = useState({ name: "", statement: "" });
+  const [confirm, setConfirm] = useState<{ title: string; body: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     if (!node) return;
@@ -428,6 +525,8 @@ function DetailPanel({
   const canContext = node.typeName === "GsnGoal" || node.typeName === "GsnStrategy";
   const canEvidence = node.typeName === "GsnSolution";
   const outgoing = (node.relationships ?? []).filter((r) => ["SUPPORTED_BY", "IN_CONTEXT_OF", ...EVIDENCE_RELS].includes(r.type));
+  const isRoot = rootHid === node.hid;
+  const rootPath = pathToRoot(rootHid, node.hid, graphEdges);
 
   const createNode = () => {
     const temp = "gsn";
@@ -444,14 +543,59 @@ function DetailPanel({
     onCommit([{ op: "updateNode", hid: node.hid, properties: { Name: edit.name, [statementProp(node.typeName)]: edit.statement } }]);
   };
 
+  /** §6.5.11.11: warn before Commit when removing a relationship would leave
+   *  GSN nodes unreachable from the Root Goal. */
+  const removeRelationship = (type: string, targetHid: string) => {
+    const ops: CommitOperation[] = [{ op: "deleteRelationship", type, sourceHid: node.hid, targetHid }];
+    const orphans = unreachableAfterRemoval(rootHid, graphNodes, graphEdges, node.hid, type, targetHid);
+    if (orphans.length > 0) {
+      setConfirm({
+        title: "Removing this relationship orphans nodes",
+        body: `Deleting ${node.hid} -[:${type}]-> ${targetHid} leaves ${orphans.length} GSN node(s) unreachable from the Root Goal: ${orphans.slice(0, 5).join(", ")}${orphans.length > 5 ? ", …" : ""}. Commit anyway?`,
+        onConfirm: () => onCommit(ops),
+      });
+    } else {
+      onCommit(ops);
+    }
+  };
+
+  /** §6.5.11.13: Root Goal deletion removes the certification argument —
+   *  always behind a danger confirmation. */
+  const deleteNode = () => {
+    setConfirm({
+      title: isRoot ? "Delete Root Goal" : `Delete ${node.typeName.replace("Gsn", "")}`,
+      body: isRoot
+        ? `Deleting Root Goal ${node.hid} removes the entire certification argument for this Asset-Loss case (SRS §6.5.11.13). This cannot be undone.`
+        : `Delete ${node.hid} (${String(node.properties.Name ?? "")}) and all of its relationships? Descendant nodes may become unreachable.`,
+      onConfirm: () => onCommit([{ op: "deleteNode", hid: node.hid }]),
+    });
+  };
+
   return (
     <div style={{ width: 330, borderLeft: "var(--sstpa-border)", overflow: "auto", padding: "var(--sstpa-sp-3)" }}>
       <div className="mono" style={{ fontSize: "0.72rem", color: "var(--sstpa-navy-muted)" }}>{node.hid}</div>
       <h3 style={{ margin: "4px 0 8px" }}>{String(node.properties.Name ?? "")}</h3>
       <GsnBadge typeName={node.typeName} />
+      {gsnId(node) !== "" && (
+        <span className="mono" style={{ fontSize: "0.7rem", marginLeft: 6 }}>GSN ID: {gsnId(node)}</span>
+      )}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
         <button className="sstpa-button" disabled={drawerOpen} onClick={() => onOpenDrawer(node.hid)}>Open Drawer</button>
+        <button className="sstpa-button danger" onClick={deleteNode}>Delete Node</button>
       </div>
+
+      {/* Path-to-root display (§6.5.11.17). */}
+      {rootPath.length > 1 && (
+        <div style={{ marginTop: 10, fontSize: "0.7rem" }}>
+          <div style={{ color: "var(--sstpa-navy-muted)" }}>Path to root</div>
+          {rootPath.map((hid, i) => (
+            <span key={hid}>
+              {i > 0 && " -> "}
+              <button className="icon-button" onClick={() => onSelect(hid)}>{hid}</button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {GSN_LABELS.includes(node.typeName as GsnLabel) && (
         <>
@@ -517,12 +661,88 @@ function DetailPanel({
       {outgoing.map((r) => (
         <div key={`${r.type}-${r.targetHID}`} style={{ borderBottom: "1px solid var(--sstpa-line-soft)", padding: "4px 0", fontSize: "0.72rem" }}>
           <button className="icon-button" onClick={() => onSelect(r.targetHID)}>{r.type} {r.targetHID}</button>
-          <button className="icon-button danger" onClick={() => onCommit([{ op: "deleteRelationship", type: r.type, sourceHid: node.hid, targetHid: r.targetHID }])}>Remove</button>
+          <button className="icon-button danger" onClick={() => removeRelationship(r.type, r.targetHID)}>Commit Remove</button>
         </div>
       ))}
-      {rootHid === node.hid && <div className="state-info" style={{ marginTop: 10, fontSize: "0.72rem" }}>Root Goal</div>}
+      {isRoot && <div className="state-info" style={{ marginTop: 10, fontSize: "0.72rem" }}>Root Goal</div>}
+      {confirm && (
+        <ConfirmDialog
+          title={confirm.title}
+          danger
+          confirmLabel="Commit"
+          onConfirm={() => {
+            confirm.onConfirm();
+            setConfirm(null);
+          }}
+          onCancel={() => setConfirm(null)}
+        >
+          <p>{confirm.body}</p>
+        </ConfirmDialog>
+      )}
     </div>
   );
+}
+
+/** Chain from the Root Goal to the target following SUPPORTED_BY and
+ *  IN_CONTEXT_OF edges (§6.5.11.17 path-to-root display). */
+function pathToRoot(rootHid: string, targetHid: string, edges: GsnEdge[]): string[] {
+  if (!rootHid || rootHid === targetHid) return [rootHid].filter(Boolean);
+  const children = new Map<string, string[]>();
+  for (const e of edges) {
+    children.set(e.source, [...(children.get(e.source) ?? []), e.target]);
+  }
+  const parent = new Map<string, string>();
+  const queue = [rootHid];
+  const seen = new Set([rootHid]);
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    for (const c of children.get(cur) ?? []) {
+      if (seen.has(c)) continue;
+      seen.add(c);
+      parent.set(c, cur);
+      if (c === targetHid) {
+        const path = [c];
+        let p: string | undefined = cur;
+        while (p) {
+          path.unshift(p);
+          p = parent.get(p);
+        }
+        return path;
+      }
+      queue.push(c);
+    }
+  }
+  return [];
+}
+
+/** Nodes of the structure that become unreachable from the Root Goal if one
+ *  relationship is removed (§6.5.11.11 deletion safety). */
+function unreachableAfterRemoval(
+  rootHid: string,
+  nodes: SoINode[],
+  edges: GsnEdge[],
+  removeSource: string,
+  removeType: string,
+  removeTarget: string,
+): string[] {
+  const inStructure = new Set(nodes.map((n) => n.hid));
+  const children = new Map<string, string[]>();
+  for (const e of edges) {
+    if (e.source === removeSource && e.type === removeType && e.target === removeTarget) continue;
+    children.set(e.source, [...(children.get(e.source) ?? []), e.target]);
+  }
+  const reachable = new Set([rootHid]);
+  const queue = [rootHid];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    for (const c of children.get(cur) ?? []) {
+      if (!reachable.has(c)) {
+        reachable.add(c);
+        queue.push(c);
+      }
+    }
+  }
+  return [...inStructure].filter((hid) => !reachable.has(hid));
 }
 
 const labelStyle = { display: "block", fontSize: "0.76rem", marginTop: 8 };
@@ -567,26 +787,136 @@ function buildGsnGraph(rootHid: string, allGsnNodes: SoINode[], byHid: Map<strin
   return { nodes: allGsnNodes.filter((n) => seen.has(n.hid)), edges };
 }
 
+/** Structural validation per §6.5.11.14: exactly-one-root, DAG acyclicity,
+ *  duplicate relationships, GSN ID uniqueness, Solution rules. Solutions
+ *  without evidence are incompleteness (WARNING), not a hard error. */
 function validateStructure(rootHid: string, nodes: SoINode[], allGsnNodes: SoINode[]): Finding[] {
   const findings: Finding[] = [];
   if (!rootHid) return [{ severity: "ERROR", message: "No Root Goal selected." }];
   const root = nodes.find((n) => n.hid === rootHid);
   if (!root) findings.push({ severity: "ERROR", message: "Root Goal is not reachable in the current graph.", nodeHid: rootHid });
+
+  const inStructure = new Set(nodes.map((n) => n.hid));
+  const incomingSupport = new Set<string>();
+  const edgeCounts = new Map<string, number>();
+  for (const n of nodes) {
+    for (const rel of n.relationships ?? []) {
+      if (!["SUPPORTED_BY", "IN_CONTEXT_OF", ...EVIDENCE_RELS].includes(rel.type)) continue;
+      if (rel.type === "SUPPORTED_BY" && inStructure.has(rel.targetHID)) incomingSupport.add(rel.targetHID);
+      const key = `${n.hid}|${rel.type}|${rel.targetHID}`;
+      edgeCounts.set(key, (edgeCounts.get(key) ?? 0) + 1);
+    }
+  }
+
+  // Exactly one Root Goal (§6.5.11.8): no other in-structure GsnGoal may be
+  // free of incoming SUPPORTED_BY.
+  for (const n of nodes) {
+    if (n.typeName === "GsnGoal" && n.hid !== rootHid && !incomingSupport.has(n.hid)) {
+      findings.push({
+        severity: "ERROR",
+        nodeHid: n.hid,
+        message: `${n.hid} is a second root Goal (no incoming SUPPORTED_BY). A Goal Structure has exactly one Root Goal.`,
+      });
+    }
+  }
+
+  // Duplicate logical relationships (§6.5.11.7).
+  for (const [key, count] of edgeCounts) {
+    if (count > 1) {
+      const [source, type, target] = key.split("|");
+      findings.push({
+        severity: "ERROR",
+        nodeHid: source,
+        message: `Duplicate ${type} relationship ${source} -> ${target} (${count} copies). Remove the duplicates.`,
+      });
+    }
+  }
+
+  // DAG acyclicity (§6.5.11.7) — DFS over SUPPORTED_BY within the structure.
+  const cycleAt = findSupportCycle(nodes, inStructure);
+  if (cycleAt) {
+    findings.push({
+      severity: "ERROR",
+      nodeHid: cycleAt,
+      message: `Cycle detected in SUPPORTED_BY relationships involving ${cycleAt}. The Goal Structure must be a DAG.`,
+    });
+  }
+
+  // GSN ID uniqueness within the structure (§6.5.11.14).
+  const idOwners = new Map<string, string[]>();
+  for (const n of nodes) {
+    const gid = gsnId(n);
+    if (gid) idOwners.set(gid, [...(idOwners.get(gid) ?? []), n.hid]);
+  }
+  for (const [gid, hids] of idOwners) {
+    if (hids.length > 1) {
+      findings.push({
+        severity: "ERROR",
+        nodeHid: hids[1],
+        message: `GSN ID "${gid}" is used by ${hids.length} nodes (${hids.join(", ")}). GSN IDs must be unique within the Goal Structure.`,
+      });
+    }
+  }
+
   for (const n of nodes) {
     if ((n.typeName === "GsnGoal" || n.typeName === "GsnStrategy") && !hasSupport(n)) {
       findings.push({ severity: "WARNING", nodeHid: n.hid, message: `${n.hid} has no SUPPORTING node.` });
     }
     if (n.typeName === "GsnSolution" && evidenceRelCount(n) === 0) {
-      findings.push({ severity: "ERROR", nodeHid: n.hid, message: `${n.hid} is a Solution without evidence.` });
+      findings.push({
+        severity: "WARNING",
+        nodeHid: n.hid,
+        message: `${n.hid} is a Solution without evidence — the Goal Structure cannot be marked complete until evidence is referenced (§6.5.11.12).`,
+      });
     }
     if (n.typeName === "GsnSolution" && (n.relationships ?? []).some((r) => r.type === "SUPPORTED_BY")) {
       findings.push({ severity: "ERROR", nodeHid: n.hid, message: `${n.hid} is a Solution with outgoing SUPPORT.` });
     }
   }
-  const graphSet = new Set(nodes.map((n) => n.hid));
-  const unreachable = allGsnNodes.filter((n) => !graphSet.has(n.hid));
+  const unreachable = allGsnNodes.filter((n) => !inStructure.has(n.hid));
   if (unreachable.length > 0) findings.push({ severity: "INFO", message: `${unreachable.length} GSN node(s) in the SoI are outside this Goal Structure.` });
   return findings;
+}
+
+/** DFS cycle detection over SUPPORTED_BY edges; returns a node on a cycle. */
+function findSupportCycle(nodes: SoINode[], inStructure: Set<string>): string | null {
+  const adj = new Map<string, string[]>();
+  for (const n of nodes) {
+    adj.set(
+      n.hid,
+      (n.relationships ?? [])
+        .filter((r) => r.type === "SUPPORTED_BY" && inStructure.has(r.targetHID))
+        .map((r) => r.targetHID),
+    );
+  }
+  const state = new Map<string, 1 | 2>(); // 1 = in stack, 2 = done
+  const visit = (hid: string): string | null => {
+    state.set(hid, 1);
+    for (const next of adj.get(hid) ?? []) {
+      const st = state.get(next);
+      if (st === 1) return next;
+      if (st === undefined) {
+        const found = visit(next);
+        if (found) return found;
+      }
+    }
+    state.set(hid, 2);
+    return null;
+  };
+  for (const n of nodes) {
+    if (!state.has(n.hid)) {
+      const found = visit(n.hid);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/** Per-type GSN ID property (GoalID, StrategyID, …) per the schema. */
+function gsnId(n: SoINode): string {
+  if (!GSN_LABELS.includes(n.typeName as GsnLabel)) return "";
+  const prop = `${n.typeName.replace("Gsn", "")}ID`;
+  return String(n.properties[prop] ?? "").trim();
 }
 
 function hasSupport(n: SoINode): boolean {
@@ -597,17 +927,27 @@ function evidenceRelCount(n: SoINode): number {
   return (n.relationships ?? []).filter((r) => EVIDENCE_RELS.includes(r.type as (typeof EVIDENCE_RELS)[number])).length;
 }
 
-function evidenceFor(solution: SoINode, byHid: Map<string, SoINode>): SoINode[] {
+function evidenceFor(solution: SoINode, byHid: Map<string, SoINode>): { node: SoINode; relType: string }[] {
   return (solution.relationships ?? [])
     .filter((r) => EVIDENCE_RELS.includes(r.type as (typeof EVIDENCE_RELS)[number]))
-    .map((r) => byHid.get(r.targetHID))
-    .filter((n): n is SoINode => !!n);
+    .map((r) => ({ node: byHid.get(r.targetHID), relType: r.type }))
+    .filter((x): x is { node: SoINode; relType: string } => !!x.node);
 }
 
+/** Search per §6.5.11.17: HID, uuid, type, name, statement text, GSN ID,
+ *  and referenced evidence HIDs. */
 function filterGraphNodes(nodes: SoINode[], search: string): SoINode[] {
   if (!search.trim()) return nodes;
   const q = search.toLowerCase();
-  return nodes.filter((n) => `${n.hid} ${n.uuid} ${n.typeName} ${String(n.properties.Name ?? "")} ${statement(n)}`.toLowerCase().includes(q));
+  return nodes.filter((n) => {
+    const evidenceHids = (n.relationships ?? [])
+      .filter((r) => EVIDENCE_RELS.includes(r.type as (typeof EVIDENCE_RELS)[number]))
+      .map((r) => r.targetHID)
+      .join(" ");
+    return `${n.hid} ${n.uuid} ${n.typeName} ${gsnId(n)} ${String(n.properties.Name ?? "")} ${statement(n)} ${evidenceHids}`
+      .toLowerCase()
+      .includes(q);
+  });
 }
 
 function tierNodes(rootHid: string, nodes: SoINode[]): [number, SoINode[]][] {
@@ -635,25 +975,41 @@ function tierNodes(rootHid: string, nodes: SoINode[]): [number, SoINode[]][] {
   return [...grouped.entries()].sort(([a], [b]) => a - b);
 }
 
+/** Resolve the Root Goal for any GSN node by walking incoming SUPPORTED_BY
+ *  edges upward through Goals AND Strategies until no structural parent
+ *  remains (§6.5.11.8). IN_CONTEXT_OF is ignored for root resolution, except
+ *  as a single anchor hop for pure context nodes (Context / Justification /
+ *  Assumption), which have no SUPPORTED_BY parents of their own. */
 function rootForNode(hid: string, nodes: SoINode[]): string | null {
-  const incoming = new Map<string, string[]>();
+  const byHid = new Map(nodes.map((n) => [n.hid, n]));
+  const supportParents = new Map<string, string[]>();
+  const contextParents = new Map<string, string[]>();
   for (const n of nodes) {
     for (const rel of n.relationships ?? []) {
-      if (["SUPPORTED_BY", "IN_CONTEXT_OF"].includes(rel.type)) {
-        incoming.set(rel.targetHID, [...(incoming.get(rel.targetHID) ?? []), n.hid]);
+      if (rel.type === "SUPPORTED_BY") {
+        supportParents.set(rel.targetHID, [...(supportParents.get(rel.targetHID) ?? []), n.hid]);
+      } else if (rel.type === "IN_CONTEXT_OF") {
+        contextParents.set(rel.targetHID, [...(contextParents.get(rel.targetHID) ?? []), n.hid]);
       }
     }
   }
-  let cur: string | null = hid;
-  const visited = new Set<string>();
-  while (cur && !visited.has(cur)) {
-    visited.add(cur);
-    const parents: string[] = incoming.get(cur) ?? [];
-    const supportedParent: string | undefined = parents.find((p: string) => nodes.find((n) => n.hid === p)?.typeName === "GsnGoal");
-    if (!supportedParent) return cur;
-    cur = supportedParent;
+  let cur = hid;
+  if (!supportParents.has(cur)) {
+    const anchor = (contextParents.get(cur) ?? [])[0];
+    if (anchor) cur = anchor;
   }
-  return cur;
+  const visited = new Set<string>();
+  while (!visited.has(cur)) {
+    visited.add(cur);
+    const structural = (supportParents.get(cur) ?? []).filter((p) => {
+      const t = byHid.get(p)?.typeName;
+      return t === "GsnGoal" || t === "GsnStrategy";
+    });
+    const next = structural.find((p) => !visited.has(p));
+    if (!next) break;
+    cur = next;
+  }
+  return byHid.has(cur) ? cur : null;
 }
 
 function relationshipFor(sourceType: string, targetType: string, requested: GsnRel): GsnRel | null {
@@ -713,20 +1069,32 @@ function sameCriticalityAssurance(loss: SoINode, goal: SoINode): boolean {
   return c && a;
 }
 
-function layoutSnapshot(rootHid: string, nodes: SoINode[]) {
+/** Persisted diagram JSON per §6.5.11.9: schema version, root identity, tool
+ *  type, viewport/zoom, node positions, edge routing, collapsed state, and
+ *  display toggles — presentation data only, never authoritative. */
+function layoutSnapshot(rootHid: string, rootUuid: string | undefined, nodes: SoINode[]) {
   return {
     schemaVersion: "1.0",
-    rootHid,
+    rootGoalHid: rootHid,
+    rootGoalUuid: rootUuid ?? null,
     toolType: "sstpa.goalkeeper",
     savedAt: new Date().toISOString(),
     layoutMode: "hierarchical-left-to-right",
+    viewport: { x: 0, y: 0 },
+    zoom: 1,
+    displayToggles: {
+      evidencePanel: true,
+      statements: true,
+      validationMarkers: true,
+    },
+    edgeRouting: [],
     nodes: tierNodes(rootHid, nodes).flatMap(([tier, group]) =>
       group.map((n, idx) => ({ hid: n.hid, x: tier * 260, y: idx * 130, collapsed: false })),
     ),
   };
 }
 
-function exportMarkdown(rootHid: string, nodes: SoINode[], edges: { source: string; target: string; type: string }[], findings: Finding[]): string {
+function exportMarkdown(rootHid: string, nodes: SoINode[], edges: GsnEdge[], findings: Finding[]): string {
   let md = `# Goal Structure ${rootHid}\n\nGenerated: ${new Date().toISOString()}\n\n`;
   for (const [tier, group] of tierNodes(rootHid, nodes)) {
     md += `## Tier ${tier}\n\n`;
@@ -739,12 +1107,4 @@ function exportMarkdown(rootHid: string, nodes: SoINode[], edges: { source: stri
   for (const f of findings) md += `- ${f.severity}: ${f.nodeHid ? `${f.nodeHid} ` : ""}${f.message}\n`;
   if (findings.length === 0) md += "No findings.\n";
   return md;
-}
-
-function downloadText(filename: string, text: string, mime: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type: mime }));
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
 }
