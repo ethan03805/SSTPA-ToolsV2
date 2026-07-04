@@ -49,7 +49,7 @@ Transitive Go dependencies are pinned and checksummed in `backend/go.sum`.
 | zustand | https://github.com/pmndrs/zustand | MIT | UI state (§6.1) | integrated |
 | @tanstack/react-query | https://tanstack.com/query | MIT | Backend fetch/mutate/cache (§6.1) | integrated |
 | @tanstack/react-virtual | https://tanstack.com/virtual | MIT | Large-list virtualization (§6.1) | integrated |
-| cytoscape, react-cytoscapejs, cytoscape-fcose | https://js.cytoscape.org | MIT | SoI graph popups (§6.1) | integrated |
+| cytoscape, react-cytoscapejs, cytoscape-fcose, cytoscape-svg | https://js.cytoscape.org | MIT | SoI graph popups + PNG/SVG diagram export (§6.1, §6.5.x) | integrated |
 | ag-grid-community, ag-grid-react | https://ag-grid.com | MIT | RTM / search / report tables (§6.1) | integrated |
 
 Exact versions pinned in `frontend/package-lock.json`.
