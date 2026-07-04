@@ -222,12 +222,14 @@ func (s *Server) handleReferenceClone(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
-		// Ownership notification when cloning onto someone else's node (§3.3.9.1).
+		// Ownership notification when cloning onto someone else's node
+		// (§3.3.9.1). The created count is verified so a missing mailbox
+		// rolls back the whole clone (SRS §5.6.6.8.1).
 		owner, _ := m["owner"].(string)
 		ownerEmail, _ := m["ownerEmail"].(string)
 		messages := 0
 		if owner != "" && owner != user.UserName && owner != "SSTPA Tools" {
-			if _, err := tx.Run(r.Context(), `
+			nres, err := tx.Run(r.Context(), `
 				MATCH (u)-[:OWNS_MAILBOX]->(mb:Mailbox) WHERE u.UserName = $owner
 				CREATE (msg:Message {
 					MessageID: randomUUID(),
@@ -241,11 +243,20 @@ func (s *Server) handleReferenceClone(w http.ResponseWriter, r *http.Request) {
 					RequiresApproval: false, ApprovalStatus: 'NOT_APPLICABLE'
 				})
 				CREATE (mb)-[:HAS_MESSAGE]->(msg)
-				SET mb.UnreadCount = coalesce(mb.UnreadCount,0) + 1, mb.LastTouch = datetime()`,
+				SET mb.UnreadCount = coalesce(mb.UnreadCount,0) + 1, mb.LastTouch = datetime()
+				RETURN count(msg) AS created`,
 				map[string]any{"owner": owner, "ownerEmail": ownerEmail,
 					"sender": user.UserName, "senderEmail": user.Email,
-					"eid": m["refExternalId"], "hid": req.CoreHID}); err != nil {
+					"eid": m["refExternalId"], "hid": req.CoreHID})
+			if err != nil {
 				return nil, err
+			}
+			nrec, err := nres.Single(r.Context())
+			if err != nil {
+				return nil, err
+			}
+			if n, _ := nrec.AsMap()["created"].(int64); n != 1 {
+				return nil, fmt.Errorf("owner %s has no mailbox; notification required, rolling back (SRS §5.6.6.8.1)", owner)
 			}
 			messages = 1
 		}

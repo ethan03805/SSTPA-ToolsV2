@@ -599,7 +599,12 @@ func (s *Server) recomputeTraceDerivations(ctx context.Context, tx neo4j.Managed
 	if err != nil {
 		return err
 	}
-	soi := h.SoIKey()
+	return s.recomputeTraceDerivationsForKey(ctx, tx, user, h.SoIKey(), commitID)
+}
+
+// recomputeTraceDerivationsForKey is recomputeTraceDerivations keyed directly
+// by SoI index (used when the commit itself carries no soiHid scope).
+func (s *Server) recomputeTraceDerivationsForKey(ctx context.Context, tx neo4j.ManagedTransaction, user UserIdentity, soi, commitID string) error {
 
 	// Note: the SRS assurance set (§3.3.10 Asset Assurances group, §3.3.4.6.2
 	// inheritance list, §3.3.4.6.3 labels) deliberately omits Integrity; see
@@ -665,27 +670,37 @@ func (s *Server) recomputeTraceDerivations(ctx context.Context, tx neo4j.Managed
 		"Trustworthy":     "Trustworthiness",
 	}
 	for prop, label := range assurance {
+		// One Requirement per qualifying (entity, Asset) pair. The rows are
+		// collected first so each new Requirement receives a distinct
+		// Sequence/HID above the current SoI maximum; a bare LIMIT/aggregate
+		// in the row stream would collapse the batch to a single Requirement
+		// or hand every row the same identity.
 		qr := fmt.Sprintf(`
+			MATCH (p:Purpose) WHERE p.SoIIndex = $soi
+			WITH p ORDER BY p.Sequence LIMIT 1
+			OPTIONAL MATCH (rq:Requirement) WHERE rq.SoIIndex = $soi
+			WITH p, coalesce(max(rq.Sequence), 0) AS maxSeq
 			MATCH (e:SSTPA)-[r:HOLDS|TRANSPORTS|USES]->(a:Asset)
 			WHERE e.SoIIndex = $soi AND a.SoIIndex = $soi
 			  AND r.TraceStatus = 'CURRENT' AND a.%s = true
 			  AND (e:Interface OR e:SystemFunction OR e:Component)
-			WITH e, a, (e.Name + ' SHALL protect the %s of ' + a.Name + '.') AS stmt
+			WITH DISTINCT p, maxSeq, e, a,
+			     (e.Name + ' SHALL protect the %s of ' + a.Name + '.') AS stmt
 			WHERE NOT EXISTS { MATCH (e)-[:HAS_REQUIREMENT]->(x:Requirement) WHERE x.RStatement = stmt }
-			MATCH (p:Purpose) WHERE p.SoIIndex = $soi
-			WITH e, a, stmt, p ORDER BY p.Sequence LIMIT 1
-			MATCH (rq:Requirement) WHERE rq.SoIIndex = $soi
-			WITH e, a, stmt, p, coalesce(max(rq.Sequence), 0) AS maxSeq
+			WITH p, maxSeq, collect({e: e, a: a, stmt: stmt}) AS rows
+			UNWIND range(0, size(rows) - 1) AS i
+			WITH p, rows[i] AS row, maxSeq + 1 + i AS seq
 			CREATE (nr:SSTPA:Requirement {
-				HID: 'REQ_' + $soi + '_' + toString(maxSeq + 1),
+				HID: 'REQ_' + $soi + '_' + toString(seq),
 				uuid: randomUUID(), TypeName: 'Requirement',
-				Name: 'Protect ' + a.Name,
-				RStatement: stmt, VMethod: 'Inspection',
+				Name: 'Protect ' + row.a.Name,
+				RStatement: row.stmt, VMethod: 'Inspection',
 				Orphan: false, Barren: true,
 				Owner: $user, OwnerEmail: $email, Creator: $user, CreatorEmail: $email,
 				Created: datetime(), LastTouch: datetime(),
-				VersionID: $version, SoIIndex: $soi, Sequence: maxSeq + 1
+				VersionID: $version, SoIIndex: $soi, Sequence: seq
 			})
+			WITH p, row.e AS e, nr
 			CREATE (e)-[:HAS_REQUIREMENT]->(nr)
 			CREATE (p)-[:HAS_REQUIREMENT]->(nr)`,
 			prop, label)

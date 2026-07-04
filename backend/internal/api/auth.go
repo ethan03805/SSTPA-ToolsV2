@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -38,29 +39,75 @@ func CurrentUser(ctx context.Context) (UserIdentity, bool) {
 	return u, ok
 }
 
-// sessionStore is the MVP in-memory token store.
-type sessionStore struct {
-	mu       sync.RWMutex
-	sessions map[string]UserIdentity
+// sessionStore is the MVP in-memory token store. Sessions expire after an
+// idle timeout so tokens do not stay valid (and the map does not grow)
+// indefinitely between process restarts.
+const sessionIdleTimeout = 24 * time.Hour
+
+type sessionEntry struct {
+	user     UserIdentity
+	lastSeen time.Time
 }
 
-var sessions = &sessionStore{sessions: map[string]UserIdentity{}}
+type sessionStore struct {
+	mu       sync.Mutex
+	sessions map[string]*sessionEntry
+}
+
+var sessions = &sessionStore{sessions: map[string]*sessionEntry{}}
 
 func (st *sessionStore) create(u UserIdentity) string {
 	b := make([]byte, 32)
 	_, _ = rand.Read(b)
 	tok := hex.EncodeToString(b)
 	st.mu.Lock()
-	st.sessions[tok] = u
+	st.prune()
+	st.sessions[tok] = &sessionEntry{user: u, lastSeen: timeNow()}
 	st.mu.Unlock()
 	return tok
 }
 
 func (st *sessionStore) lookup(tok string) (UserIdentity, bool) {
-	st.mu.RLock()
-	defer st.mu.RUnlock()
-	u, ok := st.sessions[tok]
-	return u, ok
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	e, ok := st.sessions[tok]
+	if !ok {
+		return UserIdentity{}, false
+	}
+	if timeNow().Sub(e.lastSeen) > sessionIdleTimeout {
+		delete(st.sessions, tok)
+		return UserIdentity{}, false
+	}
+	e.lastSeen = timeNow()
+	return e.user, true
+}
+
+func (st *sessionStore) revoke(tok string) {
+	st.mu.Lock()
+	delete(st.sessions, tok)
+	st.mu.Unlock()
+}
+
+// revokeUser drops every session belonging to userName (suspension,
+// disenrollment; SRS §6.5.15.11 "terminate any active sessions").
+func (st *sessionStore) revokeUser(userName string) {
+	st.mu.Lock()
+	for tok, e := range st.sessions {
+		if e.user.UserName == userName {
+			delete(st.sessions, tok)
+		}
+	}
+	st.mu.Unlock()
+}
+
+// prune removes expired sessions; callers hold st.mu.
+func (st *sessionStore) prune() {
+	cutoff := timeNow().Add(-sessionIdleTimeout)
+	for tok, e := range st.sessions {
+		if e.lastSeen.Before(cutoff) {
+			delete(st.sessions, tok)
+		}
+	}
 }
 
 // hashPassword computes the SHA-384 hex digest required by SRS §3.2.
@@ -109,6 +156,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 			OPTIONAL MATCH (u:User {UserName: $name})
 			OPTIONAL MATCH (ra:RootAdmin {UserName: $name})
 			RETURN u.Password AS upw, u.Email AS uemail, u.IsAdmin AS isAdmin,
+			       coalesce(u.AccountStatus, 'ACTIVE') AS uStatus,
 			       ra.Password AS rpw, ra.Email AS remail`,
 			map[string]any{"name": req.UserName})
 		if err != nil {
@@ -138,6 +186,11 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		email, _ := m["remail"].(string)
 		identity = UserIdentity{UserName: req.UserName, Email: email, IsAdmin: true, IsRootAdmin: true}
 	case verify(m["upw"]):
+		// Suspended/disenrolled accounts cannot authenticate (SRS §6.5.15.11).
+		if status, _ := m["uStatus"].(string); status != "ACTIVE" {
+			writeError(w, http.StatusForbidden, "account is not active", status)
+			return
+		}
 		email, _ := m["uemail"].(string)
 		isAdmin, _ := m["isAdmin"].(bool)
 		identity = UserIdentity{UserName: req.UserName, Email: email, IsAdmin: isAdmin}
@@ -146,6 +199,38 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, loginResponse{Token: sessions.create(identity), User: identity})
+}
+
+// handleAuthStatus reports whether this installation has been bootstrapped
+// (RootAdmin exists). Startup Software uses it to decide between the
+// first-run "create RootAdmin" flow and the normal login flow (SRS §3.2, §4).
+func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
+	res, err := s.db.Read(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
+		rec, err := tx.Run(r.Context(), `MATCH (ra:RootAdmin) RETURN count(ra) > 0 AS exists`, nil)
+		if err != nil {
+			return nil, err
+		}
+		single, err := rec.Single(r.Context())
+		if err != nil {
+			return nil, err
+		}
+		exists, _ := single.AsMap()["exists"].(bool)
+		return exists, nil
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "auth status failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"rootAdminExists": res.(bool)})
+}
+
+// handleLogout revokes the presented bearer token.
+func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
+	h := r.Header.Get("Authorization")
+	if strings.HasPrefix(h, "Bearer ") {
+		sessions.revoke(strings.TrimPrefix(h, "Bearer "))
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "logged out"})
 }
 
 type bootstrapRequest struct {

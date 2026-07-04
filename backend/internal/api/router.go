@@ -69,8 +69,10 @@ func NewRouter(cfg config.Config, db *graph.DB, sch *schema.Schema, m *telemetry
 		r.Get("/capability", s.handleCapability)
 
 		// Authentication (SRS §4, §3.2 — placeholder security for MVP).
+		r.Get("/auth/status", s.handleAuthStatus) // first-run detection (§4)
 		r.Post("/auth/login", s.handleLogin)
 		r.Post("/auth/bootstrap", s.handleBootstrap) // RootAdmin creation on install
+		r.Post("/auth/logout", s.handleLogout)
 
 		// Authenticated routes.
 		r.Group(func(r chi.Router) {
@@ -182,7 +184,6 @@ func (s *Server) handleCapability(w http.ResponseWriter, r *http.Request) {
 		},
 		"config": map[string]any{
 			"httpAddr": s.cfg.HTTPAddr,
-			"neo4jURI": s.cfg.Neo4jURI,
 		},
 	})
 }
