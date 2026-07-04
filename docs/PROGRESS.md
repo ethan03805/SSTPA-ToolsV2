@@ -3,6 +3,57 @@
 This file records implementation checkpoints and verification status while the
 application is completed against `SSTPA Tool SRS V7.md`.
 
+## 2026-07-04 — All 17 Add-on Tools upgraded to SRS conformance
+
+Every Add-on Tool was audited against its SRS section and rebuilt to production
+quality on a shared tool infrastructure (`frontend/src/tools/shared.tsx`:
+uniform loading/error/empty states, PNG+SVG diagram export, styled prompt).
+
+- **Navigator** (§6.5.1): four modes incl. Clone Node / Clone with
+  Requirements, schema-driven Association, Search/Locate, per-type visual
+  encoding, viewport controls, legend, PNG/SVG export, stable in-place layout.
+- **Requirements** (§6.5.2): creation, deletion with dependents, PARENTS +
+  Verification management with backend validation, SVG export.
+- **Reports** (§6.5.3): Controls-list CSV, cross-SoI-aware gap analysis,
+  optional G2M SysML/KerML appendix.
+- **Reference** (§6.5.4): hierarchy pane, clickable related items, independent
+  framework/version filters, return-to-drawer.
+- **State** (§6.5.5): parallel-transition-safe edits, real Context/Criteria
+  filtering, Hazard/CM/Requirement association, SVG export.
+- **Flow** (§6.5.6): container-scoped rendering, edge/flow-nature editing,
+  Requirement/Countermeasure assignment, Feedback projection.
+- **Asset Manager** (§6.5.7): relationship allocation, removal warnings, full
+  table with sorting/column-visibility, Regime/Environment steps.
+- **Context** (§6.5.8): Environment summary graph, Hazard management with
+  reference clone, Loss allocation, Markdown report.
+- **Trace** (§6.5.9): pre-commit summary, correct cell states, row/column
+  badges, expanded validation, New Entity Mode, MD/JSON/CSV exports.
+- **Loss** (§6.5.10) + backend: T5+ counter-attack auto-build tiers,
+  snapshot-reconciliation findings, tree editing, metric bottom bar, RV report.
+- **Goal Keeper** (§6.5.11): fixed root resolution, cycle/duplicate/uniqueness
+  validation, richer evidence, path-to-root, layout JSON export.
+- **Use-Case** (§6.5.12): Interface/Function creation, actor editing, draggable
+  persisted diagram, consistent completeness.
+- **Connection** (§6.5.13): already conformant, retained.
+- **Message Center** (§6.5.14): fixed render-loop mark-read, sortable columns,
+  keyboard navigation, per-user delete.
+- **Admin** (§6.5.15): three-region layout, full roster, two-step ADMIN
+  authorization, disenrollment wizard with retention.
+- **Attack** (§6.5.16): in-tool reference clone, per-row actions, Hazard-borne
+  attacks, criticality/assurance scope filter, MetricsJSON editor.
+- **Controls** (§6.5.17): initial-baseline generation from NIST reference,
+  nine-column table, multiple baselines, status-lifecycle gating.
+
+Schema: added `(:GsnStrategy)-[:SUPPORTED_BY]->(:GsnGoal|:GsnSolution)`
+(§6.5.11.7); widened Attack clone sources to AK_Tactic/EMB3D_Vulnerability
+(§6.5.16.6, I-16). New interpretations I-14/I-15 (M2G subset), I-16.
+
+Verification: full gate green — `go test ./...`, backend integration suite
+(throwaway Neo4j), `tsc --noEmit`, `oxlint`, `npm run build`, both Tauri
+`cargo check`, live Caddy/Neo4j stack; every tool driven and screenshotted in
+a headless browser against the seeded FireSat project with zero page errors;
+Nocturne dark style verified.
+
 ## 2026-07-04 — Production-readiness pass
 
 Full-codebase audit against the SRS followed by fixes across every segment.
