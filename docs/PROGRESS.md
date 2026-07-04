@@ -92,3 +92,23 @@ Verification:
 - `cd frontend && npm run build`
 
 SBOM impact: none. No software applications or libraries were added.
+
+## 2026-07-04 — Controls Tool Implementation
+
+- Completed the missing `(:ControlsBaseline)` schema support in the embedded
+  backend schema and mirrored docs schema, including `[:HAS_CONTROLS_BASELINE]`,
+  categorization properties, analytical selection fields, `ControlsBaselineJSON`,
+  lifecycle status, and active-baseline flag.
+- Replaced the Controls Tool scaffold with a working table-first RMF baseline
+  workflow: SoI baseline creation, C/I/A categorization, overlay capture, Cyber
+  Resilience entries, Cyber Survivability Attribute entries with traceability,
+  baseline control import/add/search, tailoring, mapping to Core
+  `(:SecurityControl)` nodes, Requirement creation/allocation, Countermeasure
+  creation/satisfaction/scope, validation, and CSV/KerML/JSON exports.
+
+Verification:
+
+- `cd backend && go test ./...`
+- `cd frontend && npm run build`
+
+SBOM impact: none. No software applications or libraries were added.

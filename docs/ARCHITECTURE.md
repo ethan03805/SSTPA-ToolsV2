@@ -115,6 +115,12 @@ Users clone reference properties into owned Core nodes via `[:REFERENCES]` (§3.
   owner reassignment, Connection-authored requirements, schema validation,
   System/tier/property filters, canvas visualization, and Markdown/SysML/JSON
   exports.
+- **Controls Tool** (§6.5.17): manages the active SoI `(:ControlsBaseline)` via
+  `(:System)-[:HAS_CONTROLS_BASELINE]->(:ControlsBaseline)`, C/I/A
+  categorization, overlays, Cyber Resilience entries, Cyber Survivability
+  Attribute entries, `ControlsBaselineJSON`, control tailoring, mapping to
+  Core `(:SecurityControl)` nodes, Countermeasure satisfaction, Requirement
+  generation/allocation, validation, and CSV/KerML/JSON exports.
 
 ## 6. SysML 2.0 / KerML 1.0 Interchange (§3.7)
 
