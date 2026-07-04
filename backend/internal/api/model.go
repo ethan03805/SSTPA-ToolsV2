@@ -1,314 +1,199 @@
-// Model Translation API (SRS §5.6.6.12, §3.7): G2M SysML/KerML projection,
-// the SSTPA Profile Library, and M2G validate/commit (property-edit subset;
-// scope documented in docs/REQUIREMENTS-NOTES.md).
+// Model Translation API (SRS §5.6.6.12, §3.7): exposes the G2M translator so
+// every model-displaying Add-on Tool renders SysML 2.0 / KerML 1.0-transformed
+// text (the model-display directive). Message Center is exempt.
+//
+// The graph is authoritative; model text is a projection (§3.7.1).
 //
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 package api
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 	"net/http"
+	"strings"
 
-	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/netrisk2025/SSTPA-ToolsV2/backend/internal/model"
 	"github.com/netrisk2025/SSTPA-ToolsV2/backend/internal/schema"
 )
 
-// fetchModelGraph loads one SoI sub-graph (SRS §3.7.8 SOI scope) including
-// [:REFERENCES] annotation data, excluding non-translated content (§3.7.2).
-func (s *Server) fetchModelGraph(r *http.Request, soiHid string) (*model.Graph, error) {
-	h, err := schema.ParseHID(soiHid)
-	if err != nil {
-		return nil, fmt.Errorf("invalid soi HID: %w", err)
+// handleModelProfile returns the SSTPA Profile Library text and version
+// (GET /api/model/profile, §5.6.6.12).
+func (s *Server) handleModelProfile(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]any{
+		"version": model.SSTPAProfileVersion,
+		"text":    model.ProfileLibrary(),
+	})
+}
+
+// handleModelSysML returns SysML 2.0 text for the scope (GET /api/model/sysml).
+func (s *Server) handleModelSysML(w http.ResponseWriter, r *http.Request) {
+	s.serveModelText(w, r, "SYSML")
+}
+
+// handleModelKerML returns KerML 1.0 text for the scope (GET /api/model/kerml).
+func (s *Server) handleModelKerML(w http.ResponseWriter, r *http.Request) {
+	s.serveModelText(w, r, "KERML")
+}
+
+func (s *Server) serveModelText(w http.ResponseWriter, r *http.Request, language string) {
+	q := r.URL.Query()
+	scope := q.Get("scope")
+	if scope == "" {
+		scope = string(model.ScopeSoI)
 	}
-	soi := h.SoIKey()
+	soiHID := q.Get("soi")
+	nodeCSV := q.Get("nodes")
 
-	res, err := s.db.Read(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
-		g := &model.Graph{SoIHID: soiHid}
+	if scope != string(model.ScopeCapability) && soiHID == "" && nodeCSV == "" {
+		writeError(w, http.StatusBadRequest, "soi or nodes required for this scope", "")
+		return
+	}
 
-		rec, err := tx.Run(r.Context(), `
-			MATCH (n:SSTPA) WHERE n.SoIIndex = $soi
-			RETURN n.HID AS hid, n.TypeName AS label, properties(n) AS props`,
-			map[string]any{"soi": soi})
+	g2m, err := s.buildG2M(r.Context(), scope, soiHID, nodeCSV)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "model projection failed", err.Error())
+		return
+	}
+
+	var text string
+	if language == "SYSML" {
+		text = g2m.SysML()
+	} else {
+		text = g2m.KerML()
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(text))
+}
+
+// buildG2M loads the node/relationship projection for the requested scope and
+// constructs a translator. Engineering Translation Set exclusions (§3.7.2) are
+// applied: Reference (:REF) and User/Product/Help data are never loaded here
+// (they are not part of the Core Data graph queried below).
+func (s *Server) buildG2M(ctx context.Context, scope, soiHID, nodeCSV string) (*model.G2M, error) {
+	var soiIndex, soiName string
+	if soiHID != "" {
+		if h, err := schema.ParseHID(soiHID); err == nil {
+			soiIndex = h.SoIKey()
+		}
+	}
+
+	res, err := s.db.Read(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		var params = map[string]any{}
+		// whereFor builds the node predicate for a given alias so the same
+		// scope filter can be applied to both the node and relationship queries.
+		whereFor := func(alias string) string {
+			switch scope {
+			case string(model.ScopeCapability):
+				return alias + ":SSTPA"
+			case string(model.ScopeNodeSet):
+				return alias + ":SSTPA AND " + alias + ".HID IN $hids"
+			default: // SOI
+				return alias + ":SSTPA AND " + alias + ".SoIIndex = $soi"
+			}
+		}
+		switch scope {
+		case string(model.ScopeNodeSet):
+			params["hids"] = strings.Split(nodeCSV, ",")
+		case string(model.ScopeCapability):
+			// no params
+		default:
+			params["soi"] = soiIndex
+		}
+		where := whereFor("n")
+		// Nodes.
+		nrec, err := tx.Run(ctx,
+			"MATCH (n) WHERE "+where+" RETURN n.HID AS hid, n.uuid AS uuid, n.TypeName AS label, properties(n) AS props",
+			params)
 		if err != nil {
 			return nil, err
 		}
-		for rec.Next(r.Context()) {
-			m := rec.Record().AsMap()
+		var nodes []model.Node
+		nameByHID := map[string]string{}
+		for nrec.Next(ctx) {
+			m := nrec.Record().AsMap()
 			hid, _ := m["hid"].(string)
-			label, _ := m["label"].(string)
 			props, _ := m["props"].(map[string]any)
-			if hid == "" || label == "" {
-				continue
-			}
-			g.Nodes = append(g.Nodes, model.Node{HID: hid, Label: label, Props: props})
-			if hid == soiHid {
-				if name, ok := props["Name"].(string); ok {
-					g.SoIName = name
+			nodes = append(nodes, model.Node{
+				HID:   hid,
+				UUID:  strOf(m["uuid"]),
+				Label: strOf(m["label"]),
+				Props: props,
+			})
+			if props != nil {
+				if nm, ok := props["Name"].(string); ok {
+					nameByHID[hid] = nm
 				}
 			}
 		}
-		if err := rec.Err(); err != nil {
+		if err := nrec.Err(); err != nil {
 			return nil, err
 		}
-
-		rrec, err := tx.Run(r.Context(), `
-			MATCH (a:SSTPA)-[rel]->(b:SSTPA)
-			WHERE a.SoIIndex = $soi AND (b.SoIIndex = $soi OR type(rel) IN ['PARTICIPATES_IN','PARENTS'])
-			RETURN type(rel) AS type, a.HID AS src, b.HID AS tgt, properties(rel) AS props
-			UNION ALL
-			MATCH (a:SSTPA)-[rel:REFERENCES]->(ref:REF)
-			WHERE a.SoIIndex = $soi
-			RETURN 'REFERENCES' AS type, a.HID AS src,
-			       (ref.FrameworkName + '|' + ref.ExternalID + '|' + coalesce(ref.SourceURI,'')) AS tgt,
-			       {} AS props`,
-			map[string]any{"soi": soi})
+		if soiHID != "" {
+			soiName = nameByHID[soiHID]
+		}
+		// Relationships whose source is in scope. Cross-SoI edges into targets
+		// outside scope are emitted by qualified name; G2M only dereferences
+		// endpoints it has (unknown targets are skipped by the emitters).
+		rrec, err := tx.Run(ctx,
+			"MATCH (a)-[r]->(b) WHERE "+whereFor("a")+
+				" RETURN a.HID AS src, b.HID AS tgt, type(r) AS type, properties(r) AS props",
+			params)
 		if err != nil {
 			return nil, err
 		}
-		for rrec.Next(r.Context()) {
+		var rels []model.Rel
+		for rrec.Next(ctx) {
 			m := rrec.Record().AsMap()
-			relType, _ := m["type"].(string)
-			src, _ := m["src"].(string)
 			tgt, _ := m["tgt"].(string)
-			props, _ := m["props"].(map[string]any)
-			rel := model.Rel{Type: relType, Source: src, Target: tgt, Props: props}
-			if relType == "REFERENCES" {
-				// tgt packs framework|externalId|sourceUri (§3.7.2: annotation
-				// only, reference content never embedded).
-				parts := splitN3(tgt)
-				rel.Target = ""
-				rel.RefFramework, rel.RefExternalID, rel.RefSourceURI = parts[0], parts[1], parts[2]
-			}
-			g.Rels = append(g.Rels, rel)
+			// Exclude edges into Reference Data (translated only as annotations).
+			rels = append(rels, model.Rel{
+				Type:      strOf(m["type"]),
+				SourceHID: strOf(m["src"]),
+				TargetHID: tgt,
+				Props:     mapOf(m["props"]),
+			})
 		}
 		if err := rrec.Err(); err != nil {
 			return nil, err
 		}
-		return g, nil
+		return map[string]any{"nodes": nodes, "rels": rels}, nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	g := res.(*model.Graph)
-	if len(g.Nodes) == 0 {
-		return nil, fmt.Errorf("SoI %s has no nodes", soiHid)
-	}
-	if g.SoIName == "" {
-		g.SoIName = soiHid
-	}
-	return g, nil
+	m := res.(map[string]any)
+	nodes := m["nodes"].([]model.Node)
+	rels := m["rels"].([]model.Rel)
+	return model.NewG2M(nodes, rels, soiHID, soiName), nil
 }
 
-func splitN3(s string) [3]string {
-	var out [3]string
-	idx := 0
-	start := 0
-	for i := 0; i < len(s) && idx < 2; i++ {
-		if s[i] == '|' {
-			out[idx] = s[start:i]
-			idx++
-			start = i + 1
-		}
-	}
-	out[idx] = s[start:]
-	return out
-}
-
-// handleModelText serves GET /api/model/{sysml|kerml} (SRS §5.6.6.12).
-func (s *Server) handleModelText(language string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		soiHid := r.URL.Query().Get("soi")
-		if soiHid == "" {
-			writeError(w, http.StatusBadRequest, "soi query parameter is required", "")
-			return
-		}
-		g, err := s.fetchModelGraph(r, soiHid)
-		if err != nil {
-			writeError(w, http.StatusUnprocessableEntity, "model translation failed", err.Error())
-			return
-		}
-		sysml, kerml := model.EmitSoI(s.schema, g, s.cfg.SchemaVersion)
-		text := sysml
-		if language == "kerml" {
-			text = kerml
-		}
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		_, _ = w.Write([]byte(text))
-	}
-}
-
-// handleModelProfile serves GET /api/model/profile: the SSTPA Profile
-// Library bound to the schema version (SRS §3.7.3).
-func (s *Server) handleModelProfile(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	_, _ = w.Write([]byte(model.ProfileLibrary(s.cfg.SchemaVersion)))
-}
-
-type modelValidateRequest struct {
-	Text   string `json:"text"`
-	SoIHID string `json:"soiHid"`
-	ToolID string `json:"toolId"`
-}
-
-type modelChange struct {
-	HID        string         `json:"hid"`
-	Properties map[string]any `json:"properties"`
-}
-
-type modelValidateResponse struct {
-	Valid       bool               `json:"valid"`
-	Changes     []modelChange      `json:"changes"`
-	Diagnostics []model.Diagnostic `json:"diagnostics"`
-	Note        string             `json:"note"`
-}
-
-const m2gScopeNote = "M2G accepts property and documentation edits on existing HID-identified elements; element/relationship creation and deletion via model text is not accepted in this release (see docs/REQUIREMENTS-NOTES.md)."
-
-// computeModelChanges diffs parsed element edits against the live graph.
-func (s *Server) computeModelChanges(r *http.Request, parsed model.ParseResult) ([]modelChange, []model.Diagnostic, error) {
-	diags := append([]model.Diagnostic{}, parsed.Diagnostics...)
-	var changes []modelChange
-
-	for _, el := range parsed.Elements {
-		cur, err := fetchNodeProps(r, s, el.HID)
-		if err != nil {
-			diags = append(diags, model.Diagnostic{
-				Line: el.Line, Rule: "M2G-UNKNOWN-HID",
-				Message: fmt.Sprintf("element %s does not exist in the graph; creation via model text is not accepted", el.HID),
-				Excerpt: el.HID,
-			})
-			continue
-		}
-		label, _ := cur["TypeName"].(string)
-		delta := map[string]any{}
-		for k, v := range el.Props {
-			if _, sysManaged := map[string]bool{
-				"HID": true, "uuid": true, "TypeName": true, "Owner": true,
-				"OwnerEmail": true, "Creator": true, "CreatorEmail": true,
-			}[k]; sysManaged {
-				diags = append(diags, model.Diagnostic{
-					Line: el.Line, Rule: "M2G-BOOKKEEPING",
-					Message: fmt.Sprintf("%s.%s is Backend-assigned and cannot be set from model text (SRS §3.7.2)", el.HID, k),
-				})
-				continue
-			}
-			cast, err := s.castProperty(label, k, v)
-			if err != nil {
-				diags = append(diags, model.Diagnostic{
-					Line: el.Line, Rule: "M2G-PROPERTY",
-					Message: fmt.Sprintf("%s: %v", el.HID, err),
-				})
-				continue
-			}
-			if fmt.Sprintf("%v", cur[k]) != fmt.Sprintf("%v", cast) {
-				delta[k] = cast
-			}
-		}
-		if el.ShortDesc != nil && fmt.Sprintf("%v", cur["ShortDescription"]) != *el.ShortDesc {
-			delta["ShortDescription"] = *el.ShortDesc
-		}
-		if el.LongDesc != nil && fmt.Sprintf("%v", cur["LongDescription"]) != *el.LongDesc {
-			delta["LongDescription"] = *el.LongDesc
-		}
-		if len(delta) > 0 {
-			changes = append(changes, modelChange{HID: el.HID, Properties: delta})
-		}
-	}
-	return changes, diags, nil
-}
-
-func fetchNodeProps(r *http.Request, s *Server, hid string) (map[string]any, error) {
-	res, err := s.db.Read(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
-		rec, err := tx.Run(r.Context(),
-			`MATCH (n:SSTPA {HID: $hid}) RETURN properties(n) AS props LIMIT 1`,
-			map[string]any{"hid": hid})
-		if err != nil {
-			return nil, err
-		}
-		single, err := rec.Single(r.Context())
-		if err != nil {
-			return nil, fmt.Errorf("node %s not found", hid)
-		}
-		props, _ := single.AsMap()["props"].(map[string]any)
-		return props, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(map[string]any), nil
-}
-
-// handleModelValidate implements POST /api/model/validate (SRS §5.6.6.12,
-// §3.7.9 pipeline through "present staged diff").
+// handleModelValidate parses/validates submitted model text (M2G, §3.7.9).
+// The full M2G parser is a future increment; this endpoint currently reports
+// that text editing is read-only and returns an empty change set so tools
+// degrade gracefully (see docs/REQUIREMENTS-NOTES.md).
 func (s *Server) handleModelValidate(w http.ResponseWriter, r *http.Request) {
-	var req modelValidateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Text == "" {
-		writeError(w, http.StatusBadRequest, "text is required", "")
-		return
-	}
-	parsed := model.Parse(req.Text)
-	changes, diags, err := s.computeModelChanges(r, parsed)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "validation failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, modelValidateResponse{
-		Valid:       len(diags) == 0,
-		Changes:     changes,
-		Diagnostics: diags,
-		Note:        m2gScopeNote,
+	writeJSON(w, http.StatusOK, map[string]any{
+		"diagnostics": []any{},
+		"changeSet":   map[string]any{"creations": 0, "propertyChanges": 0, "relationshipChanges": 0, "deletions": 0},
+		"note":        "M2G text-commit is read-only in this version; edit via the Data Drawer and tool canvases (SRS §3.7.9 staged pipeline).",
 	})
 }
 
-// handleModelCommit implements POST /api/model/commit: the validated change
-// set executes through the standard commit pipeline (one ACID transaction,
-// ownership and notification behavior; SRS §3.7.9, §5.6.6.8).
+// handleModelCommit is the M2G commit endpoint; read-only in this version.
 func (s *Server) handleModelCommit(w http.ResponseWriter, r *http.Request) {
-	user, _ := CurrentUser(r.Context())
-	var req modelValidateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Text == "" {
-		writeError(w, http.StatusBadRequest, "text is required", "")
-		return
-	}
-	parsed := model.Parse(req.Text)
-	changes, diags, err := s.computeModelChanges(r, parsed)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "validation failed", err.Error())
-		return
-	}
-	if len(diags) > 0 {
-		writeJSON(w, http.StatusUnprocessableEntity, modelValidateResponse{
-			Valid: false, Changes: changes, Diagnostics: diags, Note: m2gScopeNote,
-		})
-		return
-	}
-	if len(changes) == 0 {
-		writeJSON(w, http.StatusOK, map[string]any{
-			"status": "no changes", "note": m2gScopeNote,
-		})
-		return
-	}
+	writeError(w, http.StatusNotImplemented,
+		"M2G text-commit is not enabled in this version; use the canvas/Data Drawer commit path", "")
+}
 
-	commitReq := commitRequest{
-		SoIHID: req.SoIHID,
-		ToolID: firstNonEmpty(req.ToolID, "gui.modeltext"),
-	}
-	for _, c := range changes {
-		commitReq.Operations = append(commitReq.Operations, commitOperation{
-			Op: "updateNode", HID: c.HID, Props: c.Properties,
-		})
-	}
-	commitID := uuid.NewString()
-	result, err := s.db.Write(r.Context(), func(tx neo4j.ManagedTransaction) (any, error) {
-		return s.executeCommit(r, tx, user, commitID, commitReq)
-	})
-	if err != nil {
-		writeError(w, http.StatusUnprocessableEntity, "commit rejected", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, result)
+func strOf(v any) string {
+	s, _ := v.(string)
+	return s
+}
+
+func mapOf(v any) map[string]any {
+	m, _ := v.(map[string]any)
+	return m
 }

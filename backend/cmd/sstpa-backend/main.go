@@ -62,6 +62,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Load Example Data (FireSat) if absent (SRS §3.6).
+	if seeded, err := api.SeedExamples(ctx, cfg, db); err != nil {
+		slog.Error("example data seeding failed", "error", err)
+	} else if seeded {
+		slog.Info("example data seeded", "project", "FireSat")
+	}
+
 	srv := &http.Server{
 		Addr:              cfg.HTTPAddr,
 		Handler:           api.NewRouter(cfg, db, sch, metrics),

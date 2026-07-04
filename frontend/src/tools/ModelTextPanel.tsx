@@ -5,8 +5,9 @@
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState, type ReactNode } from "react";
-import { apiBase } from "../api/client";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { API_BASE } from "../api/client";
 import { useSession } from "../state/stores";
 import type { ModelTextLanguage } from "./manifest";
 
@@ -219,8 +220,65 @@ export function ModelTextPanel({
         {modelText.isLoading && "// Translating…"}
         {modelText.isError &&
           `// Model translator not yet available on this Backend.\n// (${String(modelText.error)})`}
-        {highlighted}
+        {modelText.data != null && highlight(modelText.data)}
       </div>
     </div>
   );
+}
+
+// SysML 2.0 / KerML 1.0 keyword set for panel highlighting (SRS §6.4.2).
+const KEYWORDS = new Set([
+  "package", "library", "part", "port", "action", "state", "transition",
+  "first", "then", "requirement", "constraint", "connection", "connect", "to",
+  "interface", "use", "case", "def", "end", "in", "out", "ref", "doc",
+  "attribute", "feature", "classifier", "behavior", "struct", "step", "assoc",
+  "metadata", "import", "verification", "verify", "view", "expose", "concern",
+  "allocate", "perform", "include", "specialization", "dependency", "from",
+  "succession", "flow", "satisfy", "subject", "actor", "true", "false",
+]);
+
+/** Tokenizes model text and applies keyword / comment / string highlighting.
+ *  Lightweight — sufficient for read-only panel display (SRS §6.4.2). */
+function highlight(text: string): ReactNode[] {
+  return text.split("\n").map((line, i) => {
+    const trimmed = line.trimStart();
+    if (trimmed.startsWith("//")) {
+      return (
+        <div key={i} className="meta">
+          {line}
+        </div>
+      );
+    }
+    // Split preserving delimiters; highlight keywords, quoted strings, docs.
+    const parts = line.split(/(\s+|<[^>]*>|'[^']*'|"[^"]*"|\/\*.*?\*\/)/g);
+    return (
+      <div key={i}>
+        {parts.map((p, j) => {
+          if (!p) return null;
+          if (p.startsWith("/*") || p.startsWith("'") || p.startsWith('"')) {
+            return (
+              <span key={j} className="str">
+                {p}
+              </span>
+            );
+          }
+          if (p.startsWith("<") && p.endsWith(">")) {
+            return (
+              <span key={j} className="meta">
+                {p}
+              </span>
+            );
+          }
+          if (KEYWORDS.has(p) || p.startsWith("#")) {
+            return (
+              <span key={j} className="kw">
+                {p}
+              </span>
+            );
+          }
+          return <span key={j}>{p}</span>;
+        })}
+      </div>
+    );
+  });
 }

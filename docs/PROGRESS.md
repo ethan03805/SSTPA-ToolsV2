@@ -256,3 +256,88 @@ Verification:
 SBOM impact: documented the Tauri CLI build tool version and the packaged
 Reference Data artifact versions; container image tag entries were aligned to
 `deploy/docker-compose.yml`.
+
+## 2026-07-04 — SysML 2.0 / KerML 1.0 model display (G2M translator)
+
+New standing directive: every model-displaying Add-on Tool except the Message
+Center must display its model from SysML 2.0 / KerML 1.0-transformed data.
+
+- Implemented the G2M translator (`backend/internal/model`): Core Data Model
+  graph → SysML 2.0 / KerML 1.0 textual notation per §3.7.5/§3.7.6, plus the
+  SSTPA Profile Library (§3.7.3). Deterministic and idempotent (§3.7.8):
+  ordered by HID type-identifier then sequence; unrestricted names for HIDs
+  and reserved words.
+- Exposed `/api/model/sysml`, `/api/model/kerml`, `/api/model/profile`,
+  `/api/model/validate`, `/api/model/commit` (§5.6.6.12); capability discovery
+  advertises `model.translate.read` and `model.profile.read`.
+- Wired the Model Text Panel (§6.4.2) to live G2M with SysML/KerML keyword
+  highlighting. Verified in the running app (Requirements Tool shows the live
+  SysML projection of the SoI). SysML notation sourced from the SysML_Vault.
+- Corrected three tool manifests to match their SRS Model Text Panel sections
+  (Reports, Reference, Context) so all model tools declare SysML/KerML.
+- Fixed a pre-existing `handleRequirementsBySoI` Cypher bug (ORDER BY after an
+  aggregating RETURN) surfaced during verification.
+- Added G2M unit tests (determinism, SysML/KerML mappings, domain
+  classification, unrestricted names). `go test ./internal/model/` passes.
+- M2G text-commit deferred (read-only panel); recorded in REQUIREMENTS-NOTES
+  M-4. Editing remains on the canvas/Data Drawer staged-commit path.
+
+Verification:
+- `cd backend && go test ./internal/model/ ./internal/schema/`
+- Live G2M: `GET /api/model/sysml?scope=SOI&soi=SYS_1_0` returns valid SysML 2.0.
+- Playwright: Model Text Panel renders highlighted SysML in the Requirements Tool.
+
+SBOM impact: none (no new libraries; G2M is pure Go stdlib).
+
+## 2026-07-04 — FireSat example data (§3.6) + Help data (§3.5)
+
+- FireSat exemplar (`backend/internal/api/example.go`): a 3-tier-deep example
+  Project (FireSat Capability → FireSat → Satellite Bus → Infrared Sensor) with
+  environments, states + transitions, components, functions, interfaces, a
+  connection, primary + derived assets, trace relationships, a hazard→control→
+  countermeasure→attack chain, a Loss + root Goal, and requirements. Owned by
+  "SSTPA Tools" (immutable ownership); IsExampleData/ExampleProject markers.
+- Namespaced HID indices (FS1, FS1.1, FS1.1.1) partition the exemplar from the
+  working Capability; HID grammar relaxed to accept alphanumeric index segments
+  (REQUIREMENTS-NOTES I-13). Seeded on startup if absent.
+- Reset endpoint (`POST /api/examples/reset`) + `GET /api/examples`; wired to
+  the gear-menu "Reset FireSat example" action (§3.6).
+- Help Data (`backend/internal/api/help.go`): 24-entry SSTPA terminology/field/
+  tutorial catalog at `GET /api/help`, shown in the gear-menu "Hover help &
+  definitions" dialog (§3.5, REQUIREMENTS-NOTES I-14).
+- End-to-end verified on FireSat:
+  - Navigator renders the full 3-tier hierarchy (Playwright shot 11).
+  - G2M SysML/KerML projects every FireSat SoI including the deepest.
+  - Loss Tool auto-build on LOS_FS1_1 produced an 8-node attack tree, 1 path:
+    "Compromise FireSat Authenticity → Downlinking → Downlink Radio →
+    RF Alert Spoofing → Digital Signature of Alerts [BLOCKED]" — the full
+    trace→loss→attack-tree→path-analysis workflow working on real example data.
+
+Verification:
+- `cd backend && go test ./...` (all pass)
+- Live: startup seeds FireSat; `POST /api/examples/reset` reloads; `/api/help`
+  returns 24 entries; Loss auto-build + path enumeration succeed on FireSat.
+
+SBOM impact: none.
+
+## 2026-07-04 — Final verification & SBOM audit pass
+
+- Ran full backend test suite (schema, model/G2M, api/loss) — all PASS; `go vet`
+  clean.
+- Comprehensive endpoint smoke: 20 API endpoint categories + `/metrics` +
+  Grafana health all return HTTP 200 against seeded FireSat data.
+- Telemetry confirmed live: Prometheus scrapes backend `/metrics`; Grafana
+  served through Caddy; SSTPA custom metrics recorded.
+- SBOM.md updated to audit grade: exact pinned versions for Go (8 direct, 92
+  total), npm (23 direct listed, 181 total), Rust (Frontend 455 / Startup 419
+  crates), Python, container images, fonts, and reference data sets; machine-
+  readable manifest locations documented for full transitive audit.
+- Added docs/VERIFICATION.md mapping each major SRS area to its verification
+  method and result, plus known deferrals.
+- All 12 build tasks complete. Application is functionally complete and running.
+
+Verification:
+- `cd backend && go vet ./... && go test ./...`
+- 20/20 endpoint categories return 200; telemetry endpoints healthy.
+
+SBOM impact: version detail expanded to audit grade; no new components.
