@@ -338,6 +338,123 @@ func prepareTraceRel(ctx context.Context, tx neo4j.ManagedTransaction, srcHID, t
 	return props, nil
 }
 
+// prepareAttackTreeRel stamps and validates the system-managed properties on a
+// Loss Tool edge. [:AT_RELATES_TO] is multiplicity-allowed because LossHID
+// scopes the same source/target pair across different attack trees.
+func prepareAttackTreeRel(ctx context.Context, tx neo4j.ManagedTransaction, srcHID, tgtHID string, src, tgt nodeInfo, props map[string]any) (map[string]any, error) {
+	if props == nil {
+		props = map[string]any{}
+	}
+	lossHID, _ := props["LossHID"].(string)
+	if lossHID == "" {
+		return nil, fmt.Errorf("[:AT_RELATES_TO] requires LossHID (SRS §3.3.4.11)")
+	}
+	res, err := tx.Run(ctx, `
+		MATCH (loss:Loss {HID: $lossHID})
+		RETURN loss.uuid AS uuid, loss.SoIIndex AS soi`,
+		map[string]any{"lossHID": lossHID})
+	if err != nil {
+		return nil, err
+	}
+	single, err := res.Single(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("LossHID %s does not identify a (:Loss)", lossHID)
+	}
+	m := single.AsMap()
+	lossUUID, _ := m["uuid"].(string)
+	lossSoI, _ := m["soi"].(string)
+
+	if src.label == "Loss" && srcHID != lossHID {
+		return nil, fmt.Errorf("[:AT_RELATES_TO] rooted at a (:Loss) must use that same Loss as LossHID (SRS §3.3.4.11)")
+	}
+	if tgt.label == "Loss" {
+		return nil, fmt.Errorf("(:Loss) SHALL NOT appear as the target of [:AT_RELATES_TO] in its own tree (SRS §3.3.4.11)")
+	}
+	if src.soiIndex != "" && src.soiIndex != lossSoI {
+		return nil, fmt.Errorf("[:AT_RELATES_TO] source %s is outside Loss SoI %s (SRS §3.3.4.11)", srcHID, lossSoI)
+	}
+	if tgt.soiIndex != "" && tgt.soiIndex != lossSoI {
+		return nil, fmt.Errorf("[:AT_RELATES_TO] target %s is outside Loss SoI %s (SRS §3.3.4.11)", tgtHID, lossSoI)
+	}
+
+	props["Lossuuid"] = lossUUID
+	if _, ok := props["TailoredOut"]; !ok {
+		props["TailoredOut"] = false
+	}
+	logic, _ := props["LogicOperator"].(string)
+	if logic == "" {
+		logic = defaultAttackTreeLogic(src.label, tgt.label)
+		props["LogicOperator"] = logic
+	}
+	if logic != "AND" && logic != "OR" && logic != "SAND" {
+		return nil, fmt.Errorf("LogicOperator must be AND, OR, or SAND")
+	}
+	if logic == "SAND" {
+		seq, ok := normalizeInt(props["SANDSequence"])
+		if !ok || seq < 0 {
+			return nil, fmt.Errorf("SANDSequence must be a non-negative integer when LogicOperator = SAND")
+		}
+		props["SANDSequence"] = seq
+	} else {
+		delete(props, "SANDSequence")
+	}
+
+	if b, _ := props["TailoredOut"].(bool); b && strings.TrimSpace(strAny(props["TailorReason"])) == "" {
+		return nil, fmt.Errorf("TailoredOut = True requires TailorReason (SRS §3.3.4.11)")
+	}
+	if b, _ := props["CompleteBlock"].(bool); b && strings.TrimSpace(strAny(props["CompleteBlockReason"])) == "" {
+		return nil, fmt.Errorf("CompleteBlock = True requires CompleteBlockReason (SRS §3.3.4.11)")
+	}
+	if b, _ := props["AllowedRV"].(bool); b && len(strings.TrimSpace(strAny(props["AllowedRVReason"]))) < 20 {
+		return nil, fmt.Errorf("AllowedRV = True requires AllowedRVReason of at least 20 characters (SRS §6.5.10.16)")
+	}
+
+	dup, err := tx.Run(ctx, `
+		MATCH (a {HID: $src})-[rel:AT_RELATES_TO {LossHID: $lossHID}]->(b {HID: $tgt})
+		RETURN count(rel) AS n`,
+		map[string]any{"src": srcHID, "tgt": tgtHID, "lossHID": lossHID})
+	if err != nil {
+		return nil, err
+	}
+	dupRec, err := dup.Single(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if n, _ := dupRec.AsMap()["n"].(int64); n > 0 {
+		return nil, fmt.Errorf("duplicate [:AT_RELATES_TO] edge for LossHID %s between %s and %s", lossHID, srcHID, tgtHID)
+	}
+	return props, nil
+}
+
+func defaultAttackTreeLogic(srcLabel, tgtLabel string) string {
+	if srcLabel == "Loss" && tgtLabel == "Environment" {
+		return "AND"
+	}
+	if srcLabel == "Attack" && tgtLabel == "Countermeasure" {
+		return "AND"
+	}
+	return "OR"
+}
+
+func normalizeInt(v any) (int64, bool) {
+	switch n := v.(type) {
+	case int:
+		return int64(n), true
+	case int64:
+		return n, true
+	case float64:
+		if n == float64(int64(n)) {
+			return int64(n), true
+		}
+	}
+	return 0, false
+}
+
+func strAny(v any) string {
+	s, _ := v.(string)
+	return s
+}
+
 // validateRelInTx re-validates a staged relationship inside the transaction:
 // canonical model, cross-SoI, duplicates, acyclicity. Returns "" when valid.
 func (s *Server) validateRelInTx(ctx context.Context, tx neo4j.ManagedTransaction, relType string, src, tgt nodeInfo, srcHID, tgtHID string) string {

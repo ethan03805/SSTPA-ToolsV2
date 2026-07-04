@@ -39,8 +39,8 @@ type commitOperation struct {
 }
 
 type commitRequest struct {
-	SoIHID     string            `json:"soiHid"`  // scope of the commit; "" for hierarchy-level commits
-	ToolID     string            `json:"toolId"`  // invoking tool, e.g. "gui.datadrawer", "sstpa.loss"
+	SoIHID     string            `json:"soiHid"` // scope of the commit; "" for hierarchy-level commits
+	ToolID     string            `json:"toolId"` // invoking tool, e.g. "gui.datadrawer", "sstpa.loss"
 	Operations []commitOperation `json:"operations"`
 }
 
@@ -275,6 +275,12 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 			if err != nil {
 				return nil, err
 			}
+			if op.Type == "AT_RELATES_TO" {
+				relProps, err = prepareAttackTreeRel(ctx, tx, src, tgt, srcInfo, tgtInfo, relProps)
+				if err != nil {
+					return nil, err
+				}
+			}
 			if isTraceRel(op.Type) {
 				relProps, err = prepareTraceRel(ctx, tx, src, tgt, commitID, relProps)
 				if err != nil {
@@ -325,9 +331,21 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 				}
 				traceTouched = true
 			} else {
-				q := fmt.Sprintf(`MATCH (a:SSTPA {HID: $src})-[rel:%s]->(b {HID: $tgt}) DELETE rel`, op.Type)
-				if _, err := tx.Run(ctx, q, map[string]any{"src": src, "tgt": tgt}); err != nil {
-					return nil, err
+				if op.Type == "AT_RELATES_TO" {
+					lossHID, _ := op.Props["LossHID"].(string)
+					if lossHID == "" {
+						return nil, fmt.Errorf("deleting [:AT_RELATES_TO] requires properties.LossHID so only one Attack Tree edge is removed (SRS §3.3.4.11)")
+					}
+					if _, err := tx.Run(ctx, `
+						MATCH (a:SSTPA {HID: $src})-[rel:AT_RELATES_TO {LossHID: $lossHID}]->(b {HID: $tgt})
+						DELETE rel`, map[string]any{"src": src, "tgt": tgt, "lossHID": lossHID}); err != nil {
+						return nil, err
+					}
+				} else {
+					q := fmt.Sprintf(`MATCH (a:SSTPA {HID: $src})-[rel:%s]->(b {HID: $tgt}) DELETE rel`, op.Type)
+					if _, err := tx.Run(ctx, q, map[string]any{"src": src, "tgt": tgt}); err != nil {
+						return nil, err
+					}
 				}
 			}
 			touch(src, srcInfo.owner, srcInfo.ownerEmail, fmt.Sprintf("relationship removed: -[:%s]-> %s", op.Type, tgt))

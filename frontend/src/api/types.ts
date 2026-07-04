@@ -145,3 +145,49 @@ export interface ReferenceSearchResult {
   isDeprecated: boolean;
   isRevoked: boolean;
 }
+
+export interface AttackTreeNode {
+  hid: string;
+  uuid: string;
+  typeName: string;
+  name: string;
+  tier: number;
+  props: Record<string, unknown>;
+}
+
+export interface AttackTreeEdge {
+  sourceHid: string;
+  targetHid: string;
+  logicOperator: "AND" | "OR" | "SAND";
+  sandSequence?: number | null;
+  tailoredOut: boolean;
+  props: Record<string, unknown>;
+}
+
+export interface LossTreeResponse {
+  loss: Record<string, unknown>;
+  asset: Record<string, unknown> | null;
+  environment: Record<string, unknown> | null;
+  nodes: AttackTreeNode[] | null;
+  edges: AttackTreeEdge[] | null;
+  traceCoverage: Record<string, unknown>[] | null;
+  statesCovered: number;
+  statesTotal: number;
+}
+
+export interface LossPathResult {
+  pathNumber: number;
+  sequence: string[];
+  nameSequence: string[];
+  leafType: string;
+  rvStatus: "RV" | "ALLOWED_RV" | "BLOCKED" | "DERIVED" | "";
+  metrics: Record<string, number>;
+}
+
+export interface LossPathsResponse {
+  lossHid: string;
+  paths: LossPathResult[] | null;
+  total: number;
+  limit: number;
+  offset: number;
+}

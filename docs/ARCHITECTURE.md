@@ -44,6 +44,11 @@ Client ──HTTPS:443──▶ Caddy ──HTTP:8080──▶ Go backend (chi +
 - **API**: REST, JSON over HTTPS; all mutations transactional (ACID) with
   validation-before-commit; ownership change notifications generated in the same
   transaction as data mutations (§5.6.6).
+- **Loss Tool API**: authenticated endpoints expose scoped attack-tree load,
+  auto-build/rebuild, and bounded path enumeration (`/api/loss/{lossHid}/tree`,
+  `/api/loss/{lossHid}/auto-build`, `/api/loss/{lossHid}/paths`). Attack Tree
+  structure remains authoritative in `[:AT_RELATES_TO]` graph edges; layout and
+  validation snapshots remain persisted on `(:Loss).AttackTreeJSON` (§6.5.10).
 - **Schema enforcement**: the Backend is authoritative for node labels, relationship
   types/direction/cardinality, SoI membership (HID Index), recursive traversal bounds,
   duplicate-relationship prevention, HID/uuid assignment, ownership and notification

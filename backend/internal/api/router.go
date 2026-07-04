@@ -106,6 +106,11 @@ func NewRouter(cfg config.Config, db *graph.DB, sch *schema.Schema, m *telemetry
 			r.Get("/requirements/lineage/{hid}", s.handleRequirementLineage)
 			r.Get("/requirements/soi/{soi}", s.handleRequirementsBySoI)
 
+			// Loss Tool / Attack Tree analysis (SRS §6.5.10)
+			r.Get("/loss/{lossHid}/tree", s.handleLossTree)
+			r.Get("/loss/{lossHid}/paths", s.handleLossPaths)
+			r.Post("/loss/{lossHid}/auto-build", s.handleLossAutoBuild)
+
 			// Messaging (SRS §5.6.6.11)
 			r.Get("/messages", s.handleListMessages)
 			r.Get("/messages/unread-count", s.handleUnreadCount)
@@ -171,6 +176,9 @@ func (s *Server) handleCapability(w http.ResponseWriter, r *http.Request) {
 			"product.read",
 			"schema.read",
 			"requirement.hierarchy.read",
+			"loss.tree.read",
+			"loss.tree.auto-build",
+			"loss.paths.read",
 		},
 		"config": map[string]any{
 			"httpAddr": s.cfg.HTTPAddr,

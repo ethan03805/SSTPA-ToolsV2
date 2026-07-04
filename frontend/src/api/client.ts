@@ -7,6 +7,8 @@ import type {
   CommitRequest,
   CommitResponse,
   HierarchyEntry,
+  LossPathsResponse,
+  LossTreeResponse,
   LoginResponse,
   MessageSummary,
   NodeResponse,
@@ -130,6 +132,27 @@ export const api = {
       "POST",
       "/api/systems/create-from-component",
       { componentHid, name },
+    ),
+
+  lossTree: (lossHid: string) =>
+    request<LossTreeResponse>(
+      "GET",
+      `/api/loss/${encodeURIComponent(lossHid)}/tree`,
+    ),
+
+  lossPaths: (lossHid: string, params?: { limit?: string; offset?: string }) =>
+    request<LossPathsResponse>(
+      "GET",
+      `/api/loss/${encodeURIComponent(lossHid)}/paths?${new URLSearchParams(params ?? {})}`,
+    ),
+
+  lossAutoBuild: (lossHid: string, rebuild = false) =>
+    request<Record<string, unknown>>(
+      "POST",
+      `/api/loss/${encodeURIComponent(lossHid)}/auto-build?${new URLSearchParams({
+        rebuild: String(rebuild),
+      })}`,
+      {},
     ),
 
   schemaNodeTypes: () =>
