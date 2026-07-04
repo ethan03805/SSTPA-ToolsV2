@@ -41,3 +41,20 @@ Verification:
 - `cd frontend && npm run build`
 
 SBOM impact: none. No software applications or libraries were added.
+
+## 2026-07-04 — Goal Keeper Tool Implementation
+
+- Replaced the Goal Keeper scaffold with a working GSN assurance-case tool:
+  Asset/Loss/Root Goal structure selection, rooted GSN DAG display, evidence
+  view, validation view, export view, search, GSN node editing, GSN node
+  creation, existing-node linking, relationship removal, Solution evidence
+  association, layout snapshot persistence, and Markdown/JSON exports.
+- Uses canonical Core graph relationships: `[:SUPPORTED_BY]`,
+  `[:IN_CONTEXT_OF]`, `[:HAS_VALIDATION]`, `[:HAS_VERIFICATION]`, and
+  `[:HAS_LOSS]`.
+
+Verification:
+
+- `cd frontend && npm run build`
+
+SBOM impact: none. No software applications or libraries were added.
