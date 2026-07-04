@@ -5,7 +5,7 @@
 // managed by the GUI shell (§6.3.2).
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
-import { lazy, Suspense, useMemo, useRef, useState, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type ComponentType } from "react";
 import { apiBase } from "../api/client";
 import { useDrawer, useSession, useSoI, useToolWindows } from "../state/stores";
 import { activeStyle } from "../styles/styles";
@@ -53,7 +53,6 @@ export function ToolWindowHost() {
 
 function ToolWindow({ toolId }: { toolId: string }) {
   const closeTool = useToolWindows((s) => s.closeTool);
-  const takeLaunchContext = useToolWindows((s) => s.takeLaunchContext);
   const manifest = manifestById(toolId);
   const { user } = useSession();
   const soiHid = useSoI((s) => s.soiHid);
@@ -67,9 +66,14 @@ function ToolWindow({ toolId }: { toolId: string }) {
   });
   const [z, setZ] = useState(() => ++topZ);
 
-  // Launch context is consumed once at mount: the invoking node (drawer or
-  // cross-tool navigation) that the tool should focus (SRS §6.4).
-  const launchRef = useRef(takeLaunchContext(toolId));
+  // Launch context (SRS §6.4): the invoking node (drawer or cross-tool
+  // navigation) the tool should focus. Subscribed reactively so that
+  // re-launching an already-open tool with a new focus target surfaces the
+  // window and updates ctx.focusHid.
+  const launch = useToolWindows((s) => s.launchContexts[toolId]);
+  useEffect(() => {
+    if (launch) setZ(++topZ); // bring to front when refocused
+  }, [launch]);
 
   const ctx: ToolLaunchContext = useMemo(
     () => ({
@@ -80,14 +84,14 @@ function ToolWindow({ toolId }: { toolId: string }) {
       soiUuid: null,
       drawerNodeHid: drawer.open ? (drawer.request?.hid ?? null) : null,
       drawerNodeUuid: null,
-      focusHid: launchRef.current?.focusHid ?? null,
-      focusType: launchRef.current?.focusType ?? null,
+      focusHid: launch?.focusHid ?? null,
+      focusType: launch?.focusType ?? null,
       launchMode: drawer.open ? "DATA_DRAWER" : "CONTROL_PANEL",
       backendBaseUrl: apiBase(),
       editAuthorized: true,
       themeTokens: activeStyle(),
     }),
-    [user, soiHid, drawer.open, drawer.request],
+    [user, soiHid, drawer.open, drawer.request, launch],
   );
 
   if (!manifest) return null;
