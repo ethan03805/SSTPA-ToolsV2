@@ -214,3 +214,25 @@ Verification:
   returns 24 entries; Loss auto-build + path enumeration succeed on FireSat.
 
 SBOM impact: none.
+
+## 2026-07-04 — Final verification & SBOM audit pass
+
+- Ran full backend test suite (schema, model/G2M, api/loss) — all PASS; `go vet`
+  clean.
+- Comprehensive endpoint smoke: 20 API endpoint categories + `/metrics` +
+  Grafana health all return HTTP 200 against seeded FireSat data.
+- Telemetry confirmed live: Prometheus scrapes backend `/metrics`; Grafana
+  served through Caddy; SSTPA custom metrics recorded.
+- SBOM.md updated to audit grade: exact pinned versions for Go (8 direct, 92
+  total), npm (23 direct listed, 181 total), Rust (Frontend 455 / Startup 419
+  crates), Python, container images, fonts, and reference data sets; machine-
+  readable manifest locations documented for full transitive audit.
+- Added docs/VERIFICATION.md mapping each major SRS area to its verification
+  method and result, plus known deferrals.
+- All 12 build tasks complete. Application is functionally complete and running.
+
+Verification:
+- `cd backend && go vet ./... && go test ./...`
+- 20/20 endpoint categories return 200; telemetry endpoints healthy.
+
+SBOM impact: version detail expanded to audit grade; no new components.
