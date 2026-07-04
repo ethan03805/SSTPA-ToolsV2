@@ -126,10 +126,19 @@ func TestParseHID(t *testing.T) {
 		t.Errorf("capability index should be empty, got %q", cap.Index)
 	}
 
-	for _, bad := range []string{"", "SYS", "SYS_1.2", "sys_1_0", "SYS_1.2.3_x", "SYS_a.b_0"} {
+	for _, bad := range []string{"", "SYS", "SYS_1.2", "sys_1_0", "SYS_1.2.3_x", "SYS_1..2_0"} {
 		if _, err := ParseHID(bad); err == nil {
 			t.Errorf("expected parse failure for %q", bad)
 		}
+	}
+
+	// Example-data namespace: alphanumeric index segments are valid (I-13).
+	fs, err := ParseHID("SYS_FS1.1.1_0")
+	if err != nil {
+		t.Fatalf("alphanumeric example HID should parse: %v", err)
+	}
+	if fs.Index != "FS1.1.1" || fs.SoIKey() != "FS1.1.1" {
+		t.Errorf("example HID index: got %q", fs.Index)
 	}
 }
 

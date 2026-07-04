@@ -204,12 +204,13 @@ func (s *Server) handleRequirementsBySoI(w http.ResponseWriter, r *http.Request)
 			OPTIONAL MATCH (rq)-[:PARENTS]->(child:Requirement)
 			OPTIONAL MATCH (rq)-[:VERIFIED_BY]->(v:Verification)
 			OPTIONAL MATCH (parent:Requirement)-[:PARENTS]->(rq)
-			RETURN rq{.HID, .uuid, .Name, .RStatement, .VMethod, .SoIIndex} AS req,
+			WITH rq, rq{.HID, .uuid, .Name, .RStatement, .VMethod, .SoIIndex} AS req,
 			       collect(DISTINCT {hid: b.HID, name: b.Name, typeName: b.TypeName}) AS bearers,
 			       count(DISTINCT child) AS children,
 			       count(DISTINCT v) AS verifications,
 			       collect(DISTINCT parent.HID) AS parents
-			ORDER BY rq.HID`,
+			ORDER BY rq.HID
+			RETURN req, bearers, children, verifications, parents`,
 			map[string]any{"soi": soi})
 		if err != nil {
 			return nil, err

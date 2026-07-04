@@ -28,40 +28,66 @@ a software audit. It is maintained continuously as components are added.
 
 | Component | Version | Source | License | Use | Status |
 |---|---|---|---|---|---|
-| github.com/go-chi/chi/v5 | see go.sum | https://github.com/go-chi/chi | MIT | HTTP router (§5) | integrated |
-| github.com/neo4j/neo4j-go-driver/v5 | see go.sum | https://github.com/neo4j/neo4j-go-driver | Apache-2.0 | Neo4j Bolt driver (§5.6) | integrated |
-| github.com/prometheus/client_golang | see go.sum | https://github.com/prometheus/client_golang | Apache-2.0 | /metrics endpoint (§5.6.3) | integrated |
-| go.opentelemetry.io/otel (+ SDK, OTLP exporters) | see go.sum | https://opentelemetry.io | Apache-2.0 | Traces/metrics emission (§5.6.2) | integrated |
-| github.com/google/uuid | see go.sum | https://github.com/google/uuid | BSD-3-Clause | uuid property generation (§3.3.8) | integrated |
+| github.com/go-chi/chi/v5 | v5.3.0 | https://github.com/go-chi/chi | MIT | HTTP router (§5) | integrated |
+| github.com/neo4j/neo4j-go-driver/v5 | v5.28.4 | https://github.com/neo4j/neo4j-go-driver | Apache-2.0 | Neo4j Bolt driver (§5.6) | integrated |
+| github.com/prometheus/client_golang | v1.23.2 | https://github.com/prometheus/client_golang | Apache-2.0 | /metrics endpoint (§5.6.3) | integrated |
+| go.opentelemetry.io/otel | v1.44.0 | https://opentelemetry.io | Apache-2.0 | Tracing core (§5.6.2) | integrated |
+| go.opentelemetry.io/otel/sdk | v1.44.0 | https://opentelemetry.io | Apache-2.0 | Trace SDK/provider (§5.6.2) | integrated |
+| go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc | v1.44.0 | https://opentelemetry.io | Apache-2.0 | OTLP gRPC trace export (§5.6.2) | integrated |
+| go.opentelemetry.io/otel/trace | v1.44.0 | https://opentelemetry.io | Apache-2.0 | Tracer API (§5.6.2) | integrated |
+| github.com/google/uuid | v1.6.0 | https://github.com/google/uuid | BSD-3-Clause | uuid property generation (§3.3.8) | integrated |
 
-Transitive Go dependencies are pinned and checksummed in `backend/go.sum`.
+All 92 direct and transitive Go modules are pinned and cryptographically
+checksummed in `backend/go.sum` (the authoritative machine-readable manifest
+for a full transitive audit). Notable transitive dependencies include
+`golang.org/x/{net,sys,text}`, `google.golang.org/{grpc,protobuf,genproto}`,
+`github.com/prometheus/{client_model,common,procfs}`, and
+`go.opentelemetry.io/{otel/metric,proto/otlp}` — all BSD-3-Clause or Apache-2.0.
 
 ## 3. Frontend (npm) — `frontend/package.json`
 
-| Component | Source | License | Use | Status |
-|---|---|---|---|---|
-| react, react-dom | https://react.dev | MIT | UI framework (§6.1) | integrated |
-| vite | https://vitejs.dev | MIT | Build tool (§6.1) | integrated |
-| tailwindcss | https://tailwindcss.com | MIT | Styling (§6.1) | integrated |
-| @tauri-apps/api, @tauri-apps/cli | https://tauri.app | MIT/Apache-2.0 | Desktop shell (§6.1) | integrated |
-| @radix-ui/* primitives | https://radix-ui.com | MIT | Headless UI components (§6.1) | integrated |
-| framer-motion | https://framer.com/motion | MIT | Drawer/expand animations (§6.1) | integrated |
-| zustand | https://github.com/pmndrs/zustand | MIT | UI state (§6.1) | integrated |
-| @tanstack/react-query | https://tanstack.com/query | MIT | Backend fetch/mutate/cache (§6.1) | integrated |
-| @tanstack/react-virtual | https://tanstack.com/virtual | MIT | Large-list virtualization (§6.1) | integrated |
-| cytoscape, react-cytoscapejs, cytoscape-fcose, cytoscape-svg | https://js.cytoscape.org | MIT | SoI graph popups + PNG/SVG diagram export (§6.1, §6.5.x) | integrated |
-| ag-grid-community, ag-grid-react | https://ag-grid.com | MIT | RTM / search / report tables (§6.1) | integrated |
+| Component | Version | Source | License | Use | Status |
+|---|---|---|---|---|---|
+| react, react-dom | 19.2.7 | https://react.dev | MIT | UI framework (§6.1) | integrated |
+| vite | 8.1.1 | https://vitejs.dev | MIT | Build tool (§6.1) | integrated |
+| typescript | 6.0.2 | https://typescriptlang.org | Apache-2.0 | Frontend language (§6.1) | integrated |
+| tailwindcss + @tailwindcss/vite | 4.3.2 | https://tailwindcss.com | MIT | Styling (§6.1) | integrated |
+| @vitejs/plugin-react | 6.0.3 | https://vitejs.dev | MIT | React fast-refresh build plugin | integrated |
+| @tauri-apps/api | 2.11.1 | https://tauri.app | MIT/Apache-2.0 | Desktop shell bridge (§6.1) | integrated |
+| @tauri-apps/cli | 2.11.4 | https://tauri.app | MIT/Apache-2.0 | Desktop bundle build (§6.1) | integrated |
+| @tauri-apps/plugin-shell | 2.3.5 | https://tauri.app | MIT/Apache-2.0 | Shell command bridge | integrated |
+| @radix-ui/react-{dialog,tooltip,dropdown-menu,collapsible} | 1.1.18 / 1.2.11 / 2.1.19 / 1.1.15 | https://radix-ui.com | MIT | Headless UI primitives (§6.1) | integrated |
+| framer-motion | 12.42.2 | https://framer.com/motion | MIT | Drawer/expand animations (§6.1) | integrated |
+| zustand | 5.0.14 | https://github.com/pmndrs/zustand | MIT | UI state (§6.1) | integrated |
+| @tanstack/react-query | 5.101.2 | https://tanstack.com/query | MIT | Backend fetch/mutate/cache (§6.1) | integrated |
+| @tanstack/react-virtual | 3.14.5 | https://tanstack.com/virtual | MIT | Large-list virtualization (§6.1) | integrated |
+| cytoscape | 3.34.0 | https://js.cytoscape.org | MIT | Graph diagrams (§6.1) | integrated |
+| react-cytoscapejs | 2.0.0 | https://github.com/plotly/react-cytoscapejs | MIT | React Cytoscape binding | integrated |
+| cytoscape-fcose | 2.2.0 | https://github.com/iVis-at-Bilkent/cytoscape.js-fcose | MIT | Force-directed layout | integrated |
+| ag-grid-community, ag-grid-react | 36.0.0 | https://ag-grid.com | MIT | RTM / search / report tables (§6.1) | integrated |
+| oxlint | 1.71.0 | https://oxc.rs | MIT | Frontend linter (dev only) | integrated |
 
-Exact versions pinned in `frontend/package-lock.json`.
+Exact versions of all 181 packages (direct + transitive) are pinned in
+`frontend/package-lock.json`. Versions above are the resolved lockfile
+versions. All are MIT except TypeScript (Apache-2.0) and the dual
+MIT/Apache-2.0 Tauri packages.
 
 ## 4. Tauri (Rust crates) — `frontend/src-tauri/Cargo.toml`, `startup/src-tauri/Cargo.toml`
 
-| Component | Source | License | Use | Status |
-|---|---|---|---|---|
-| tauri (v2) | https://tauri.app | MIT/Apache-2.0 | Desktop application shell | integrated |
-| serde, serde_json | https://serde.rs | MIT/Apache-2.0 | Serialization | integrated |
+| Component | Version | Source | License | Use | Status |
+|---|---|---|---|---|---|
+| tauri | 2.x (v2) | https://tauri.app | MIT/Apache-2.0 | Desktop application shell | integrated |
+| tauri-build | 2.x | https://tauri.app | MIT/Apache-2.0 | Build script | integrated |
+| tauri-plugin-log | 2.x | https://tauri.app | MIT/Apache-2.0 | Dev logging (Frontend shell) | integrated |
+| serde, serde_json | 1.x | https://serde.rs | MIT/Apache-2.0 | Serialization | integrated |
+| log | 0.4.x | https://github.com/rust-lang/log | MIT/Apache-2.0 | Logging facade | integrated |
 
-Exact versions pinned in `Cargo.lock`.
+Exact versions of all Rust crates are pinned in the respective `Cargo.lock`
+files: `frontend/src-tauri/Cargo.lock` (455 crates, transitive) and
+`startup/src-tauri/Cargo.lock` (419 crates, transitive). The Tauri dependency
+tree is predominantly MIT/Apache-2.0 dual-licensed; a small number of crates
+are MIT, BSD, Zlib, or Unicode-DFS-2016. Run `cargo license` against each
+`Cargo.lock` for the authoritative per-crate license report.
 
 ## 5. Container Images (Docker Compose) — `deploy/`
 

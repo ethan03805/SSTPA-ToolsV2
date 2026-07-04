@@ -100,7 +100,7 @@ export const toolManifests: ToolManifest[] = [
     ToolName: "Reports Tool",
     ToolVersion: "1.0.0",
     ToolType: "REPORTING",
-    ModelTextLanguages: [],
+    ModelTextLanguages: ["SYSML", "KERML"],
     LaunchLocation: ["CONTROL_PANEL"],
     SupportedNodeContexts: ["*"],
     RequiredBackendCapabilities: [
@@ -121,7 +121,7 @@ export const toolManifests: ToolManifest[] = [
     ToolName: "Reference Tool",
     ToolVersion: "1.0.0",
     ToolType: "REFERENCE",
-    ModelTextLanguages: [],
+    ModelTextLanguages: ["KERML"],
     LaunchLocation: ["CONTROL_PANEL", "DATA_DRAWER"],
     SupportedNodeContexts: [
       "Attack",
@@ -205,7 +205,7 @@ export const toolManifests: ToolManifest[] = [
     ToolName: "Context Tool",
     ToolVersion: "1.0.0",
     ToolType: "GRAPH_ANALYSIS",
-    ModelTextLanguages: ["SYSML"],
+    ModelTextLanguages: ["SYSML", "KERML"],
     LaunchLocation: ["CONTROL_PANEL", "DATA_DRAWER"],
     SupportedNodeContexts: ["Environment", "State", "Hazard", "Loss"],
     RequiredBackendCapabilities: ["soi.read", "graph.mutate.transactional"],

@@ -4,6 +4,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -139,6 +140,13 @@ func NewRouter(cfg config.Config, db *graph.DB, sch *schema.Schema, m *telemetry
 			// Product data (SRS §3.1)
 			r.Get("/product", s.handleProduct)
 
+			// Example Data — FireSat (SRS §3.6)
+			r.Get("/examples", s.handleExampleList)
+			r.Post("/examples/reset", s.handleExampleReset)
+
+			// Help Data — Hover Help, definitions, tutorial (SRS §3.5)
+			r.Get("/help", s.handleHelp)
+
 			// Schema introspection for Frontend rendering (SRS §3.3.9/§3.3.10)
 			r.Get("/schema/node-types", s.handleSchemaNodeTypes)
 			r.Get("/schema/node-types/{label}", s.handleSchemaNodeType)
@@ -155,6 +163,13 @@ func NewRouter(cfg config.Config, db *graph.DB, sch *schema.Schema, m *telemetry
 	})
 
 	return r
+}
+
+// SeedExamples loads Example Data (FireSat) if absent (SRS §3.6). Called once
+// at startup after the database is reachable. Returns whether it seeded.
+func SeedExamples(ctx context.Context, cfg config.Config, db *graph.DB) (bool, error) {
+	s := &Server{cfg: cfg, db: db}
+	return s.seedFireSat(ctx)
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +208,6 @@ func (s *Server) handleCapability(w http.ResponseWriter, r *http.Request) {
 			"loss.tree.auto-build",
 			"loss.paths.read",
 			"model.translate.read",
-			"model.translate.write",
 			"model.profile.read",
 		},
 		"config": map[string]any{
