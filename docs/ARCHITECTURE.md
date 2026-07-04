@@ -13,10 +13,15 @@ SSTPA Tools is implemented as four independently operable segments:
 | Startup Software | `startup/` | Tauri (Rust + web UI) launcher |
 | Backend | `backend/`, `deploy/` | Go + Neo4j + Docker Compose |
 | Frontend | `frontend/` | Tauri + React + TypeScript |
-| Installer | `installer/` | Platform bundling scripts |
+| Installer | `installer/` | Package staging scripts, install helpers, optional image archives |
 
 The Sustainment Environment (§9) lives in `sustainment/` and runs only on the
 development system — never on a deployed SSTPA Tools installation.
+
+The Installer segment stages all product segments into a versioned release
+payload, copies platform-native Tauri bundle outputs when available, optionally
+saves Docker images for air-gapped installation, and emits SHA-256 checksums for
+audit and transfer verification.
 
 ## 2. Backend (§5)
 

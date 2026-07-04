@@ -8,7 +8,8 @@ a software audit. It is maintained continuously as components are added.
 **Supplier / IP owner**: Nicholas Triska (nihlo2025@proton.me)
 **SBOM format**: human-readable Markdown (this file). Machine-readable manifests:
 `backend/go.mod`/`go.sum`, `frontend/package.json`/`package-lock.json`,
-`frontend/src-tauri/Cargo.toml`/`Cargo.lock`, `sustainment/requirements.txt`.
+`frontend/src-tauri/Cargo.toml`/`Cargo.lock`,
+`startup/src-tauri/Cargo.toml`/`Cargo.lock`, `sustainment/requirements.txt`.
 
 > Status legend: **planned** = specified, not yet integrated; **integrated** = in use in the codebase.
 
@@ -65,12 +66,12 @@ Exact versions pinned in `Cargo.lock`.
 
 | Image | Tag | Source | License | Use | Status |
 |---|---|---|---|---|---|
-| neo4j | 2025.12-community | https://hub.docker.com/_/neo4j | GPL-3.0 (Community Ed.) | Graph database (§5.6.1) | integrated |
-| caddy | 2 | https://hub.docker.com/_/caddy | Apache-2.0 | Reverse proxy / TLS (§5.4) | integrated |
-| otel/opentelemetry-collector-contrib | latest stable | https://opentelemetry.io | Apache-2.0 | Telemetry pipeline (§5.6.2) | integrated |
-| prom/prometheus | latest stable | https://prometheus.io | Apache-2.0 | Metrics store (§5.6.3) | integrated |
-| grafana/tempo | latest stable | https://grafana.com/oss/tempo | AGPL-3.0 | Trace store (§5.6.4) | integrated |
-| grafana/grafana | latest stable | https://grafana.com/oss/grafana | AGPL-3.0 | Dashboards (§5.6.5) | integrated |
+| neo4j | 2026.05.0-community | https://hub.docker.com/_/neo4j | GPL-3.0 (Community Ed.) | Graph database (§5.6.1) | integrated |
+| caddy | 2.11.4 | https://hub.docker.com/_/caddy | Apache-2.0 | Reverse proxy / TLS (§5.4) | integrated |
+| otel/opentelemetry-collector-contrib | 0.155.0 | https://opentelemetry.io | Apache-2.0 | Telemetry pipeline (§5.6.2) | integrated |
+| prom/prometheus | v3.13.0 | https://prometheus.io | Apache-2.0 | Metrics store (§5.6.3) | integrated |
+| grafana/tempo | 2.9.3 | https://grafana.com/oss/tempo | AGPL-3.0 | Trace store (§5.6.4) | integrated |
+| grafana/grafana | 13.0.3 | https://grafana.com/oss/grafana | AGPL-3.0 | Dashboards (§5.6.5) | integrated |
 
 Note: Neo4j Community (GPLv3), Tempo and Grafana (AGPLv3) are used as unmodified,
 separate services accessed over network protocols; SSTPA proprietary code links to

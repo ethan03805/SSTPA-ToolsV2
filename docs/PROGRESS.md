@@ -112,3 +112,21 @@ Verification:
 - `cd frontend && npm run build`
 
 SBOM impact: none. No software applications or libraries were added.
+
+## 2026-07-04 — Installer Segment Implementation
+
+- Added the `installer/` segment with package staging, optional Backend image
+  build, optional Tauri bundle builds, optional Docker image archive capture,
+  POSIX shell and Windows PowerShell install helpers, package manifests, and
+  SHA-256 checksum generation.
+- Updated `FloorPlan.md` for the new installer subdirectories and documented the
+  installer path in README and architecture notes.
+- Verified the lightweight package path with
+  `./installer/scripts/build-package.sh --skip-tauri --skip-docker --version 0.1.0-test`.
+
+Verification:
+
+- `./installer/scripts/build-package.sh --skip-tauri --skip-docker --version 0.1.0-test`
+
+SBOM impact: none. No software applications or libraries were added; container
+image tag entries were aligned to `deploy/docker-compose.yml`.

@@ -14,6 +14,10 @@ Schema: {path} - description - Access Rules
 
 /home/netrisk/Projects/SSTPA Tools/installer - Installer build scripts for Windows/macOS/Linux (SRS §2) - Open for use
 
+/home/netrisk/Projects/SSTPA Tools/installer/scripts - Installer package and container-image staging scripts - Open for use
+
+/home/netrisk/Projects/SSTPA Tools/installer/templates - POSIX shell and Windows PowerShell install helpers copied into release packages - Open for use
+
 /home/netrisk/Projects/SSTPA Tools/sustainment - Python reference-data pipeline: acquire → normalize → transform → validate → package (SRS §9) - Open for use
 
 /home/netrisk/Projects/SSTPA Tools/deploy - Docker Compose and service configs: Caddy, Neo4j, OTel, Prometheus, Tempo, Grafana (SRS §5.7) - Open for use

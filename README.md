@@ -53,6 +53,15 @@ cd deploy && docker compose up -d
 cd frontend && npm install && npm run tauri dev
 ```
 
+## Installer Package
+
+```bash
+./installer/scripts/build-package.sh --save-images
+```
+
+Use `--skip-tauri --skip-docker` for a fast staging/checksum validation run.
+Packages are written to `installer/out/`.
+
 ## Copyright
 
 2025 Nicholas Triska. All rights reserved.
