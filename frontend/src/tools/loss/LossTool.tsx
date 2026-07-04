@@ -812,7 +812,7 @@ function TreeView({
                     </div>
                     <div style={{ fontSize: "0.8rem", fontWeight: 700, marginTop: 4 }}>{n.name || n.hid}</div>
                     {isRvLeaf && (
-                      <div style={{ fontSize: "0.64rem", marginTop: 2 }} className={allowed ? "state-warn" : "state-warn"}>
+                      <div style={{ fontSize: "0.64rem", marginTop: 2 }} className={allowed ? "state-warn" : "state-error"}>
                         {allowed ? "Allowed RV" : "Unaddressed RV"}
                       </div>
                     )}
