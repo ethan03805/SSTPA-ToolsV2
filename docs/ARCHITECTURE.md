@@ -109,6 +109,12 @@ Users clone reference properties into owned Core nodes via `[:REFERENCES]` (§3.
   `[:INCLUDES_UC]`/`[:EXTENDS]` links, requirement allocation through
   participating Interfaces/Functions, validation findings, diagram snapshots, and
   Markdown/JSON exports.
+- **Connection Tool** (§6.5.13): manages System-owned `(:Connection)` nodes via
+  `(:System)-[:HAS_CONNECTION]->(:Connection)`, participating Interface ends via
+  `(:Interface)-[:PARTICIPATES_IN]->(:Connection)` including edge properties,
+  owner reassignment, Connection-authored requirements, schema validation,
+  System/tier/property filters, canvas visualization, and Markdown/SysML/JSON
+  exports.
 
 ## 6. SysML 2.0 / KerML 1.0 Interchange (§3.7)
 

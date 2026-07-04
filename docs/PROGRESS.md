@@ -76,3 +76,19 @@ Verification:
 - `cd frontend && npm run build`
 
 SBOM impact: none. No software applications or libraries were added.
+
+## 2026-07-04 — Connection Tool Implementation
+
+- Replaced the Connection Tool scaffold with a working graph-analysis tool:
+  Connection creation, System ownership assignment/reassignment, Interface
+  participant association/removal through `[:PARTICIPATES_IN]`, relationship
+  edge-property editing, direct Connection requirements, selection/filter/display
+  modes, validation, and Markdown/SysML/JSON exports.
+- Implemented filters for owner System, System tier, OSI layer, directionality,
+  participating Interface, and free-text Connection/participant search.
+
+Verification:
+
+- `cd frontend && npm run build`
+
+SBOM impact: none. No software applications or libraries were added.
