@@ -269,13 +269,28 @@ export const api = {
     request<{ unread: number }>("GET", "/api/messages/unread-count"),
 
   listUsers: () =>
-    request<{ users: Record<string, unknown>[] }>("GET", "/api/admin/users"),
+    request<{
+      users: {
+        userName: string;
+        email: string;
+        displayName: string;
+        isAdmin: boolean;
+        isRootAdmin: boolean;
+        accountStatus: "ACTIVE" | "SUSPENDED" | "DISENROLLED";
+        createDate: string | null;
+        lastTouch: string | null;
+        ownedNodes: number;
+        unreadMessages: number;
+      }[];
+    }>("GET", "/api/admin/users"),
 
   createUser: (payload: {
     userName: string;
     password: string;
     email: string;
+    displayName?: string;
     isAdmin: boolean;
+    authorizerPassword?: string;
   }) => request<{ status: string }>("POST", "/api/admin/users", payload),
 
   updateUser: (userName: string, payload: Record<string, unknown>) =>
