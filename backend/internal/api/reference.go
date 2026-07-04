@@ -15,9 +15,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-// authorizedCloneSources implements the SRS §3.4.6.1 table.
+// authorizedCloneSources implements the SRS §3.4.6.1 table. The (:Attack)
+// row is widened to include (:AK_Tactic) and (:EMB3D_Vulnerability) to match
+// the more specific Attack Tool requirement (§6.5.16.6), which authorizes
+// ATT&CK Tactic/Technique/Sub-Technique, ATLAS Technique, and EMB3D
+// Vulnerability as clone sources (see REQUIREMENTS-NOTES I-16).
 var authorizedCloneSources = map[string][]string{
-	"Attack":          {"AK_Technique", "AT_Technique"},
+	"Attack":          {"AK_Tactic", "AK_Technique", "AT_Technique", "EMB3D_Vulnerability"},
 	"Countermeasure":  {"AK_Mitigation", "AK_DetectionStrategy", "AK_Analytic", "AT_Mitigation", "EMB3D_CourseOfAction"},
 	"SecurityControl": {"NIST_Control", "NIST_Enhancement"},
 	"Component":       {"AK_Software", "AK_Asset", "EMB3D_Device"},
