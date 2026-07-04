@@ -26,7 +26,14 @@ Useful options:
 
 When the host Tauri CLI cannot produce native bundles, `build-package.sh`
 falls back to `npm run build` plus `cargo build --release` and stages the
-release binaries under `payload/bundles/*/bin`.
+release binaries under `payload/bundles/*/bin`. On Linux, the script also checks
+the visible inotify instance count before invoking the Tauri CLI; if the host is
+at or near `/proc/sys/fs/inotify/max_user_instances`, it skips the native bundle
+attempt to avoid the Tauri CLI watcher panic and uses the release-binary path.
+
+The generated `manifests/package.properties` records `tauriRequested`,
+`tauriBuilt`, `frontendBundleStatus`, and `startupBundleStatus` so release
+audits can tell native bundles from fallback binaries.
 
 Output is written to `installer/out/` and ignored by Git.
 

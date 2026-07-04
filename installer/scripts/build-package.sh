@@ -7,6 +7,8 @@ VERSION="0.1.0"
 BUILD_TAURI=1
 BUILD_DOCKER=1
 SAVE_IMAGES=0
+FRONTEND_BUNDLE_STATUS="skipped"
+STARTUP_BUNDLE_STATUS="skipped"
 
 usage() {
   cat <<'USAGE'
@@ -63,21 +65,71 @@ require_cmd() {
   fi
 }
 
-build_tauri_or_release() {
-  local app_dir="$1"
-  local label="$2"
-  shift 2
+count_visible_inotify_instances() {
+  local proc count total=0
 
-  if (cd "${app_dir}" && "$@"); then
-    echo "${label}: Tauri bundle build completed."
+  if [[ ! -d /proc ]]; then
+    echo 0
     return 0
   fi
 
-  echo "${label}: Tauri bundle build failed; falling back to release binary build." >&2
+  for proc in /proc/[0-9]*; do
+    [[ -d "${proc}/fd" ]] || continue
+    count="$(find "${proc}/fd" -maxdepth 1 -lname 'anon_inode:inotify' 2>/dev/null | wc -l)"
+    total=$((total + count))
+  done
+
+  echo "${total}"
+}
+
+has_tauri_watcher_capacity() {
+  local limit current
+
+  if [[ ! -r /proc/sys/fs/inotify/max_user_instances ]]; then
+    return 0
+  fi
+
+  limit="$(cat /proc/sys/fs/inotify/max_user_instances)"
+  if [[ ! "${limit}" =~ ^[0-9]+$ ]]; then
+    return 0
+  fi
+
+  current="$(count_visible_inotify_instances)"
+  if [[ ! "${current}" =~ ^[0-9]+$ ]]; then
+    return 0
+  fi
+
+  if (( current + 2 >= limit )); then
+    echo "Host inotify watcher instances are near/exceeding the limit (${current}/${limit}); skipping Tauri CLI bundle attempt." >&2
+    return 1
+  fi
+
+  return 0
+}
+
+build_tauri_or_release() {
+  local app_dir="$1"
+  local label="$2"
+  local status_var="$3"
+  shift 3
+
+  if has_tauri_watcher_capacity; then
+    if (cd "${app_dir}" && "$@"); then
+      echo "${label}: Tauri bundle build completed."
+      printf -v "${status_var}" "%s" "bundle"
+      return 0
+    fi
+
+    echo "${label}: Tauri bundle build failed; falling back to release binary build." >&2
+  else
+    echo "${label}: falling back to release binary build." >&2
+  fi
+
   if [[ -f "${app_dir}/package.json" ]]; then
     (cd "${app_dir}" && npm run build)
   fi
   (cd "${app_dir}/src-tauri" && cargo build --release)
+  printf -v "${status_var}" "%s" "release-binary"
 }
 
 require_cmd tar
@@ -110,8 +162,8 @@ if [[ "${BUILD_TAURI}" -eq 1 ]]; then
   if [[ ! -d "${ROOT_DIR}/frontend/node_modules" ]]; then
     (cd "${ROOT_DIR}/frontend" && npm ci)
   fi
-  build_tauri_or_release "${ROOT_DIR}/frontend" "Frontend" npx tauri build
-  build_tauri_or_release "${ROOT_DIR}/startup" "Startup" "${ROOT_DIR}/frontend/node_modules/.bin/tauri" build
+  build_tauri_or_release "${ROOT_DIR}/frontend" "Frontend" FRONTEND_BUNDLE_STATUS npx tauri build
+  build_tauri_or_release "${ROOT_DIR}/startup" "Startup" STARTUP_BUNDLE_STATUS "${ROOT_DIR}/frontend/node_modules/.bin/tauri" build
 fi
 
 rm -rf "${PACKAGE_DIR}"
@@ -136,18 +188,18 @@ tar \
   README.md NOTICE "SSTPA Tool SRS V7.md" FloorPlan.md Assets backend deploy docs frontend startup sustainment installer/README.md \
   | tar -C "${PACKAGE_DIR}/payload" -xf -
 
-if [[ -d "${ROOT_DIR}/frontend/src-tauri/target/release/bundle" ]]; then
+if [[ "${FRONTEND_BUNDLE_STATUS}" == "bundle" && -d "${ROOT_DIR}/frontend/src-tauri/target/release/bundle" ]]; then
   mkdir -p "${PACKAGE_DIR}/payload/bundles/frontend"
   tar -C "${ROOT_DIR}/frontend/src-tauri/target/release/bundle" -cf - . | tar -C "${PACKAGE_DIR}/payload/bundles/frontend" -xf -
-elif [[ -x "${ROOT_DIR}/frontend/src-tauri/target/release/sstpa-tools-gui" ]]; then
+elif [[ "${FRONTEND_BUNDLE_STATUS}" != "skipped" && -x "${ROOT_DIR}/frontend/src-tauri/target/release/sstpa-tools-gui" ]]; then
   mkdir -p "${PACKAGE_DIR}/payload/bundles/frontend/bin"
   cp "${ROOT_DIR}/frontend/src-tauri/target/release/sstpa-tools-gui" "${PACKAGE_DIR}/payload/bundles/frontend/bin/"
 fi
 
-if [[ -d "${ROOT_DIR}/startup/src-tauri/target/release/bundle" ]]; then
+if [[ "${STARTUP_BUNDLE_STATUS}" == "bundle" && -d "${ROOT_DIR}/startup/src-tauri/target/release/bundle" ]]; then
   mkdir -p "${PACKAGE_DIR}/payload/bundles/startup"
   tar -C "${ROOT_DIR}/startup/src-tauri/target/release/bundle" -cf - . | tar -C "${PACKAGE_DIR}/payload/bundles/startup" -xf -
-elif [[ -x "${ROOT_DIR}/startup/src-tauri/target/release/sstpa-startup" ]]; then
+elif [[ "${STARTUP_BUNDLE_STATUS}" != "skipped" && -x "${ROOT_DIR}/startup/src-tauri/target/release/sstpa-startup" ]]; then
   mkdir -p "${PACKAGE_DIR}/payload/bundles/startup/bin"
   cp "${ROOT_DIR}/startup/src-tauri/target/release/sstpa-startup" "${PACKAGE_DIR}/payload/bundles/startup/bin/"
 fi
@@ -160,13 +212,21 @@ if [[ "${SAVE_IMAGES}" -eq 1 ]]; then
 fi
 
 COMMIT="$(git -C "${ROOT_DIR}" rev-parse HEAD)"
+TAURI_BUILT=0
+if [[ "${FRONTEND_BUNDLE_STATUS}" == "bundle" && "${STARTUP_BUNDLE_STATUS}" == "bundle" ]]; then
+  TAURI_BUILT=1
+fi
 {
   echo "product=SSTPA Tools"
   echo "version=${VERSION}"
   echo "platform=${PLATFORM}"
   echo "gitCommit=${COMMIT}"
   echo "createdUtc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "tauriBuilt=${BUILD_TAURI}"
+  echo "tauriRequested=${BUILD_TAURI}"
+  echo "tauriBuilt=${TAURI_BUILT}"
+  echo "tauriNativeBundles=${TAURI_BUILT}"
+  echo "frontendBundleStatus=${FRONTEND_BUNDLE_STATUS}"
+  echo "startupBundleStatus=${STARTUP_BUNDLE_STATUS}"
   echo "dockerBuilt=${BUILD_DOCKER}"
   echo "imagesSaved=${SAVE_IMAGES}"
 } > "${PACKAGE_DIR}/manifests/package.properties"

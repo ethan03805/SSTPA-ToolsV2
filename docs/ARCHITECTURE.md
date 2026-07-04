@@ -21,7 +21,9 @@ development system — never on a deployed SSTPA Tools installation.
 The Installer segment stages all product segments into a versioned release
 payload, copies platform-native Tauri bundle outputs when available, optionally
 saves Docker images for air-gapped installation, and emits SHA-256 checksums for
-audit and transfer verification.
+audit and transfer verification. If the host cannot run the Tauri native bundler
+because build-time watcher capacity is exhausted, the package path falls back to
+release binaries and records the per-app bundle status in the package manifest.
 
 ## 2. Backend (§5)
 

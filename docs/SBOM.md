@@ -22,6 +22,7 @@ a software audit. It is maintained continuously as components are added.
 | Rust | 1.94.1 | https://rust-lang.org | MIT/Apache-2.0 | Tauri shell for Frontend & Startup | integrated |
 | Python | 3.14.3 | https://python.org | PSF-2.0 | Sustainment pipeline (§9.6; SRS requires ≥3.12) | integrated |
 | TypeScript | (see package-lock.json) | https://typescriptlang.org | Apache-2.0 | Frontend language | integrated |
+| Tauri CLI | 2.11.4 | https://tauri.app | MIT/Apache-2.0 | Native desktop bundle build tooling; pinned by `frontend/package-lock.json`, optionally installed via Cargo on build hosts | integrated |
 
 ## 2. Backend (Go) — `backend/go.mod`
 

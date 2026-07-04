@@ -122,6 +122,9 @@ SBOM impact: none. No software applications or libraries were added.
 - Added Tauri project ignore files and installer fallback behavior so package
   staging still emits release binaries on hosts where the Tauri CLI native
   bundler panics before bundling.
+- Hardened the installer package manifest to report native bundle status per
+  Tauri app and added a Linux inotify-capacity preflight so watcher-exhausted
+  hosts use the release-binary fallback without a noisy CLI panic.
 - Updated `FloorPlan.md` for the new installer subdirectories and documented the
   installer path in README and architecture notes.
 - Verified the lightweight package path with
@@ -133,6 +136,8 @@ Verification:
 
 - `./installer/scripts/build-package.sh --skip-tauri --skip-docker --version 0.1.0-test`
 - `./installer/scripts/build-package.sh --skip-docker --version 0.1.0-tauri-smoke`
+- `cargo tauri build --no-bundle --ci` (observed host inotify instance exhaustion;
+  release-binary fallback remains the supported package path on this host)
 
-SBOM impact: none. No software applications or libraries were added; container
-image tag entries were aligned to `deploy/docker-compose.yml`.
+SBOM impact: documented the Tauri CLI build tool version; container image tag
+entries were aligned to `deploy/docker-compose.yml`.
