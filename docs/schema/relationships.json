@@ -478,6 +478,13 @@
    "srsLine": 686
   },
   {
+   "type": "HAS_CONTROLS_BASELINE",
+   "source": "System",
+   "target": "ControlsBaseline",
+   "srsSection": "6.5.17.2",
+   "srsLine": 15473
+  },
+  {
    "type": "HAS_INTERFACE",
    "source": "System",
    "target": "Interface",

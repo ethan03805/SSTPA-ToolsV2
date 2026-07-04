@@ -25,7 +25,7 @@ func TestLoadSchema(t *testing.T) {
 	// Canonical labels from SRS §3.3.3 must exist.
 	for _, l := range []string{"Project", "System", "Component", "SystemFunction",
 		"Interface", "Connection", "Purpose", "State", "Asset", "Loss", "Attack",
-		"Countermeasure", "SecurityControl", "Requirement", "UseCase", "GsnGoal"} {
+		"Countermeasure", "SecurityControl", "ControlsBaseline", "Requirement", "UseCase", "GsnGoal"} {
 		if !s.ValidLabel(l) {
 			t.Errorf("missing canonical label %s", l)
 		}
@@ -38,6 +38,7 @@ func TestHIDPrefixes(t *testing.T) {
 		"System": "SYS", "Component": "EL", "SystemFunction": "FUN",
 		"Interface": "INT", "Requirement": "REQ", "Asset": "AST",
 		"Project": "CAP", "Loss": "LOS", "SecurityControl": "CTRL",
+		"ControlsBaseline": "CBL",
 	}
 	for label, prefix := range want {
 		if s.NodeTypes[label].HIDPrefix != prefix {
@@ -64,6 +65,7 @@ func TestRelationshipAllowed(t *testing.T) {
 		{"THREATENS", "Hazard", "Asset"},
 		{"EXPLOITS", "Attack", "Component"},
 		{"PARTICIPATES_IN", "Interface", "Connection"},
+		{"HAS_CONTROLS_BASELINE", "System", "ControlsBaseline"},
 		{"SUPPORTED_BY", "GsnGoal", "GsnStrategy"},
 	}
 	for _, v := range valid {

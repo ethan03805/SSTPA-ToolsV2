@@ -1555,6 +1555,176 @@
    ],
    "srsHeading": "Validation"
   },
+  "ControlsBaseline": {
+   "srsLines": "15312-16424",
+   "description": "Analytical controls baseline node maintained by the Controls Tool for one SoI. The label appears in the HID prefix table and is defined by SRS 6.5.17.",
+   "propertyGroups": [
+    {
+     "groupName": "Categorization",
+     "properties": [
+      {
+       "name": "ConfidentialityImpact",
+       "displayName": "Confidentiality Impact:",
+       "type": "Enum",
+       "enumValues": [
+        "NONE",
+        "LOW",
+        "MODERATE",
+        "HIGH"
+       ],
+       "edit": "edit",
+       "default": "NONE"
+      },
+      {
+       "name": "IntegrityImpact",
+       "displayName": "Integrity Impact:",
+       "type": "Enum",
+       "enumValues": [
+        "NONE",
+        "LOW",
+        "MODERATE",
+        "HIGH"
+       ],
+       "edit": "edit",
+       "default": "NONE"
+      },
+      {
+       "name": "AvailabilityImpact",
+       "displayName": "Availability Impact:",
+       "type": "Enum",
+       "enumValues": [
+        "NONE",
+        "LOW",
+        "MODERATE",
+        "HIGH"
+       ],
+       "edit": "edit",
+       "default": "NONE"
+      },
+      {
+       "name": "CategorizationRationale",
+       "displayName": "Categorization Rationale:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "The Controls Tool SHALL preserve independent Confidentiality, Integrity, and Availability values and SHALL NOT compute a High Water Mark."
+     ]
+    },
+    {
+     "groupName": "Analytical Selections",
+     "properties": [
+      {
+       "name": "OverlayIDs",
+       "displayName": "Overlay IDs:",
+       "type": "String",
+       "edit": "edit",
+       "default": "[]"
+      },
+      {
+       "name": "OverlayRationale",
+       "displayName": "Overlay Rationale:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SelectedCSA",
+       "displayName": "Selected CSA:",
+       "type": "String",
+       "edit": "edit",
+       "default": "[]"
+      },
+      {
+       "name": "SurvivabilityRationale",
+       "displayName": "Survivability Rationale:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      },
+      {
+       "name": "SelectedPrinciples",
+       "displayName": "Selected Principles:",
+       "type": "String",
+       "edit": "edit",
+       "default": "[]"
+      },
+      {
+       "name": "SelectedTechniques",
+       "displayName": "Selected Techniques:",
+       "type": "String",
+       "edit": "edit",
+       "default": "[]"
+      },
+      {
+       "name": "SelectedApproaches",
+       "displayName": "Selected Approaches:",
+       "type": "String",
+       "edit": "edit",
+       "default": "[]"
+      },
+      {
+       "name": "ResilienceRationale",
+       "displayName": "Resilience Rationale:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "Selection properties are serialized JSON arrays owned by the Controls Tool."
+     ]
+    },
+    {
+     "groupName": "Baseline Data",
+     "properties": [
+      {
+       "name": "ControlsBaselineJSON",
+       "displayName": "Controls Baseline JSON:",
+       "type": "String",
+       "edit": "edit",
+       "default": "{\"schema\":\"SSTPA-CB-1.0\",\"categorization\":{},\"overlays\":[],\"survivability\":[],\"resilience\":[],\"controls\":[]}"
+      },
+      {
+       "name": "BaselineStatus",
+       "displayName": "Baseline Status:",
+       "type": "Enum",
+       "enumValues": [
+        "DRAFT",
+        "REVIEWED",
+        "BASELINED",
+        "APPROVED"
+       ],
+       "edit": "edit",
+       "default": "DRAFT"
+      },
+      {
+       "name": "IsActive",
+       "displayName": "Active Baseline:",
+       "type": "Boolean",
+       "edit": "edit",
+       "default": "True"
+      },
+      {
+       "name": "ValidationSummary",
+       "displayName": "Validation Summary:",
+       "type": "String",
+       "edit": "edit",
+       "default": null
+      }
+     ],
+     "constraints": [
+      "ControlsBaselineJSON is the authoritative analytical artifact used by the Controls Tool."
+     ]
+    }
+   ],
+   "relationshipGroups": [
+    "[:HAS_CONTROLS_BASELINE]"
+   ],
+   "srsHeading": "Controls Baseline"
+  },
   "SecurityControl": {
    "srsLines": "2150-2172",
    "description": "SRS heading is 'Control'; the prose in this section refers to the node as the SecurityControl (cloned from (:NIST_Control) or (:NIST_Enhancement) Reference nodes).",
