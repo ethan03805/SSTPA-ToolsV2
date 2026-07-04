@@ -3,15 +3,18 @@
 // relationship groups → secondary/tertiary cards (recursive).
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { api } from "../api/client";
+import { api, ApiError } from "../api/client";
 import type { SoINode } from "../api/types";
 import { useDrawer, useSoI } from "../state/stores";
 import { NodeTypeBadge, nodeTypeColor } from "./NodeTypeBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
 
-/** Primary section order per SRS §6.3.4.2. */
+/** Primary section order per SRS §6.3.4.2. SecurityControl/Countermeasure
+ *  disclose through the Security section's relationship groups (§6.3.4.2);
+ *  every node type not named here surfaces in the trailing Analysis section
+ *  so the panel presents all SoI data (§6.3.4). */
 const SECTIONS: { title: string; labels: string[] }[] = [
   { title: "Environment", labels: ["Environment"] },
   { title: "Connection", labels: ["Connection"] },
@@ -25,8 +28,13 @@ const SECTIONS: { title: string; labels: string[] }[] = [
     labels: ["Perspective", "FunctionalFlow", "ControlStructure", "UseCase"],
   },
   { title: "Asset", labels: ["Asset", "DerivedAsset"] },
-  { title: "Security", labels: ["Security", "SecurityControl", "Countermeasure"] },
+  { title: "Security", labels: ["Security"] },
 ];
+
+const SECTION_LABELS = new Set(SECTIONS.flatMap((s) => s.labels));
+
+/** Allowed (type → target labels) lookup keyed by source label. */
+export type RelTargetLookup = Map<string, Map<string, string[]>>;
 
 export function MainPanel() {
   const soiHid = useSoI((s) => s.soiHid);
@@ -37,11 +45,45 @@ export function MainPanel() {
     enabled: !!soiHid,
   });
 
+  const relSchema = useQuery({
+    queryKey: ["schema-relationships"],
+    queryFn: api.schemaRelationships,
+    staleTime: Infinity,
+  });
+
+  const relTargets: RelTargetLookup = useMemo(() => {
+    const m: RelTargetLookup = new Map();
+    for (const r of relSchema.data?.relationships ?? []) {
+      if (r.type === "AT_RELATES_TO") continue; // Loss Tool exclusive (§3.3.4.11)
+      let byType = m.get(r.source);
+      if (!byType) {
+        byType = new Map();
+        m.set(r.source, byType);
+      }
+      const targets = byType.get(r.type) ?? [];
+      if (!targets.includes(r.target)) targets.push(r.target);
+      byType.set(r.type, targets);
+    }
+    return m;
+  }, [relSchema.data]);
+
   const nodesByHid = useMemo(() => {
     const m = new Map<string, SoINode>();
     for (const n of soiQuery.data?.nodes ?? []) m.set(n.hid, n);
     return m;
   }, [soiQuery.data]);
+
+  const analysisNodes = useMemo(
+    () =>
+      (soiQuery.data?.nodes ?? []).filter(
+        (n) => !SECTION_LABELS.has(n.typeName) && n.typeName !== "System",
+      ),
+    [soiQuery.data],
+  );
+  const analysisLabels = useMemo(
+    () => [...new Set(analysisNodes.map((n) => n.typeName))].sort(),
+    [analysisNodes],
+  );
 
   if (!soiHid) {
     return (
@@ -78,6 +120,24 @@ export function MainPanel() {
     );
   }
 
+  if (soiQuery.isError) {
+    return (
+      <main className="main-panel">
+        <div className="sstpa-alert-warning">
+          Could not load the System of Interest ({soiHid}):{" "}
+          {String(soiQuery.error)}
+          <button
+            className="sstpa-button secondary"
+            style={{ marginLeft: 12, padding: "2px 10px" }}
+            onClick={() => void soiQuery.refetch()}
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="main-panel">
       {SECTIONS.map((section) => (
@@ -90,8 +150,20 @@ export function MainPanel() {
           )}
           nodesByHid={nodesByHid}
           soiHid={soiHid}
+          relTargets={relTargets}
         />
       ))}
+      {analysisNodes.length > 0 && (
+        <NodeTypeSection
+          title="Analysis"
+          labels={analysisLabels}
+          nodes={analysisNodes}
+          nodesByHid={nodesByHid}
+          soiHid={soiHid}
+          relTargets={relTargets}
+          creatable={false}
+        />
+      )}
     </main>
   );
 }
@@ -102,40 +174,53 @@ function NodeTypeSection({
   nodes,
   nodesByHid,
   soiHid,
+  relTargets,
+  creatable = true,
 }: {
   title: string;
   labels: string[];
   nodes: SoINode[];
   nodesByHid: Map<string, SoINode>;
   soiHid: string;
+  relTargets: RelTargetLookup;
+  creatable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const openDrawer = useDrawer((s) => s.openDrawer);
-  const drawerOpen = useDrawer((s) => s.open);
+  const requestOpenDrawer = useDrawer((s) => s.requestOpenDrawer);
+
+  const toggle = () => setOpen((v) => !v);
 
   return (
     <section className="node-section" data-open={open}>
       <div
         className="node-section-header"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        }}
         role="button"
+        tabIndex={0}
         aria-expanded={open}
       >
         <span style={{ width: 14, textAlign: "center" }}>{open ? "▾" : "▸"}</span>
         <span className="node-section-title">{title}</span>
         <span className="node-count">{nodes.length}</span>
         <span style={{ flex: 1 }} />
-        <button
-          className="icon-button"
-          title={`Add a new ${title} node`}
-          disabled={drawerOpen}
-          onClick={(e) => {
-            e.stopPropagation();
-            openDrawer({ mode: "create", label: labels[0] });
-          }}
-        >
-          + Add
-        </button>
+        {creatable && (
+          <button
+            className="icon-button"
+            title={`Add a new ${title} node`}
+            onClick={(e) => {
+              e.stopPropagation();
+              requestOpenDrawer({ mode: "create", label: labels[0] });
+            }}
+          >
+            + Add
+          </button>
+        )}
       </div>
       {open && (
         <div className="node-section-body">
@@ -150,6 +235,7 @@ function NodeTypeSection({
               node={n}
               nodesByHid={nodesByHid}
               soiHid={soiHid}
+              relTargets={relTargets}
               depth={0}
             />
           ))}
@@ -165,17 +251,18 @@ export function EntityCard({
   node,
   nodesByHid,
   soiHid,
+  relTargets,
   depth,
 }: {
   node: SoINode;
   nodesByHid: Map<string, SoINode>;
   soiHid: string;
+  relTargets: RelTargetLookup;
   depth: number;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const openDrawer = useDrawer((s) => s.openDrawer);
-  const drawerOpen = useDrawer((s) => s.open);
+  const requestOpenDrawer = useDrawer((s) => s.requestOpenDrawer);
   const qc = useQueryClient();
 
   const relGroups = useMemo(() => {
@@ -202,26 +289,33 @@ export function EntityCard({
     const orphans: string[] = [];
     for (const hid of targets) {
       let incoming = 0;
+      let fromMe = 0;
       for (const other of nodesByHid.values()) {
         for (const rel of other.relationships ?? []) {
-          if (rel.targetHID === hid) incoming++;
+          if (rel.targetHID === hid) {
+            incoming++;
+            if (other.hid === node.hid) fromMe++;
+          }
         }
       }
-      if (incoming <= 1) orphans.push(hid);
+      if (fromMe > 0 && incoming - fromMe === 0) orphans.push(hid);
     }
     return orphans;
   }, [confirmDelete, node, nodesByHid]);
 
-  const doDelete = async () => {
-    await api.commit({
-      soiHid,
-      toolId: "gui.mainpanel",
-      operations: [{ op: "deleteNode", hid: node.hid }],
-    });
-    setConfirmDelete(false);
-    void qc.invalidateQueries({ queryKey: ["soi"] });
-    void qc.invalidateQueries({ queryKey: ["hierarchy"] });
-  };
+  const del = useMutation({
+    mutationFn: () =>
+      api.commit({
+        soiHid,
+        toolId: "gui.mainpanel",
+        operations: [{ op: "deleteNode", hid: node.hid }],
+      }),
+    onSuccess: () => {
+      setConfirmDelete(false);
+      void qc.invalidateQueries({ queryKey: ["soi"] });
+      void qc.invalidateQueries({ queryKey: ["hierarchy"] });
+    },
+  });
 
   return (
     <div className="entity-card">
@@ -243,8 +337,7 @@ export function EntityCard({
           <button
             className="icon-button"
             title="Edit in Data Drawer"
-            disabled={drawerOpen}
-            onClick={() => openDrawer({ mode: "edit", hid: node.hid })}
+            onClick={() => requestOpenDrawer({ mode: "edit", hid: node.hid })}
           >
             ✎
           </button>
@@ -276,6 +369,7 @@ export function EntityCard({
               nodesByHid={nodesByHid}
               soiHid={soiHid}
               parentNode={node}
+              relTargets={relTargets}
               depth={depth}
             />
           ))}
@@ -285,10 +379,18 @@ export function EntityCard({
       {confirmDelete && (
         <ConfirmDialog
           title={`Delete ${node.hid}?`}
-          confirmLabel="Delete"
+          confirmLabel={del.isPending ? "Deleting…" : "Delete"}
+          confirmDisabled={del.isPending}
           danger
-          onCancel={() => setConfirmDelete(false)}
-          onConfirm={() => void doDelete()}
+          onCancel={() => {
+            if (!del.isPending) {
+              setConfirmDelete(false);
+              del.reset();
+            }
+          }}
+          onConfirm={() => {
+            if (!del.isPending) del.mutate();
+          }}
         >
           <p>
             Delete <span className="mono">{node.hid}</span> “
@@ -313,6 +415,14 @@ export function EntityCard({
               </ul>
             </div>
           )}
+          {del.isError && (
+            <div className="sstpa-alert-warning">
+              Delete rejected:{" "}
+              {del.error instanceof ApiError
+                ? `${del.error.message}${del.error.detail ? `: ${del.error.detail}` : ""}`
+                : String(del.error)}
+            </div>
+          )}
         </ConfirmDialog>
       )}
     </div>
@@ -325,6 +435,7 @@ function RelationshipGroup({
   nodesByHid,
   soiHid,
   parentNode,
+  relTargets,
   depth,
 }: {
   relType: string;
@@ -332,39 +443,151 @@ function RelationshipGroup({
   nodesByHid: Map<string, SoINode>;
   soiHid: string;
   parentNode: SoINode;
+  relTargets: RelTargetLookup;
   depth: number;
 }) {
   const [open, setOpen] = useState(false);
-  const openDrawer = useDrawer((s) => s.openDrawer);
-  const drawerOpen = useDrawer((s) => s.open);
+  const [addPicker, setAddPicker] = useState(false);
+  const [associatePick, setAssociatePick] = useState<string | null>(null);
+  const requestOpenDrawer = useDrawer((s) => s.requestOpenDrawer);
+  const qc = useQueryClient();
+
+  // Authorized target labels for this (source type, relationship type)
+  // (SRS §6.3.4.4 Add / Associate act on schema-valid targets only).
+  const allowedTargets =
+    relTargets.get(parentNode.typeName)?.get(relType) ?? [];
+
+  const associate = useMutation({
+    mutationFn: (targetHid: string) =>
+      api.commit({
+        soiHid,
+        toolId: "gui.mainpanel",
+        operations: [
+          {
+            op: "createRelationship",
+            type: relType,
+            sourceHid: parentNode.hid,
+            targetHid,
+          },
+        ],
+      }),
+    onSuccess: () => {
+      setAssociatePick(null);
+      void qc.invalidateQueries({ queryKey: ["soi"] });
+    },
+  });
+
+  const beginAdd = (label: string) => {
+    setAddPicker(false);
+    requestOpenDrawer({
+      mode: "create",
+      label,
+      linkFrom: { sourceHid: parentNode.hid, type: relType },
+    });
+  };
+
+  const existing = new Set(targets.map((t) => t.targetHid));
+  const associateCandidates = [...nodesByHid.values()].filter(
+    (n) =>
+      allowedTargets.includes(n.typeName) &&
+      n.hid !== parentNode.hid &&
+      !existing.has(n.hid),
+  );
+
+  const toggle = () => setOpen((v) => !v);
 
   return (
     <div className="rel-group">
       <div
         className="rel-group-header"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        }}
         role="button"
+        tabIndex={0}
         aria-expanded={open}
       >
         <span>{open ? "▾" : "▸"}</span>
         <span className="rel-name">[:{relType}]</span>
         <span className="node-count">{targets.length}</span>
         <span style={{ flex: 1 }} />
-        <button
-          className="icon-button"
-          title="Create a new related node"
-          disabled={drawerOpen}
-          onClick={(e) => {
-            e.stopPropagation();
-            openDrawer({
-              mode: "create",
-              linkFrom: { sourceHid: parentNode.hid, type: relType },
-            });
-          }}
-        >
-          + Add
-        </button>
+        {allowedTargets.length > 0 && (
+          <>
+            <button
+              className="icon-button"
+              title="Create a new related node"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (allowedTargets.length === 1) beginAdd(allowedTargets[0]);
+                else setAddPicker((v) => !v);
+              }}
+            >
+              + Add
+            </button>
+            <button
+              className="icon-button"
+              title="Associate an existing node"
+              disabled={associateCandidates.length === 0}
+              onClick={(e) => {
+                e.stopPropagation();
+                setAssociatePick(associatePick === null ? "" : null);
+              }}
+            >
+              ⇄ Associate
+            </button>
+          </>
+        )}
       </div>
+      {addPicker && (
+        <div style={{ display: "flex", gap: 6, padding: "4px 0" }}>
+          {allowedTargets.map((label) => (
+            <button
+              key={label}
+              className="icon-button"
+              onClick={() => beginAdd(label)}
+            >
+              + {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {associatePick !== null && (
+        <div style={{ padding: "4px 0" }}>
+          <select
+            className="sstpa-input"
+            value={associatePick}
+            onChange={(e) => setAssociatePick(e.target.value)}
+          >
+            <option value="" disabled>
+              Select a node to associate via [:{relType}]…
+            </option>
+            {associateCandidates.map((c) => (
+              <option key={c.hid} value={c.hid}>
+                {c.hid} — {String(c.properties.Name ?? "")} ({c.typeName})
+              </option>
+            ))}
+          </select>
+          <button
+            className="sstpa-button"
+            style={{ marginLeft: 6, padding: "2px 10px" }}
+            disabled={!associatePick || associate.isPending}
+            onClick={() => associate.mutate(associatePick)}
+          >
+            {associate.isPending ? "Committing…" : "Commit association"}
+          </button>
+          {associate.isError && (
+            <div className="sstpa-alert-warning" style={{ marginTop: 4 }}>
+              {associate.error instanceof ApiError
+                ? `${associate.error.message}${associate.error.detail ? `: ${associate.error.detail}` : ""}`
+                : String(associate.error)}
+            </div>
+          )}
+        </div>
+      )}
       {open && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingTop: 4 }}>
           {targets.map(({ targetHid, props }) => {
@@ -386,6 +609,7 @@ function RelationshipGroup({
                     node={target}
                     nodesByHid={nodesByHid}
                     soiHid={soiHid}
+                    relTargets={relTargets}
                     depth={depth + 1}
                   />
                 ) : (

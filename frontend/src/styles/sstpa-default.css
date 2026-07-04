@@ -145,6 +145,55 @@
   --sstpa-drawer-width: 460px;
 }
 
+/* --------------------- Nocturne style (SRS §6.2.1) ----------------------
+   Alternate dark style selected from the gear menu: the same drafting
+   language on deep navy surfaces with ivory ink and preserved gold accents. */
+:root[data-sstpa-style="nocturne"] {
+  --sstpa-ivory: #141d30;
+  --sstpa-ivory-raised: #1b2544;
+  --sstpa-ivory-sunken: #0e1524;
+  --sstpa-navy: #e8e2d2;
+  --sstpa-navy-deep: #f5f1e4;
+  --sstpa-navy-muted: #a7b0c2;
+  --sstpa-ink: #dcd6c6;
+  --sstpa-gold: #c9a44e;
+  --sstpa-gold-soft: #a8905e;
+  --sstpa-verdigris: #6fa294;
+  --sstpa-line: #52607a;
+  --sstpa-line-soft: #39465e;
+  --sstpa-grid: rgba(232, 226, 210, 0.05);
+
+  --sstpa-status-ok: #6fbf94;
+  --sstpa-status-warn: #d9a648;
+  --sstpa-status-error: #d97b7b;
+  --sstpa-status-info: #7ea9d9;
+  --sstpa-connection: #6fbf94;
+
+  --sstpa-node-system: #9db4dd;
+  --sstpa-node-element: #a7b0c2;
+  --sstpa-node-function: #7ea9d9;
+  --sstpa-node-interface: #6fa294;
+  --sstpa-node-state: #a794c9;
+  --sstpa-node-asset: #c9a44e;
+  --sstpa-node-security: #d97b7b;
+  --sstpa-node-purpose: #c99a6e;
+  --sstpa-node-environment: #92b07e;
+  --sstpa-node-connection: #74a4b5;
+  --sstpa-node-muted: #667088;
+
+  --sstpa-canvas: #101827;
+  --sstpa-node-fill: #1b2440;
+  --sstpa-node-stroke: #c3cde0;
+  --sstpa-edge-stroke: #52607a;
+  --sstpa-selected: #c9a44e;
+  --sstpa-hover: #a8905e;
+
+  --sstpa-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --sstpa-shadow-drawer: -6px 0 18px rgba(0, 0, 0, 0.5);
+  --sstpa-shadow-popup: 0 8px 28px rgba(0, 0, 0, 0.6);
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --sstpa-motion-fast: 0ms;
@@ -653,6 +702,22 @@ select.sstpa-input:focus {
   border: 1px solid var(--sstpa-status-warn);
   background: #fdf6e3;
   color: var(--sstpa-status-warn);
+  border-radius: var(--sstpa-radius);
+  padding: var(--sstpa-sp-2) var(--sstpa-sp-3);
+  font-size: 0.85rem;
+}
+.sstpa-alert-success {
+  border: 1px solid var(--sstpa-status-ok);
+  background: #eef6ef;
+  color: var(--sstpa-status-ok);
+  border-radius: var(--sstpa-radius);
+  padding: var(--sstpa-sp-2) var(--sstpa-sp-3);
+  font-size: 0.85rem;
+}
+.sstpa-alert-error {
+  border: 1px solid var(--sstpa-status-error);
+  background: #fbeeee;
+  color: var(--sstpa-status-error);
   border-radius: var(--sstpa-radius);
   padding: var(--sstpa-sp-2) var(--sstpa-sp-3);
   font-size: 0.85rem;

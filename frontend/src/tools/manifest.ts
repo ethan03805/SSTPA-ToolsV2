@@ -35,6 +35,9 @@ export interface ToolLaunchContext {
   soiUuid: string | null;
   drawerNodeHid: string | null;
   drawerNodeUuid: string | null;
+  /** Node another tool asked this tool to focus (cross-tool navigation). */
+  focusHid: string | null;
+  focusType: string | null;
   launchMode: "CONTROL_PANEL" | "DATA_DRAWER";
   backendBaseUrl: string;
   editAuthorized: boolean;

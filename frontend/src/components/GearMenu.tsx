@@ -1,14 +1,21 @@
 // Gear menu (SRS §6.3.1, §3.1): style selection, product/license info,
-// hover-help access, example-data reset.
+// example-data reset.
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api/client";
 import { useUnderConstruction } from "../state/stores";
+import {
+  activeStyle,
+  applyStyle,
+  availableStyles,
+  type StyleName,
+} from "../styles/styles";
 
 export function GearMenu({ onClose }: { onClose: () => void }) {
   const [showProduct, setShowProduct] = useState(false);
+  const [style, setStyle] = useState<StyleName>(activeStyle());
   const underConstruction = useUnderConstruction((s) => s.show);
 
   const item = (label: string, onClick: () => void) => (
@@ -42,14 +49,33 @@ export function GearMenu({ onClose }: { onClose: () => void }) {
         {item("Product & license information", () => {
           setShowProduct(true);
         })}
-        {item("Select style…", () => {
-          underConstruction("Alternate styles");
-          onClose();
-        })}
-        {item("Hover help", () => {
-          underConstruction("Hover Help");
-          onClose();
-        })}
+        <div
+          style={{
+            padding: "6px 8px",
+            fontSize: "0.82rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span>Style</span>
+          <select
+            className="sstpa-input"
+            style={{ flex: 1 }}
+            value={style}
+            onChange={(e) => {
+              const next = e.target.value as StyleName;
+              setStyle(next);
+              applyStyle(next);
+            }}
+          >
+            {availableStyles.map((s) => (
+              <option key={s.name} value={s.name}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
         {item("Reset example data…", () => {
           underConstruction("Example data reset");
           onClose();
