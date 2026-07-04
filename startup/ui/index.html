@@ -2,6 +2,7 @@
 <!--
   SSTPA Tools Startup Software (SRS §4): authenticates the User, starts the
   Backend, launches the Frontend, and assures clean shutdown.
+  Styled per the Instrument design system (docs/DESIGN.md).
   2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 -->
 <html lang="en">
@@ -10,15 +11,30 @@
     <title>SSTPA Tools — Startup</title>
     <style>
       :root {
-        --ivory: #f7f3e8;
-        --ivory-raised: #fcfaf2;
-        --navy: #1b2a4a;
-        --navy-muted: #44546e;
-        --gold: #a8853a;
-        --gold-soft: #c9b077;
-        --error: #8c2f2f;
-        --ok: #2e6b4f;
-        --line-soft: #b9c1cf;
+        --bg: #f4f5f7;
+        --surface: #ffffff;
+        --inset: #eceef1;
+        --text: #1a1d23;
+        --text-strong: #0e1013;
+        --muted: #5d6674;
+        --line: #d9dce1;
+        --accent: #3b4fd8;
+        --error: #be3536;
+        --ok: #1b7f4b;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14161a;
+          --surface: #1d2026;
+          --inset: #101216;
+          --text: #e6e8ec;
+          --text-strong: #ffffff;
+          --muted: #9aa3b0;
+          --line: #333842;
+          --accent: #7c90f0;
+          --error: #e5726b;
+          --ok: #4cc38a;
+        }
       }
       * {
         box-sizing: border-box;
@@ -29,52 +45,45 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
-        color: var(--navy);
-        background-color: var(--ivory);
-        background-image: linear-gradient(rgba(27, 42, 74, 0.055) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(27, 42, 74, 0.055) 1px, transparent 1px);
-        background-size: 24px 24px;
+        font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text);
+        background: var(--bg);
       }
       .frame {
-        border: 3px double var(--navy);
-        border-radius: 6px;
-        position: relative;
-        background: var(--ivory-raised);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
         width: 400px;
-        padding: 28px;
+        padding: 32px 28px 24px;
         text-align: center;
       }
-      .frame::before {
-        content: "";
-        position: absolute;
-        inset: 4px;
-        border: 1px solid var(--gold-soft);
-        border-radius: 3px;
-        pointer-events: none;
+      .mark {
+        color: var(--text-strong);
       }
-      /* Startup animation (SRS §4): gentle breathing logo */
-      img.logo {
-        max-width: 210px;
-        animation: breathe 2.6s ease-in-out infinite;
+      /* Startup pulse (SRS §4): the mark breathes gently while booting */
+      .mark.busy {
+        animation: breathe 2.4s ease-in-out infinite;
       }
       @keyframes breathe {
-        0%, 100% { transform: scale(1); opacity: 0.92; }
-        50% { transform: scale(1.035); opacity: 1; }
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 1; }
       }
       @media (prefers-reduced-motion: reduce) {
-        img.logo { animation: none; }
+        .mark.busy { animation: none; }
       }
       h1 {
-        font-family: Georgia, serif;
-        font-variant: small-caps;
-        letter-spacing: 0.06em;
-        margin: 8px 0 2px;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: var(--text-strong);
+        margin: 10px 0 2px;
       }
       .status {
-        font-family: "JetBrains Mono", monospace;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
         font-size: 0.72rem;
-        color: var(--navy-muted);
+        color: var(--muted);
         min-height: 2.4em;
         margin: 10px 0;
         white-space: pre-line;
@@ -85,31 +94,38 @@
         display: block;
         text-align: left;
         font-size: 0.82rem;
+        color: var(--muted);
         margin-top: 10px;
       }
       input {
         width: 100%;
         font: inherit;
+        color: var(--text);
+        background: var(--surface);
         padding: 6px 9px;
-        border: 1px solid var(--line-soft);
-        border-radius: 3px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
         margin-top: 3px;
       }
       input:focus {
-        border-color: var(--gold);
+        border-color: var(--accent);
         outline: none;
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
       }
       button {
         font: inherit;
-        font-weight: 600;
+        font-weight: 500;
         width: 100%;
-        margin-top: 14px;
+        margin-top: 16px;
         padding: 8px;
-        border-radius: 3px;
-        border: 1px solid var(--navy);
-        background: var(--navy);
-        color: var(--ivory);
+        border-radius: 6px;
+        border: 1px solid var(--text);
+        background: var(--text);
+        color: var(--surface);
         cursor: pointer;
+      }
+      button:hover {
+        background: var(--text-strong);
       }
       button:disabled {
         opacity: 0.55;
@@ -117,22 +133,42 @@
       }
       .copyright {
         font-size: 0.62rem;
-        color: var(--navy-muted);
-        margin-top: 16px;
+        color: var(--muted);
+        margin-top: 18px;
       }
       .firstrun {
         text-align: left;
         font-size: 0.78rem;
-        color: var(--navy-muted);
-        border-left: 3px solid var(--gold-soft);
-        padding-left: 10px;
+        color: var(--muted);
+        background: var(--inset);
+        border-radius: 6px;
+        padding: 8px 10px;
         margin: 12px 0 4px;
       }
     </style>
   </head>
   <body>
     <div class="frame">
-      <img class="logo" src="sstpa-logo-large.png" alt="SSTPA Tools" />
+      <svg
+        id="mark"
+        class="mark busy"
+        width="44"
+        height="44"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="5" y="3" width="14" height="6" rx="1.6" />
+        <rect x="5" y="15" width="14" height="6" rx="1.6" />
+        <path d="M16.2 9.4v4.2" />
+        <path d="m14.4 11.9 1.8 1.9 1.8-1.9" />
+        <path d="M7.8 14.6v-4.2" />
+        <path d="m6 12.1 1.8-1.9 1.8 1.9" />
+      </svg>
       <h1>SSTPA Tools</h1>
       <div id="status" class="status">Starting Backend…</div>
       <form id="login" style="display: none">

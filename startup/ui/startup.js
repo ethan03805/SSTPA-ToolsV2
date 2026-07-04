@@ -17,6 +17,8 @@ const bsBtn = document.getElementById("bs-go");
 function setStatus(text, cls = "") {
   statusEl.textContent = text;
   statusEl.className = `status ${cls}`;
+  // The mark pulses only while work is in flight.
+  document.getElementById("mark").classList.toggle("busy", cls === "");
 }
 
 async function boot() {
