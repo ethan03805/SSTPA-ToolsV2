@@ -3,6 +3,37 @@
 This file records implementation checkpoints and verification status while the
 application is completed against `SSTPA Tool SRS V7.md`.
 
+## 2026-07-04 — Complete UI redesign: the "Instrument" design system (`ui-redesign` branch)
+
+The Art Nouveau visual identity was removed end-to-end and replaced with a
+minimalist system (docs/DESIGN.md; deviation recorded as REQUIREMENTS-NOTES
+I-17). Highlights:
+
+- `sstpa-default.css` rewritten: semantic tokens (`--sstpa-bg/surface/text/
+  muted/accent/…`), Light + Dark styles, hairline-only elevation, no drafting
+  grid/double borders/gold ornament. Token renames swept through all 28
+  components/tools.
+- Typography: IBM Plex Sans 400/500/600 replaces Source Sans 3 + Cormorant SC;
+  JetBrains Mono retained for HIDs/model text. No display serif remains.
+- Iconography: emoji glyphs replaced by an inline SVG set
+  (`components/Icon.tsx`); tool manifests now reference glyph names. New
+  control-loop `Mark` replaces the logo in all chrome; the heritage logo now
+  appears only in the Product & License dialog.
+- Node-type categorical palette re-derived and validated for CVD separation
+  and surface contrast in both styles; `NodeTypeBadge` renders tinted chips.
+- Cytoscape graph styling (Navigator/Requirements/State/Flow) now resolves
+  design tokens at graph build time (`shared.uiToken()/graphTheme()`) — graphs
+  follow the active style.
+- New flat indigo control-loop app icon generated for both Tauri shells
+  (icns/ico/png) plus favicons; startup launcher UI restyled with
+  light/dark support.
+
+Verification: `npm run build` (tsc + vite) and `npm run lint` clean;
+`cargo check` clean for both shells; full stack exercised against the running
+Docker backend with Playwright — login, main window (sections, entity cards,
+badges, Data Drawer), Navigator/Requirements tool windows, gear menu, and the
+launcher captured in light and dark styles.
+
 ## 2026-07-04 — All 17 Add-on Tools upgraded to SRS conformance
 
 Every Add-on Tool was audited against its SRS section and rebuilt to production

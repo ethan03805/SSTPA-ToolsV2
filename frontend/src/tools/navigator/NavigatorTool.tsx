@@ -795,7 +795,7 @@ export default function NavigatorTool({
                 </div>
               ))}
               <div style={{ fontSize: "0.68rem", color: "var(--sstpa-muted)", marginTop: 4 }}>
-                Double gold border = current SoI. Dashed edges = SoI content
+                Double accent border = current SoI. Dashed edges = SoI content
                 relationships.
               </div>
             </div>

@@ -72,7 +72,9 @@ Shared Add-on Tool helpers live in `frontend/src/tools/shared.tsx`
 - New Add-on Tool = a manifest entry + a lazy component + a registry line; no
   other wiring. Tools receive a `ToolLaunchContext` (current SoI, invoking node,
   cross-tool `focusHid`).
-- Design language: reuse `sstpa-*` CSS classes and `var(--sstpa-*)` tokens
-  (`src/styles/sstpa-default.css`); no per-component stylesheets. The GUI ships a
-  default (ivory) and a Nocturne (dark) style, switchable from the gear menu.
+- Design language: the minimalist "Instrument" system — see `docs/DESIGN.md`.
+  Reuse `sstpa-*` CSS classes and `var(--sstpa-*)` tokens
+  (`src/styles/sstpa-default.css`); no per-component stylesheets; SVG glyphs from
+  `src/components/Icon.tsx` (never emoji). The GUI ships Light (default) and
+  Dark ("nocturne") styles, switchable from the gear menu.
 - Commit to git often; keep `docs/PROGRESS.md` current.

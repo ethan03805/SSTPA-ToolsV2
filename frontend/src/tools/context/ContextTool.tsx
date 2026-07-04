@@ -643,7 +643,7 @@ function EnvironmentDetail({
 
 /** Read-only mini node-edge summary graph for the selected Environment
  *  (§6.5.8.5a): Environment ↔ VALID_IN States ↔ HAS_HAZARD Hazards. Staged
- *  [:VALID_IN] changes render dashed (gold = staged add, red = staged remove). */
+ *  [:VALID_IN] changes render dashed (accent = staged add, red = staged remove). */
 function EnvSummaryGraph({
   envLabel,
   states,

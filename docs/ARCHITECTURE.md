@@ -108,10 +108,12 @@ Users clone reference properties into owned Core nodes via `[:REFERENCES]` (§3.
   SoI Panel (hierarchy navigation), Main Panel (collapsible node-type sections →
   entity cards → relationship groups, progressive disclosure), and a right-side
   Data Drawer as the single edit surface with staged edits and Commit confirmation.
-- **Style** (§6.2): `sstpa-default.css` design tokens; ivory surfaces, deep navy
-  typography, restrained Art Nouveau framing, drafting-card aesthetic. Fonts:
-  Source Sans 3 (UI), Cormorant SC (branding/headings), JetBrains Mono (identifiers) —
-  all open-source, bundled for air-gapped deployment.
+- **Style** (§6.2): `sstpa-default.css` design tokens; the minimalist
+  "Instrument" system (docs/DESIGN.md; REQUIREMENTS-NOTES.md I-17): cool neutral
+  surfaces, hairline separation, one indigo accent reserved for
+  selection/focus/active state, mono HID chips, light + dark styles. Fonts:
+  IBM Plex Sans (UI), JetBrains Mono (identifiers) — all open-source, bundled
+  for air-gapped deployment.
 - **Add-on Tools** (§6.4): manifest-driven extension architecture; tools run in popup
   windows using a common shell (header, SoI display, Commit/Cancel/Close, validation
   display, Model Text Panel when the manifest declares model languages). Tools access

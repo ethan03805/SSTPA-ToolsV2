@@ -82,8 +82,7 @@ none of them. Neo4j access is via the Apache-2.0 Bolt driver.
 
 | Font | Source | License | Use | Status |
 |---|---|---|---|---|
-| Source Sans 3 | https://github.com/adobe-fonts/source-sans | OFL-1.1 | Primary UI text | integrated |
-| Cormorant SC | https://github.com/CatharsisFonts/Cormorant | OFL-1.1 | Branding & major headings | integrated |
+| IBM Plex Sans | https://github.com/IBM/plex | OFL-1.1 | Primary UI text & headings | integrated |
 | JetBrains Mono | https://github.com/JetBrains/JetBrainsMono | OFL-1.1 | Technical identifiers, model text | integrated |
 
 Fonts are bundled with the application for air-gapped deployment.
