@@ -3,6 +3,60 @@
 This file records implementation checkpoints and verification status while the
 application is completed against `SSTPA Tool SRS V7.md`.
 
+## 2026-07-04 — Production-readiness pass
+
+Full-codebase audit against the SRS followed by fixes across every segment.
+
+Backend (§3, §5):
+- Closed a Cypher-injection vector in `deleteRelationship` (unknown relationship
+  types are now rejected before interpolation).
+- HID/uuid/UserName uniqueness enforced with database constraints (concurrent
+  commits can no longer mint duplicate identities).
+- Fixed protection-Requirement generation (§3.3.4.6.3): the previous `LIMIT 1`
+  collapsed each batch to one Requirement and duplicated HIDs; now one
+  Requirement per qualifying (entity, Asset) pair with distinct identities.
+- Trace derivation recompute runs for every SoI whose trace edges moved,
+  including scopeless commits and traced-entity deletions.
+- Reference-clone notifications verify creation and roll back on missing mailbox
+  (§5.6.6.8.1); Prometheus counters moved outside the managed transaction.
+- Session tokens expire; `POST /api/auth/logout`, `GET /api/auth/status`, and
+  `GET /api/auth/me` added; internal Neo4j URI no longer leaked from capability.
+- `transferOwnership` commit op (§5.6.6.8.2); structured owner-change fields on
+  notifications; per-user message deletion (§6.5.14.11); full Admin account
+  lifecycle (§6.5.15: suspend/reinstate/disenroll-with-retention, two-step
+  ADMIN authorization, roster counts).
+- Model Translation API (§5.6.6.12, §3.7): G2M SysML/KerML projection, SSTPA
+  Profile Library, M2G property-edit subset — see I-14/I-15.
+
+Deploy/installer (§2, §5.7, §9):
+- Removed the public `/metrics-proxy`; disabled Grafana anonymous access;
+  compose requires explicit passwords.
+- Portable, robust `load-reference-data.sh` (+ Windows `.ps1`).
+- Installer redone: prerequisite checks, secrets never packaged, fresh
+  per-install credentials, always-staged release binaries, uninstallers.
+- Reference-data pipeline validated end to end (6,897 REF nodes loaded).
+
+Startup/Frontend launch chain (§4):
+- Fixed the dead 8543 backend port → Caddy 443 edge; health gate polls a
+  proxied endpoint; first-run RootAdmin bootstrap; single sign-on handover to
+  the GUI; CSP added to the Tauri webview.
+
+GUI shell (§6.2–6.4):
+- Data Drawer Add/Associate actions, safe drawer replacement, orphan
+  assessment, staged-state clearing, keyboard-accessible dialogs.
+- Main Panel schema-driven Add/Associate, Analysis section for all node types,
+  error/retry states.
+- Manifest-driven Branding-panel tools, working style switching (Nocturne dark
+  style), Admin-hidden-from-users, per-tool Model Text Panel with highlighting
+  and export.
+
+Verification: `go test ./...`, backend integration suite (throwaway Neo4j:
+auth, commit+trace derivation, ownership transfer, per-user message delete,
+admin lifecycle, model translation) all green; `npm run build`; both Tauri
+shells `cargo check`; live Docker stack exercised end to end with a seeded
+FireSat project (trace inheritance and six protection Requirements verified,
+Loss auto-build, G2M model text); GUI screenshotted via headless browser.
+
 ## 2026-07-04 — Loss Tool Integration
 
 - Wired backend Loss Tool endpoints for attack-tree load, auto-build/rebuild,
