@@ -311,12 +311,16 @@ func (s *Server) executeCommit(r *http.Request, tx neo4j.ManagedTransaction, use
 			if err != nil {
 				return nil, err
 			}
-			// Trace relationships are never deleted; they are superseded (§3.3.4.6.1).
-			if op.Type == "HOLDS" || op.Type == "TRANSPORTS" || op.Type == "USES" {
+			// Trace relationships are never deleted; they are superseded
+			// (§3.3.4.6.1). A TraceStateHID in properties scopes the clear to
+			// one matrix cell (§6.5.9.6 Phase 1 "cleared cell").
+			if isTraceRel(op.Type) {
+				stateHid, _ := op.Props["TraceStateHID"].(string)
 				q := fmt.Sprintf(`MATCH (a:SSTPA {HID: $src})-[rel:%s]->(b {HID: $tgt})
 					WHERE rel.TraceStatus = 'CURRENT'
+					  AND ($state = '' OR rel.TraceStateHID = $state)
 					SET rel.TraceStatus = 'SUPERSEDED'`, op.Type)
-				if _, err := tx.Run(ctx, q, map[string]any{"src": src, "tgt": tgt}); err != nil {
+				if _, err := tx.Run(ctx, q, map[string]any{"src": src, "tgt": tgt, "state": stateHid}); err != nil {
 					return nil, err
 				}
 				traceTouched = true

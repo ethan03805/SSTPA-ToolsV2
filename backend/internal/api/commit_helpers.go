@@ -302,22 +302,26 @@ func isTraceRel(relType string) bool {
 	return relType == "HOLDS" || relType == "TRANSPORTS" || relType == "USES"
 }
 
-// prepareTraceRel enforces §3.3.4.6.1 semantics inside the transaction:
-// supersede any CURRENT trace relationship for the same (entity, Asset) pair,
-// compute the next TraceVersion, and stamp system-managed trace metadata.
+// prepareTraceRel enforces §3.3.4.6.1 / §6.5.9.6 Phase-1/2 semantics inside
+// the transaction: supersede any CURRENT trace relationship for the same
+// (entity, State, Asset) cell (trace relationships are state-scoped —
+// different States coexist), compute the next TraceVersion across the
+// (entity, Asset) pair, and stamp system-managed trace metadata.
 func prepareTraceRel(ctx context.Context, tx neo4j.ManagedTransaction, srcHID, tgtHID, commitID string, props map[string]any) (map[string]any, error) {
 	if props == nil {
 		props = map[string]any{}
 	}
-	if _, ok := props["TraceStateHID"]; !ok {
+	stateHid, _ := props["TraceStateHID"].(string)
+	if stateHid == "" {
 		return nil, fmt.Errorf("trace relationships require TraceStateHID (SRS §3.3.4.6.1)")
 	}
 	res, err := tx.Run(ctx, `
 		MATCH (a {HID: $src})-[r:HOLDS|TRANSPORTS|USES]->(b {HID: $tgt})
 		WITH collect(r) AS rels, coalesce(max(r.TraceVersion), 0) AS maxV
-		FOREACH (r IN [x IN rels WHERE x.TraceStatus = 'CURRENT'] | SET r.TraceStatus = 'SUPERSEDED')
+		FOREACH (r IN [x IN rels WHERE x.TraceStatus = 'CURRENT' AND x.TraceStateHID = $state] |
+			SET r.TraceStatus = 'SUPERSEDED')
 		RETURN maxV`,
-		map[string]any{"src": srcHID, "tgt": tgtHID})
+		map[string]any{"src": srcHID, "tgt": tgtHID, "state": stateHid})
 	if err != nil {
 		return nil, err
 	}
