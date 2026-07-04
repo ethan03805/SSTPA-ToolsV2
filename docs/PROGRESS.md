@@ -183,3 +183,34 @@ Verification:
 - Playwright: Model Text Panel renders highlighted SysML in the Requirements Tool.
 
 SBOM impact: none (no new libraries; G2M is pure Go stdlib).
+
+## 2026-07-04 — FireSat example data (§3.6) + Help data (§3.5)
+
+- FireSat exemplar (`backend/internal/api/example.go`): a 3-tier-deep example
+  Project (FireSat Capability → FireSat → Satellite Bus → Infrared Sensor) with
+  environments, states + transitions, components, functions, interfaces, a
+  connection, primary + derived assets, trace relationships, a hazard→control→
+  countermeasure→attack chain, a Loss + root Goal, and requirements. Owned by
+  "SSTPA Tools" (immutable ownership); IsExampleData/ExampleProject markers.
+- Namespaced HID indices (FS1, FS1.1, FS1.1.1) partition the exemplar from the
+  working Capability; HID grammar relaxed to accept alphanumeric index segments
+  (REQUIREMENTS-NOTES I-13). Seeded on startup if absent.
+- Reset endpoint (`POST /api/examples/reset`) + `GET /api/examples`; wired to
+  the gear-menu "Reset FireSat example" action (§3.6).
+- Help Data (`backend/internal/api/help.go`): 24-entry SSTPA terminology/field/
+  tutorial catalog at `GET /api/help`, shown in the gear-menu "Hover help &
+  definitions" dialog (§3.5, REQUIREMENTS-NOTES I-14).
+- End-to-end verified on FireSat:
+  - Navigator renders the full 3-tier hierarchy (Playwright shot 11).
+  - G2M SysML/KerML projects every FireSat SoI including the deepest.
+  - Loss Tool auto-build on LOS_FS1_1 produced an 8-node attack tree, 1 path:
+    "Compromise FireSat Authenticity → Downlinking → Downlink Radio →
+    RF Alert Spoofing → Digital Signature of Alerts [BLOCKED]" — the full
+    trace→loss→attack-tree→path-analysis workflow working on real example data.
+
+Verification:
+- `cd backend && go test ./...` (all pass)
+- Live: startup seeds FireSat; `POST /api/examples/reset` reloads; `/api/help`
+  returns 24 entries; Loss auto-build + path enumeration succeed on FireSat.
+
+SBOM impact: none.

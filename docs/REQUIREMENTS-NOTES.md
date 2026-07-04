@@ -45,3 +45,10 @@ transformed data.
 | M-2 | §6.5.3.9, §6.5.4.16, §6.5.8.16 | Corrected three tool manifests whose `ModelTextLanguages` did not match their SRS Model Text Panel sections: Reports → [SYSML, KERML], Reference → [KERML], Context → [SYSML, KERML]. All model tools now display SysML/KerML. |
 | M-3 | Navigator (§6.5.1), Admin (§6.5.15), Message Center (§6.5.14) | These declare no Model Text Panel: Navigator performs hierarchy navigation (not model display), Admin manages users, Message Center is explicitly exempt. No SysML/KerML surface required. |
 | M-4 | §3.7.9 M2G | M2G (text → staged graph mutations) text-commit is not enabled in this version; the Model Text Panel is read-only. Editing is performed through the tool canvases and Data Drawer, which is the authoritative staged-commit path. `/api/model/validate` returns an empty change set and `/api/model/commit` returns 501 so tools degrade gracefully. Recorded as a deferred capability. |
+
+## Example & Help Data
+
+| # | SRS ref | Interpretation taken |
+|---|---|---|
+| I-13 | §3.6 vs §3.3.8.2 | Example Data consists of pre-defined Projects with the same schema as Core Data, but §3.3.8.2 gives the single Capability a null index and integer System indices, so a second (:Project) exemplar would collide (both CAP__0; both tier-1 systems SYS_1_0…). Interpretation: Example Data is a separate partition (like Reference Data). FireSat is namespaced with an "FS"-prefixed HID index (CAP_FS_0, SYS_FS1_0, SYS_FS1.1.1_0). The HID grammar was relaxed to accept alphanumeric index segments; example nodes carry IsExampleData=true and ExampleProject="FireSat" for reset scoping. Owned by "SSTPA Tools" (nihlo2025@proton.me); ownership immutable; seeded on startup if absent; Reset via the gear menu (§3.6). |
+| I-14 | §3.5 | Help Data is served from an embedded catalog of SSTPA terminology, field help, and tutorial entries (from §1/§3.3.1 definitions and Resource.md), exposed at /api/help and shown in the gear-menu "Hover help & definitions" dialog. Per-field hover tooltips reuse the same catalog by term. |

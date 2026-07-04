@@ -2,14 +2,26 @@
 // hover-help access, example-data reset.
 // 2025 Nicholas Triska. All rights reserved. See NOTICE at repository root.
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api/client";
 import { useUnderConstruction } from "../state/stores";
 
 export function GearMenu({ onClose }: { onClose: () => void }) {
   const [showProduct, setShowProduct] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
   const underConstruction = useUnderConstruction((s) => s.show);
+  const qc = useQueryClient();
+
+  const reset = useMutation({
+    mutationFn: () => api.resetExample("FireSat"),
+    onSuccess: () => {
+      setResetMsg("FireSat example reset to defaults.");
+      void qc.invalidateQueries();
+    },
+    onError: (e) => setResetMsg(`Reset failed: ${String(e)}`),
+  });
 
   const item = (label: string, onClick: () => void) => (
     <button
@@ -46,15 +58,27 @@ export function GearMenu({ onClose }: { onClose: () => void }) {
           underConstruction("Alternate styles");
           onClose();
         })}
-        {item("Hover help", () => {
-          underConstruction("Hover Help");
-          onClose();
+        {item("Hover help & definitions…", () => {
+          setShowHelp(true);
         })}
-        {item("Reset example data…", () => {
-          underConstruction("Example data reset");
-          onClose();
-        })}
+        {item(
+          reset.isPending ? "Resetting FireSat…" : "Reset FireSat example",
+          () => reset.mutate(),
+        )}
+        {resetMsg && (
+          <div className="sstpa-alert-warning" style={{ marginTop: 6, fontSize: "0.72rem" }}>
+            {resetMsg}
+          </div>
+        )}
       </div>
+      {showHelp && (
+        <HelpDialog
+          onClose={() => {
+            setShowHelp(false);
+            onClose();
+          }}
+        />
+      )}
       {showProduct && (
         <ProductDialog
           onClose={() => {
@@ -111,6 +135,57 @@ function ProductDialog({ onClose }: { onClose: () => void }) {
           </>
         )}
         <div style={{ textAlign: "right" }}>
+          <button className="sstpa-button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Hover Help & definitions viewer (SRS §3.5). */
+function HelpDialog({ onClose }: { onClose: () => void }) {
+  const help = useQuery({ queryKey: ["help"], queryFn: api.help });
+  const [filter, setFilter] = useState("");
+  const entries = (help.data?.help ?? []).filter(
+    (e) =>
+      !filter ||
+      e.term.toLowerCase().includes(filter.toLowerCase()) ||
+      e.definition.toLowerCase().includes(filter.toLowerCase()),
+  );
+  return (
+    <div className="sstpa-dialog-overlay" onClick={onClose}>
+      <div
+        className="sstpa-frame sstpa-dialog"
+        style={{ minWidth: 560, maxHeight: "80vh" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2>SSTPA Help & Definitions</h2>
+        <input
+          className="sstpa-input"
+          placeholder="Search terms…"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          autoFocus
+        />
+        <div style={{ maxHeight: "56vh", overflow: "auto", marginTop: 10 }}>
+          {entries.map((e) => (
+            <div key={e.term} style={{ marginBottom: 10 }}>
+              <div style={{ fontWeight: 700, color: "var(--sstpa-navy)" }}>
+                {e.term}{" "}
+                <span
+                  className="type-badge"
+                  style={{ background: "var(--sstpa-node-muted)", fontSize: "0.6rem" }}
+                >
+                  {e.category}
+                </span>
+              </div>
+              <div style={{ fontSize: "0.84rem" }}>{e.definition}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign: "right", marginTop: 8 }}>
           <button className="sstpa-button" onClick={onClose}>
             Close
           </button>
