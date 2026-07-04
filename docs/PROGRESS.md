@@ -23,3 +23,21 @@ Verification:
 - `cd frontend && npm run build`
 
 SBOM impact: none. No software applications or libraries were added.
+
+## 2026-07-04 — Attack Tool Implementation
+
+- Replaced the Attack Tool scaffold with a working SRS-shaped tool surface:
+  entity roster, entity Attack associations, Attack creation, existing Attack
+  association/removal, hierarchy management using `[:SUBORDINATE_TO]`, catalog
+  view, asset-scope filtering based on CURRENT trace coverage, editable Attack
+  details, `MetricsJSON` validation, `TARGETS_LOSS` scoping, and CSV/Markdown
+  exports.
+- Kept Attack Tool mutations on canonical Core Data (`(:Attack)`,
+  `[:EXPLOITS]`, `[:SUBORDINATE_TO]`, `[:TARGETS_LOSS]`) and did not create
+  Loss Tool-owned `[:AT_RELATES_TO]` edges.
+
+Verification:
+
+- `cd frontend && npm run build`
+
+SBOM impact: none. No software applications or libraries were added.
