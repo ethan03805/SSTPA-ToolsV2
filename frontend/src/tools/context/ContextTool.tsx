@@ -57,7 +57,6 @@ export default function ContextTool({
   const environments = nodes.filter((n) => n.typeName === "Environment");
   const states = nodes.filter((n) => n.typeName === "State");
   const assets = nodes.filter((n) => n.typeName === "Asset" || n.typeName === "DerivedAsset");
-  const losses = nodes.filter((n) => n.typeName === "Loss");
 
   // Non-blocking warnings (§6.5.8.9).
   const warnings: string[] = [];
@@ -129,7 +128,6 @@ export default function ContextTool({
       {mode === "loss" && (
         <LossAllocation
           assets={assets}
-          losses={losses}
           environments={environments}
           byHid={byHid}
           commit={commit.mutate}
@@ -613,13 +611,11 @@ function StateEnvMatrix({
 /** Loss Allocation Mode (§6.5.8.5c/§6.5.8.6). */
 function LossAllocation({
   assets,
-  losses,
   environments,
   byHid,
   commit,
 }: {
   assets: SoINode[];
-  losses: SoINode[];
   environments: SoINode[];
   byHid: Map<string, SoINode>;
   commit: (ops: CommitOperation[]) => void;

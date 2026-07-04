@@ -131,7 +131,7 @@ export default function AssetManagerTool({
           Validation
         </button>
         <span style={{ flex: 1 }} />
-        {view === "table" && <NewAssetButton ctx={ctx} assets={assets} commit={commit.mutate} autoGenOps={autoGenOps} />}
+        {view === "table" && <NewAssetButton ctx={ctx} assets={assets} commit={commit.mutate} />}
       </div>
       {notice && (
         <div className="sstpa-alert-warning" style={{ margin: "6px 12px" }}>
@@ -142,7 +142,7 @@ export default function AssetManagerTool({
         </div>
       )}
       {view === "table" && (
-        <AssetTable ctx={ctx} assets={assets} byHid={byHid} commit={commit.mutate} autoGenOps={autoGenOps} />
+        <AssetTable assets={assets} byHid={byHid} commit={commit.mutate} autoGenOps={autoGenOps} />
       )}
       {view === "regimes" && <RegimeView ctx={ctx} assets={assets} commit={commit.mutate} />}
       {view === "validation" && <ValidationView assets={assets} byHid={byHid} />}
@@ -154,12 +154,10 @@ function NewAssetButton({
   ctx,
   assets,
   commit,
-  autoGenOps,
 }: {
   ctx: ToolLaunchContext;
   assets: SoINode[];
   commit: (ops: CommitOperation[]) => void;
-  autoGenOps: (hid: string, name: string, props: Record<string, unknown>) => CommitOperation[];
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -306,13 +304,11 @@ function NewAssetButton({
 
 /** Asset Table View (§6.5.7.7) with expandable quick-edit rows. */
 function AssetTable({
-  ctx,
   assets,
   byHid,
   commit,
   autoGenOps,
 }: {
-  ctx: ToolLaunchContext;
   assets: SoINode[];
   byHid: Map<string, SoINode>;
   commit: (ops: CommitOperation[]) => void;
