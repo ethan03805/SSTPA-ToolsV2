@@ -311,14 +311,25 @@ export default function NavigatorTool({
       if (ev.target === cy) selectRef.current(null);
     });
     cyRef.current = cy;
+
+    // Cytoscape reads the container size at init; inside a freshly-mounted
+    // flex popup that size can be 0. Re-fit whenever the container resizes.
+    const ro = new ResizeObserver(() => {
+      cy.resize();
+      if (cy.elements().length > 0) cy.fit(undefined, 40);
+    });
+    if (containerRef.current) ro.observe(containerRef.current);
+
     return () => {
+      ro.disconnect();
       cy.destroy();
       cyRef.current = null;
     };
   }, []);
 
-  // Element diffing: add/remove without rebuilding the whole graph.
-  const knownIds = useRef<Set<string>>(new Set());
+  // Element diffing: reconcile against the LIVE cytoscape instance (not a
+  // separate id set — that desynchronizes when the instance is recreated,
+  // e.g. React StrictMode remounts in development).
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
@@ -329,20 +340,19 @@ export default function NavigatorTool({
     let structural = false;
     cy.batch(() => {
       for (const n of elements.nodes) {
-        if (!knownIds.current.has(n.data.id)) {
+        if (cy.getElementById(n.data.id).length === 0) {
           cy.add({ group: "nodes", data: { ...n.data } });
           structural = true;
         }
       }
       for (const e of elements.edges) {
-        if (!knownIds.current.has(e.data.id) && cy.getElementById(e.data.id).length === 0) {
-          if (
-            cy.getElementById(e.data.source).length > 0 &&
-            cy.getElementById(e.data.target).length > 0
-          ) {
-            cy.add({ group: "edges", data: { ...e.data } });
-            structural = true;
-          }
+        if (
+          cy.getElementById(e.data.id).length === 0 &&
+          cy.getElementById(e.data.source).length > 0 &&
+          cy.getElementById(e.data.target).length > 0
+        ) {
+          cy.add({ group: "edges", data: { ...e.data } });
+          structural = true;
         }
       }
       cy.elements().forEach((el) => {
@@ -352,20 +362,34 @@ export default function NavigatorTool({
         }
       });
     });
-    knownIds.current = nextIds;
-    if (structural) {
-      const layout = cy.layout({
-        name: "fcose",
-        animate: false,
-        randomize: false,
-        idealEdgeLength: () => 90,
-      } as never);
+    if (structural && cy.elements().length > 0) {
+      // A hierarchy view is tree-shaped: a breadthfirst layout is
+      // deterministic and robust for small graphs (fcose degenerates on a
+      // couple of nodes). Expanded SoI contents use fcose for their denser
+      // relationship webs.
+      const dense = cy.edges("[kind='relationship']").length > 0;
+      const layout = cy.layout(
+        (dense
+          ? {
+              name: "fcose",
+              animate: false,
+              randomize: true,
+              idealEdgeLength: () => 90,
+              nodeSeparation: 120,
+            }
+          : {
+              name: "breadthfirst",
+              directed: true,
+              spacingFactor: 1.3,
+              padding: 30,
+              animate: false,
+            }) as never,
+      );
       layout.run();
+      cy.fit(undefined, 45);
       // Center on the current SoI on first population (§6.5.1.7).
       if (soiHid && cy.getElementById(soiHid).length > 0) {
         cy.center(cy.getElementById(soiHid));
-      } else {
-        cy.fit(undefined, 40);
       }
     }
   }, [elements, soiHid]);
